@@ -8,7 +8,12 @@ def load_data(file_path):
 def remove_cyclic_prefix(signal, prefix_length, block_size):
     """Remove the cyclic prefix of an OFDM signal."""
     num_blocks = len(signal) // (block_size + prefix_length)
-    return np.concatenate([signal[i * (block_size + prefix_length) + prefix_length:(i + 1) * (block_size + prefix_length)] for i in range(num_blocks)])
+    blocks = []
+    for i in range(num_blocks):
+        start_index = i * (block_size + prefix_length) + prefix_length
+        end_index = start_index + block_size
+        blocks.append(signal[start_index:end_index])
+    return blocks
 
 def apply_fft(signal, n):
     """Apply FFT to the signal."""
@@ -46,22 +51,26 @@ received_signal = load_data('file1.csv')
 prefix_length = 32
 block_size = 1024
 
-# Remove cyclic prefix
-received_signal_without_prefix = remove_cyclic_prefix(received_signal, prefix_length, block_size)
-
-# Apply FFT to the received signal
-r_n = apply_fft(received_signal_without_prefix, block_size)
+# Remove cyclic prefix and get blocks
+blocks = remove_cyclic_prefix(received_signal, prefix_length, block_size)
 
 # Estimate channel frequency response
 g_n = apply_fft(channel_impulse_response, block_size)
 
-# Compensate for the channel effects
-x_n = channel_compensation(r_n, g_n)
+# Process each block
+complete_binary_data = ''
+for block in blocks:
+    # Apply FFT to the block
+    r_n = apply_fft(block, block_size)
 
-# Demap QPSK symbols to binary data
-binary_data = qpsk_demapper(x_n[1:(block_size//2)])  # Assuming data is only in these bins
+    # Compensate for the channel effects
+    x_n = channel_compensation(r_n, g_n)
 
-print("Recovered Binary Data:", binary_data)
+    # Demap QPSK symbols to binary data
+    binary_data = qpsk_demapper(x_n[1:(block_size//2)])  # Assuming data is only in these bins
+    complete_binary_data += binary_data
+
+print("Recovered Binary Data Length:", len(complete_binary_data))
 
 def binary_to_bytes(binary_data):
     # Pad the binary string to make its length a multiple of 8
@@ -74,27 +83,31 @@ def binary_to_bytes(binary_data):
 
 
 
-def parse_binary_data(binary_data):
+def parse_bytes_data(bytes_data):
     # Splitting the data at null bytes
-    parts = binary_data.split(b'\0')
+    parts = bytes_data.split(b'\0')
     filename = parts[0].decode('utf-8')
     file_size = int(parts[1].decode('utf-8'))
-    file_content = ''
-    for part in parts[2:]:
-        print(part)
-        file_content += part.decode('utf-8')
+    file_content = bytes_data[33: file_size+2] # Assuming the rest is content
+    
 
     return filename, file_size, file_content
 
 # Convert demapped binary data to bytes
-bytes_data = binary_to_bytes(binary_data)
+bytes_data = binary_to_bytes(complete_binary_data)
 
 # Parse the bytes data to extract filename, size, and content
-filename, file_size, content = parse_binary_data(bytes_data)
+filename, file_size, content = parse_bytes_data(bytes_data)
 print("Filename:", filename)
 print("File Size:", file_size)
-print("Content:", content.decode('utf-8'))  # Assuming content is text and UTF-8 decodable
+#print("Content:", content.decode('utf-8'))  # Assuming content is text and UTF-8 decodable
+print(bytes_data[29:40])
 
-with open('files/3829010287.tiff', 'wb') as file:
-    file.write(content)
+
+# Save the byte array to a TIFF file
+file_path = './files/3829010287.tiff'
+with open(file_path, 'wb') as file:
+    file.write(bytes_data[29:])
+
+print(f"File has been saved to {file_path}. Please check the file to see if the image is correctly reconstructed.")
 

@@ -87,27 +87,28 @@ def parse_bytes_data(bytes_data):
     # Splitting the data at null bytes
     parts = bytes_data.split(b'\0')
     filename = parts[0].decode('utf-8')
-    file_size = int(parts[1].decode('utf-8'))
-    file_content = bytes_data[33: file_size+2] # Assuming the rest is content
+    start_of_image_data = bytes_data.find(b'\0', bytes_data.find(b'\0') + 1) + 1
+    file_size = int(bytes_data[bytes_data.find(b'\0') + 1 : start_of_image_data - 1])
     
-
+    file_content = bytes_data[start_of_image_data:start_of_image_data + file_size]
+    
     return filename, file_size, file_content
 
 # Convert demapped binary data to bytes
 bytes_data = binary_to_bytes(complete_binary_data)
 
+
 # Parse the bytes data to extract filename, size, and content
 filename, file_size, content = parse_bytes_data(bytes_data)
 print("Filename:", filename)
-print("File Size:", file_size)
-#print("Content:", content.decode('utf-8'))  # Assuming content is text and UTF-8 decodable
-print(bytes_data[29:40])
+print("File Size:", file_size)  
+print(content[0:10])
 
 
 # Save the byte array to a TIFF file
 file_path = './files/3829010287.tiff'
 with open(file_path, 'wb') as file:
-    file.write(bytes_data[29:])
+    file.write(content)
 
 print(f"File has been saved to {file_path}. Please check the file to see if the image is correctly reconstructed.")
 

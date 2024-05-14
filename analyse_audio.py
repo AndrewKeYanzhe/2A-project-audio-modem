@@ -10,8 +10,8 @@ import librosa
 import matplotlib.pyplot as plt
 
 # Path to your .m4a file
-file_path = "/Users/andrewke/Library/CloudStorage/OneDrive-UniversityofCambridge/2A Audio modem/2A Project - Audio modem Repo/recordings/chirp_lib.m4a"
-file_path2 = "/Users/andrewke/Library/CloudStorage/OneDrive-UniversityofCambridge/2A Audio modem/2A Project - Audio modem Repo/recordings/ZOOM0009.WAV"
+file_path = "recordings/chirp_lib.m4a"
+file_path2 = "recordings/ZOOM0009.WAV"
 
 
 # Load the audio file

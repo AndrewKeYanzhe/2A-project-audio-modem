@@ -2,19 +2,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import chirp, spectrogram
 import sounddevice as sd
+from scipy.io.wavfile import write
 
 # Parameters
 duration = 5.0  # seconds
-fs = 44100  # Sampling rate, Hz
+fs = 48000  # Sampling rate, Hz
 f0 = 20  # Start frequency, Hz
 f1 = 20000  # End frequency, Hz
 t = np.linspace(0, duration, int(fs * duration))  # Time array
 
 # Generate chirp signal
 signal = chirp(t, f0, duration, f1, method='linear')
+# Normalize signal to 16-bit integer values
+signal_int = np.int16(signal / np.max(np.abs(signal)) * 32767)
 
 # Normalize signal to ensure it is within the proper range for playing
 signal_normalized = signal / np.max(np.abs(signal))
+
+# Save the signal as a WAV file
+wav_file = 'recordings/linear_chirp.wav'
+write(wav_file, fs, signal_int)
 
 # Play the signal
 sd.play(signal_normalized, fs)

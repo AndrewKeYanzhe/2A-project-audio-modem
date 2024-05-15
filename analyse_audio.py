@@ -10,7 +10,7 @@ import librosa
 import matplotlib.pyplot as plt
 
 # Path to your .m4a file
-file_path = "recordings/barker_code_long.m4a"
+file_path = "recordings/chirp_1k_3k.m4a"
 file_path2 = "recordings/ZOOM0009.WAV"
 
 

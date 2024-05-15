@@ -68,7 +68,8 @@ for block in blocks:
     x_n = channel_compensation(r_n, g_n)
 
     # Demap QPSK symbols to binary data
-    binary_data = qpsk_demapper(x_n[1:(block_size//2)])  # Assuming data is only in these bins
+    binary_data = qpsk_demapper(x_n)
+    # binary_data = qpsk_demapper(x_n[0:(block_size//2)])  # Assuming data is only in these bins
     complete_binary_data += binary_data
 
 print("Recovered Binary Data Length:", len(complete_binary_data))

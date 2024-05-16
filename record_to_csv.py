@@ -1,12 +1,24 @@
 import sounddevice as sd
 
+sampling_rate=48000
+record_duration=sampling_rate*60
 
-numsamples=48000
-
-recording = sd.rec(numsamples, 48000, channels=1, dtype='int16')
+recording = sd.rec(record_duration, sampling_rate, channels=1, dtype='int16')
 # sd.wait()
 
-recording = recording[:-int(len(recording)*0.2)]
+
+def truncate_list(lst):
+    # Find index of first value larger than 2000
+    index = next((i for i, val in enumerate(lst) if abs(val) > 2000), None)
+    if index is not None:
+        # Truncate the list from that index onwards
+        return lst[:index]
+    else:
+        # If no value larger than 2000 found, return the original list
+        return lst
+
+# recording = recording[:-int(len(recording)*0.2)]
+# recording=truncate_list(recording)
 
 for row in recording:
     print(row)

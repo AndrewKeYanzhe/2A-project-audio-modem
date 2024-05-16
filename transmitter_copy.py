@@ -92,7 +92,7 @@ filename = "chirp_lib.m4a"
 binary_data = audio_to_binary_with_header(audio_data, filename)
     
     # Parameters
-block_size = 1024  # Each block should contain 511 symbols
+block_size = 511  # Each block should contain 511 symbols
 prefix_length = 32
     
     # Split data into blocks, append cyclic prefix, and combine blocks

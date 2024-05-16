@@ -15,6 +15,8 @@ import soundfile as sf
 import numpy  # Make sure NumPy is loaded before it is used in the callback
 assert numpy  # avoid "imported but unused" message (W0611)
 
+import librosa
+import matplotlib.pyplot as plt
 
 def int_or_str(text):
     """Helper function for argument parsing."""
@@ -25,6 +27,23 @@ def int_or_str(text):
 
 def process_audio():
     print("hi")
+
+    file_path = args.filename
+
+    audio_data, sr = librosa.load(file_path, sr=None)
+    audio_data2, sr2 = librosa.load(file_path, sr=None)
+
+
+    # Plot the waveform
+    plt.figure(figsize=(12, 4))
+    plt.plot(audio_data2, label=file_path.split('/')[-1])
+    # plt.plot(audio_data2, label=file_path2.split('/')[-1])
+    plt.xlabel("Sample")
+    plt.ylabel("Amplitude")
+    plt.title("Waveforms of {} and {}".format(file_path.split('/')[-1], file_path.split('/')[-1]))
+    plt.legend()  # Show legend with file names
+    plt.show()
+    print(type)
 
 
 parser = argparse.ArgumentParser(add_help=False)

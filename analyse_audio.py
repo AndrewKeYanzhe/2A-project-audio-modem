@@ -24,8 +24,8 @@ import librosa
 import matplotlib.pyplot as plt
 
 # Path to your .m4a file
-file_path = "recordings/chirp_lib.m4a"
-file_path2 = "recordings/ZOOM0009.WAV"
+file_path = "recordings/mac_recording.m4a"
+file_path2 = "recordings/chirp_1k_3k.m4a"
 
 
 # Load the audio file

@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 # Path to your .m4a file
 file_path = "recordings/chirp_lib.m4a"
-file_path2 = "recordings/ZOOM0009.WAV"
+file_path2 = "recordings/linear_chirp.wav"
 
 
 # Load the audio file

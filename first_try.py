@@ -45,7 +45,7 @@ def qpsk_demapper(compensated_symbols):
 
 # Load the channel impulse response and the received signal
 channel_impulse_response = load_data('channel.csv')
-received_signal = load_data('file1.csv')
+received_signal = load_data('./files/received.csv')
 
 # Parameters
 prefix_length = 32
@@ -106,7 +106,7 @@ print(content[0:10])
 
 
 # Save the byte array to a TIFF file
-file_path = './files/3829010287.tiff'
+file_path = './files/test_transmitter.m4a'
 with open(file_path, 'wb') as file:
     file.write(content)
 

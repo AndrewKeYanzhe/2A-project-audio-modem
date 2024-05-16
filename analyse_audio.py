@@ -15,8 +15,8 @@ file_path2 = "recordings/ZOOM0009.WAV"
 
 
 # Load the audio file
-audio_data, sr = librosa.load(file_path)
-audio_data2, sr2 = librosa.load(file_path2)
+audio_data, sr = librosa.load(file_path, sr=None)
+audio_data2, sr2 = librosa.load(file_path2, sr=None)
 
 
 # Plot the waveform

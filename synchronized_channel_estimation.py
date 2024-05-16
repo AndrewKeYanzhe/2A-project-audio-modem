@@ -98,6 +98,12 @@ def calculate_and_plot_frequency_responses(transmitted, received, fs, f_low, f_h
 
     # Phase of the frequency response (in degrees)
     phase_response = np.angle(frequency_response, deg=True)
+    plt.figure(figsize=(14, 5))
+    plt.plot(frequencies_filtered, phase_response)
+    plt.title('Phase Response of the Channel')
+    plt.xlabel('Frequency (Hz)')
+    plt.ylabel('Phase (Degrees)')
+    plt.show()
 
     # Plot magnitude spectra of transmitted and received signals
     plt.figure(figsize=(14, 5))

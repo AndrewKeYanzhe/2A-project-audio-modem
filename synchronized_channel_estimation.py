@@ -67,8 +67,7 @@ def plot_time_domain_signals(transmitted, realligned_received, delay,transmitted
     
     plt.tight_layout()
     plt.show()
-import numpy as np
-import matplotlib.pyplot as plt
+
 
 def calculate_and_plot_frequency_responses(transmitted, received, fs, f_low, f_high):
     # Compute the length for FFT based on the input signal length
@@ -143,8 +142,8 @@ if __name__ == '__main__':
     fs=48000
     
     # File paths
-    transmitted_signal_path = 'recordings/transmitted_chirp_1k_3k_2s.wav'
-    received_signal_path = 'recordings/chirp_1k_3k.m4a'  # Using the same signal for testing
+    transmitted_signal_path = 'recordings/transmitted_linear_chirp_with_prefix_and_silence.wav'
+    received_signal_path = 'recordings/received_linear_chirp_with_prefix_and_silence.m4a'
 
     # Load audio files
     transmitted_signal, sr_trans = librosa.load(transmitted_signal_path, sr=None)
@@ -158,7 +157,7 @@ if __name__ == '__main__':
     transmitted, realligned_received, delay,transmitted_signal_length = sync(transmitted_signal, received_signal, f_low, f_high, sr_trans)
 
     # Plot time domain signals
-    # plot_time_domain_signals(transmitted_signal_path, received_signal_path,transmitted_signal_length, f_low, f_high)
+    plot_time_domain_signals(transmitted, realligned_received,delay, transmitted_signal_length, f_low, f_high)
 
     #Plot frequency responses
-    calculate_and_plot_frequency_responses(transmitted, realligned_received,fs, f_low, f_high)
+    # calculate_and_plot_frequency_responses(transmitted, realligned_received,fs, f_low, f_high)

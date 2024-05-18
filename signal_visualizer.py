@@ -40,8 +40,8 @@ def plot_signals(transmitted_signal_path, received_signal_path):
     plt.show()
 
 # File paths (Replace 'path_to_files' with the actual path to your audio files)
-transmitted_signal_path = 'recordings/transmitted_chirp_1k_3k_2s.wav'
-received_signal_path = 'recordings/chirp_1k_3k.m4a'
+transmitted_signal_path = 'recordings/transmitted_5.26pm.wav'
+received_signal_path = 'recordings/received_5.26pm.m4a'
 
 # Call the function to plot the signals
 plot_signals(transmitted_signal_path, received_signal_path)
@@ -53,7 +53,7 @@ def plot_spectrogram(signal, fs, title):
     plt.xlabel('Time [s]')
     plt.title(title)
     plt.colorbar(label='Intensity [dB]')
-    plt.ylim(500, 4000)  # Limit frequency axis to half the sampling rate
+    plt.ylim(10, 10000)  # Limit frequency axis to half the sampling rate
 
 def load_and_plot_spectrograms(transmitted_path, received_path):
     # Load audio files

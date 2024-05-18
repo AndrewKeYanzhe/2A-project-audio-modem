@@ -106,7 +106,7 @@ print(content[0:10])
 
 
 # Save the byte array to a TIFF file
-file_path = './files/test_transmitter.m4a'
+file_path = './files/test_linear_chirp.wav'
 with open(file_path, 'wb') as file:
     file.write(content)
 

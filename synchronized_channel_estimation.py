@@ -15,8 +15,6 @@ def bandpass_filter(signal, lowcut, highcut, fs, order=5):
 # Define the sync function to align signals with zero padding
 def sync(transmitted_signal, received_signal, f_low, f_high, fs):
     # Bandpass filtering both signals
-    transmitted_signal = bandpass_filter(transmitted_signal, f_low, f_high, fs)
-    received_signal = bandpass_filter(received_signal, f_low, f_high, fs)
     
     # Matched filtering to find correlation
     correlation = np.correlate(received_signal, transmitted_signal, mode='full')
@@ -137,13 +135,13 @@ def calculate_and_plot_frequency_responses(transmitted, received, fs, f_low, f_h
 if __name__ == '__main__':
     
     # Parameters
-    f_low = 1000
-    f_high = 3000
+    f_low = 20
+    f_high = 5000
     fs=48000
     
     # File paths
-    transmitted_signal_path = 'recordings/transmitted_linear_chirp_with_prefix_and_silence.wav'
-    received_signal_path = 'recordings/received_linear_chirp_with_prefix_and_silence.m4a'
+    transmitted_signal_path = 'recordings/transmitted_chirp_1k_3k_2s.wav'
+    received_signal_path = 'recordings/chirp_1k_3k.m4a'
 
     # Load audio files
     transmitted_signal, sr_trans = librosa.load(transmitted_signal_path, sr=None)

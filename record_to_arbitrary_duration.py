@@ -1,11 +1,13 @@
-#!/usr/bin/env python3
 """
 
-This code records audio of an arbitrary duration, stopped by pressing "ctrl c"
+The function 'record_audio' records audio of an arbitrary duration, stopped by pressing "ctrl c"
+The audio is recorded to a .wav file, and the file_path is returned.
 
-The audio is recorded to a .wav file, and this .wav file is read into a list. 
+The function 'plot_waveform' plots the waveform of the recorded audio
 
-Receiver code can be integrated by add into the plot_waveform() function. 
+example usage:
+# recording_path = record_audio()
+# plot_waveform()
 
 """
 import argparse
@@ -119,8 +121,6 @@ def record_audio():
         parser.exit(type(e).__name__ + ': ' + str(e))
 
 
-recording_path = record_audio()
-# print(recording_path)
-# print("end")
-plot_waveform()
-audio_to_csv(recording_path)
+# recording_path = record_audio()
+# plot_waveform()
+# audio_to_csv(recording_path)

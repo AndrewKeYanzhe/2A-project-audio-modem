@@ -1,5 +1,5 @@
 """ 
-audio_to_csv creates a csv file from an audio file
+the function audio_to_csv(file_path) creates a csv file from an audio file
 input is path to audio
 output is <audio_filename>.csv
 """

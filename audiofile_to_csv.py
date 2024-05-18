@@ -1,3 +1,8 @@
+"""
+This code reads an audio file and writes the list to a csv file
+"""
+
+
 import librosa
 import csv
 import numpy as np

@@ -5,7 +5,7 @@ This code records audio of an arbitrary duration, stopped by pressing "ctrl c"
 
 The audio is recorded to a .wav file, and this .wav file is read into a list. 
 
-Receiver code can be integrated by add into the process_audio() function. 
+Receiver code can be integrated by add into the plot_waveform() function. 
 
 """
 import argparse
@@ -21,6 +21,8 @@ assert numpy  # avoid "imported but unused" message (W0611)
 import librosa
 import matplotlib.pyplot as plt
 
+from audiofile_to_csv import *
+
 def int_or_str(text):
     """Helper function for argument parsing."""
     try:
@@ -28,8 +30,8 @@ def int_or_str(text):
     except ValueError:
         return text
 
-def process_audio():
-    print("hi")
+def plot_waveform():
+    # print("hi")
 
     file_path = args.filename
 
@@ -46,7 +48,8 @@ def process_audio():
     plt.title("Waveforms of {} and {}".format(file_path.split('/')[-1], file_path.split('/')[-1]))
     plt.legend()  # Show legend with file names
     plt.show()
-    print(type)
+    # print(type)
+
 
 
 parser = argparse.ArgumentParser(add_help=False)
@@ -84,33 +87,40 @@ def callback(indata, frames, time, status):
         print(status, file=sys.stderr)
     q.put(indata.copy())
 
+def record_audio():
 
-try:
-    if args.samplerate is None:
-        device_info = sd.query_devices(args.device, 'input')
-        # soundfile expects an int, sounddevice provides a float:
-        # args.samplerate = int(device_info['default_samplerate'])
-        args.samplerate = 48000
-    if args.filename is None:
-        args.filename = tempfile.mktemp(prefix='delme_rec_unlimited_',
-                                        suffix='.wav', dir='')
-        # args.filename = "unlimited_duration.wav"
+    try:
+        if args.samplerate is None:
+            device_info = sd.query_devices(args.device, 'input')
+            # soundfile expects an int, sounddevice provides a float:
+            # args.samplerate = int(device_info['default_samplerate'])
+            args.samplerate = 48000
+        if args.filename is None:
+            args.filename = tempfile.mktemp(prefix='delme_rec_unlimited_',
+                                            suffix='.wav', dir='')
+            # args.filename = "unlimited_duration.wav"
 
-    # Make sure the file is opened before recording anything:
-    with sf.SoundFile(args.filename, mode='x', samplerate=args.samplerate,
-                      channels=args.channels, subtype=args.subtype) as file:
-        with sd.InputStream(samplerate=args.samplerate, device=args.device,
-                            channels=args.channels, callback=callback):
-            print('#' * 80)
-            print('press Ctrl+C to stop the recording')
-            print('#' * 80)
-            while True:
-                file.write(q.get())
-except KeyboardInterrupt:
-    print('\nRecording finished: ' + repr(args.filename))
-    process_audio()
-    parser.exit(0)
-except Exception as e:
-    parser.exit(type(e).__name__ + ': ' + str(e))
+        # Make sure the file is opened before recording anything:
+        with sf.SoundFile(args.filename, mode='x', samplerate=args.samplerate,
+                        channels=args.channels, subtype=args.subtype) as file:
+            with sd.InputStream(samplerate=args.samplerate, device=args.device,
+                                channels=args.channels, callback=callback):
+                print('#' * 80)
+                print('press Ctrl+C to stop the recording')
+                print('#' * 80)
+                while True:
+                    file.write(q.get())
+    except KeyboardInterrupt:
+        print('\nRecording finished: ' + repr(args.filename))
+        
+        return args.filename
+        parser.exit(0)
+    except Exception as e:
+        parser.exit(type(e).__name__ + ': ' + str(e))
 
 
+recording_path = record_audio()
+# print(recording_path)
+# print("end")
+plot_waveform()
+audio_to_csv(recording_path)

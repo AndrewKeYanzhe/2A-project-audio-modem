@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-"""Create a recording with arbitrary duration.
+"""
 
-The soundfile module (https://python-soundfile.readthedocs.io/)
-has to be installed!
+This code records audio of an arbitrary duration, stopped by pressing "ctrl c"
+
+The audio is recorded to a .wav file, and this .wav file is read into a list. 
+
+Receiver code can be integrated by add into the process_audio() function. 
 
 """
 import argparse
@@ -86,7 +89,8 @@ try:
     if args.samplerate is None:
         device_info = sd.query_devices(args.device, 'input')
         # soundfile expects an int, sounddevice provides a float:
-        args.samplerate = int(device_info['default_samplerate'])
+        # args.samplerate = int(device_info['default_samplerate'])
+        args.samplerate = 48000
     if args.filename is None:
         args.filename = tempfile.mktemp(prefix='delme_rec_unlimited_',
                                         suffix='.wav', dir='')

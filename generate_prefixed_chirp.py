@@ -1,3 +1,9 @@
+"""
+Generate a linear chirp signal with a circular prefix and silence.
+The signal is saved as a WAV file and plotted in the time domain.
+Don't forget to replace the path to the saved WAV file with your own path.
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.io.wavfile import write

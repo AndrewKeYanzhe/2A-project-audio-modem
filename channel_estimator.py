@@ -304,6 +304,8 @@ if __name__ == '__main__':
     
     signal_processor = AnalogueSignalProcessor(transmitted_signal_path, received_signal_path, f_low, f_high)
     signal_processor.load_audio_files()
-    delay = signal_processor.find_delay(plot=True) # Note, I didn't provide the start and end times
+    # For delay calcualtion: you will need to add the chirp start and end times
+    # when your received signal comes with the information bits - make it faster!
+    delay = signal_processor.find_delay(plot=True) 
     frequency_bins, frequency_response = signal_processor.get_frequency_response(chirp_start_time, chirp_end_time, plot=True)
     FIR = signal_processor.get_FIR(plot=True, truncate=True, file_path='FIR_filters/5.26pm.csv')

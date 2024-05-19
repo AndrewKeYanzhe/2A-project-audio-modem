@@ -120,7 +120,8 @@ def record_audio():
     except Exception as e:
         parser.exit(type(e).__name__ + ': ' + str(e))
 
+if __name__ == "__main__":
 
-# recording_path = record_audio()
-# plot_waveform()
-# audio_to_csv(recording_path)
+    recording_path = record_audio()
+    plot_waveform()
+    audio_to_csv(recording_path)

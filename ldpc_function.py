@@ -47,7 +47,7 @@ def decode_ldpc(signal):
     app, it = c.decode(y)
 
     # Check the number of iterations taken by the decoder
-    print("iterations",it)  # Output: 0
+    # print("iterations",it)  # Output: 0
 
     output = np.where(app < 0, 1, 0)
     output=output[0:324]
@@ -69,6 +69,8 @@ if __name__ == "__main__":
     print("padded data\n",data)
 
     y=encode_ldpc(data)
+
+    print("length of encoded data ",len(y))
 
     print("y before flipping\n",y)
     y=flip_bits(y,6) 

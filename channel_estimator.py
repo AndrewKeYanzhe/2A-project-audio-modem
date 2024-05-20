@@ -98,6 +98,9 @@ class AnalogueSignalProcessor:
             logging.info('Bandpass filtering the signals (for matched filtering only), f_low = {}, f_high = {}'.format(self.f_low, self.f_high))
             filtered_trans = bandpass_filter(self.trans, self.f_low, self.f_high, self.fs)
             filtered_recv = bandpass_filter(truncated_recv, self.f_low, self.f_high, self.fs)
+        else:
+            filtered_trans = self.trans
+            filtered_recv = truncated_recv
         
         # Matched filtering to find correlation
         logging.info('Finding delay... (If this takes too long, you can specify the range to search for delay by providing start_time and end_time to truncate the received signal)')

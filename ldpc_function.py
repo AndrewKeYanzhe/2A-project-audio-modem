@@ -16,9 +16,11 @@ the transmitted block is 2x the size of the data block
 the transmitted block has to be a multiple of 24 (see /py/ldpc.py)
 1008 is chosen so that it fits within the 1022 bits ofdm data block
 
-hence the data block has to be of length 504
+hence the ldpc input data block has to be of length 504
 
-encode_ldpc(data) returns the 1008 length transmission block
+encode_ldpc(data) 
+    accepts 504 length data list
+    returns the 1008 length transmission block
 decode_ldpc(signal) does the inverse
 """
 

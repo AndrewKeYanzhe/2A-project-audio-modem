@@ -8,6 +8,18 @@ on mac:
 gcc -lm -shared -fPIC -o bin/c_ldpc.so src/c_ldpc.c
 gcc -o bin/results2csv src/results2csv.c
 
+Usage
+-------------------------
+
+the transmitted block is 2x the size of the data block
+
+the transmitted block has to be a multiple of 24 (see /py/ldpc.py)
+504 is chosen so that it fits within the 511 ofdm data block
+
+hence the data block has to be of length 252
+
+encode_ldpc(data) returns the 504 length transmission block
+decode_ldpc(signal) does the inverse
 """
 
 
@@ -16,7 +28,7 @@ import py.ldpc as ldpc
 import numpy as np
 
 # Create an LDPC code object
-c = ldpc.code()
+c = ldpc.code(standard = '802.16', rate = '1/2', z=21, ptype='A')
 
 def flip_bits(bit_list, percentage=5):
     # Calculate the number of bits to flip
@@ -50,7 +62,7 @@ def decode_ldpc(signal):
     # print("iterations",it)  # Output: 0
 
     output = np.where(app < 0, 1, 0)
-    output=output[0:324]
+    output=output[0:252]
 
     return output
 
@@ -64,13 +76,13 @@ if __name__ == "__main__":
     # data = np.random.randint(0, 2, c.K)
     data = [0,0,1,1]
 
-    data = np.pad(data, (0, 324 - len(data)), 'constant', constant_values=(0, 0)) #length must be 324
+    data = np.pad(data, (0, 252 - len(data)), 'constant', constant_values=(0, 0)) #length must be 252
 
     print("padded data\n",data)
 
     y=encode_ldpc(data)
 
-    print("length of encoded data ",len(y))
+    
 
     print("y before flipping\n",y)
     y=flip_bits(y,6) 
@@ -79,6 +91,7 @@ if __name__ == "__main__":
     output = decode_ldpc(y)
     print(output)
     print("length of output ",len(output))
+    print("length of encoded data ",len(y))
 
     #run 100 times
     errors = 0

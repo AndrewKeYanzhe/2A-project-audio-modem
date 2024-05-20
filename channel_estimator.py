@@ -175,6 +175,9 @@ class AnalogueSignalProcessor:
         truncated_trans = self.trans[start_index:end_index]
         truncated_recv = self.recv[self.delay+start_index:self.delay+end_index]
         
+        # Temporary code to calculate the direct FIR filter
+        self.direct_FIR(truncated_trans, truncated_recv, plot=True, file_path='FIR_filters/direct_5.56pm.csv', truncate=True)
+        
         # Compute the length for FFT based on the input signal length
         max_length = len(truncated_trans)  # Assuming transmitted and received are of the same length
 
@@ -277,6 +280,40 @@ class AnalogueSignalProcessor:
         if self.fir_filter.shape[0] > self.fs*1.0:
             logging.warning('Invalid FIR filter length > 1 second')
         return self.fir_filter
+    def direct_FIR(self, chirp_trans, chirp_recv, plot=False, file_path=None, truncate=False):
+        """
+        Compute the FIR by cross-correlating the chirp section of the transmitted and received signals.
+        """
+        logging.info('Computing direct FIR filter...')
+        # Calculate the correlation function between the chirp sections of the transmitted and received signals
+        correlation = np.correlate(chirp_recv, chirp_trans, mode='full')
+        
+        if plot:
+            plt.figure(figsize=(8, 6))
+            plt.plot(correlation)
+            plt.title('Direct FIR Filter Calculation')
+            plt.xlabel('Samples')
+            plt.ylabel('Amplitude')
+            plt.show()
+            
+        if truncate:
+            logging.info('Truncating the direc FIR filter to contain 90% of the energy.')
+            # Truncate the FIR filter to contain 90% of the energy
+            energy = np.sum(correlation**2)
+            cumulative_energy = 0
+            for i in range(len(correlation)):
+                cumulative_energy += correlation[i]**2
+                if cumulative_energy / energy >= 0.9:
+                    break
+            correlation = correlation[:i]
+            logging.info('Truncated direct FIR filter length = {}'.format(i))
+        
+        if file_path:
+            logging.info('Saving FIR filter to {}'.format(file_path))
+            pd.DataFrame(correlation).to_csv(file_path, index=False)
+        
+        return correlation
+    
     
 if __name__ == '__main__':
     
@@ -290,8 +327,8 @@ if __name__ == '__main__':
     chirp_start_time = 2.0
     chirp_end_time = 7.0
     # File paths
-    transmitted_signal_path = 'recordings/transmitted_5.26pm.wav'
-    received_signal_path = 'recordings/received_5.26pm.m4a'
+    transmitted_signal_path = 'recordings/transmitted_5.56pm.wav'
+    received_signal_path = 'recordings/received_5.56pm.m4a'
     
     # # Test Parameters
     # f_low = 1000

@@ -1,3 +1,7 @@
+# bin, data, py and src folders are from ldpc
+
+# Doesn't seem to work on windows
+
 # ldpc
 This package contains an implementation of encoders and 
 decoders for the low-density parity-check (LDPC) codes

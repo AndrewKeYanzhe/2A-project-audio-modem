@@ -41,6 +41,10 @@ from scipy.signal import butter, filtfilt
 import librosa
 import pandas as pd
 import logging
+import time
+
+import scipy.signal
+
 
 # Define the bandpass filter
 def bandpass_filter(signal, lowcut, highcut, fs, order=5):
@@ -104,7 +108,19 @@ class AnalogueSignalProcessor:
         
         # Matched filtering to find correlation
         logging.info('Finding delay... (If this takes too long, you can specify the range to search for delay by providing start_time and end_time to truncate the received signal)')
-        correlation = np.correlate(filtered_recv, filtered_trans, mode='full')
+        start_time = time.time()
+
+        # correlation = np.correlate(filtered_recv, filtered_trans, mode='full')
+        correlation = scipy.signal.correlate(filtered_recv, filtered_trans, mode='full') #much faster than numpy.correlate which does not use fft
+
+
+
+        end_time = time.time()
+
+        execution_time = end_time - start_time
+        print("Execution time:", execution_time, "seconds")
+        
+        
         # Finding delay
         relative_delay = np.argmax(correlation) - (len(self.trans) - 1)
         self.delay = relative_delay + start_time*self.fs if start_time else relative_delay

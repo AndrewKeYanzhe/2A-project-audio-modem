@@ -14,11 +14,11 @@ Usage
 the transmitted block is 2x the size of the data block
 
 the transmitted block has to be a multiple of 24 (see /py/ldpc.py)
-504 is chosen so that it fits within the 511 ofdm data block
+1008 is chosen so that it fits within the 1022 bits ofdm data block
 
-hence the data block has to be of length 252
+hence the data block has to be of length 504
 
-encode_ldpc(data) returns the 504 length transmission block
+encode_ldpc(data) returns the 1008 length transmission block
 decode_ldpc(signal) does the inverse
 """
 
@@ -27,8 +27,18 @@ import random
 import py.ldpc as ldpc
 import numpy as np
 
+np.set_printoptions(threshold=np.inf)
+
+
 # Create an LDPC code object
-c = ldpc.code(standard = '802.16', rate = '1/2', z=21, ptype='A')
+
+encoded_block_length = 1008
+data_block_length = int(encoded_block_length/2)
+z=int(1008/24)
+
+c = ldpc.code(standard = '802.16', rate = '1/2', z=z, ptype='A')
+
+
 
 def flip_bits(bit_list, percentage=5):
     # Calculate the number of bits to flip
@@ -45,7 +55,7 @@ def flip_bits(bit_list, percentage=5):
     return bit_list
 
 
-def encode_ldpc(data): #data must be of length 324
+def encode_ldpc(data): 
     x = c.encode(data)
     # print(len(x), "seems to be twice as long")
     # print("x\n",x)
@@ -62,7 +72,7 @@ def decode_ldpc(signal):
     # print("iterations",it)  # Output: 0
 
     output = np.where(app < 0, 1, 0)
-    output=output[0:252]
+    output=output[0:data_block_length]
 
     return output
 
@@ -76,7 +86,7 @@ if __name__ == "__main__":
     # data = np.random.randint(0, 2, c.K)
     data = [0,0,1,1]
 
-    data = np.pad(data, (0, 252 - len(data)), 'constant', constant_values=(0, 0)) #length must be 252
+    data = np.pad(data, (0, data_block_length - len(data)), 'constant', constant_values=(0, 0)) 
 
     print("padded data\n",data)
 
@@ -85,11 +95,15 @@ if __name__ == "__main__":
     
 
     print("y before flipping\n",y)
+
+    
     y=flip_bits(y,6) 
+
+
     print("y after flipping\n",y)
 
     output = decode_ldpc(y)
-    print(output)
+    print("decoded data\n",output)
     print("length of output ",len(output))
     print("length of encoded data ",len(y))
 

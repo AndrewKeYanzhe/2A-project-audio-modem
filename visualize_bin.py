@@ -18,6 +18,6 @@ binary_string1 = bytes_to_binary_string(byte_data1)
 binary_string2 = bytes_to_binary_string(byte_data2)
 
 # Output the binary string (first 100 bits for demonstration)
-print("Binary String1 (first 500 bits):", binary_string1[0:170])
-print("Binary String2 (first 500 bits):", binary_string2[0:170])
+print("Binary String1 (first 500 bits):", binary_string1[0:2000])
+print("Binary String2 (first 500 bits):", binary_string2[0:2000])
 

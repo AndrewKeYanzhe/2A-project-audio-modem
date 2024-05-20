@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from channel_estimator import AnalogueSignalProcessor
+import logging
 """
     The Receiver class processes an OFDM signal to recover binary data, convert it to bytes,
     and save it to a file. It handles loading data, removing cyclic prefixes, applying FFT,
@@ -130,6 +131,16 @@ class Receiver:
         file_content = bytes_data[start_of_image_data:start_of_image_data + file_size]
 
         return filename, file_size, file_content
+    def binary_to_bin_file(self, binary_data, file_path):
+        """Convert binary string to a .bin file."""
+        padded_binary = binary_data + '0' * ((8 - len(binary_data) % 8) % 8)
+        byte_array = bytearray()
+        for i in range(0, len(padded_binary), 8):
+            byte_part = padded_binary[i:i + 8]
+            byte_array.append(int(byte_part, 2))
+        with open(file_path, 'wb') as bin_file:
+            bin_file.write(byte_array)
+        print(f"Binary data has been saved to {file_path}.")
 
     def save_file(self, file_path, content):
         """Save the content to a file."""
@@ -151,26 +162,34 @@ print(content[0:10])
 output_file_path = './files/test_image_received.tiff'
 receiver.save_file(output_file_path, content)
 """
+#record the input audio
+
+
+
+
+
 
 # Example usage with AnalogueSignalProcessor
 
 # Initialize AnalogueSignalProcessor with the chirp signals
-chirp_transmitted_path = './files/transmitted_chirp.wav'
-received_signal_path = './files/received_signal_with_chirp.wav'
-asp = AnalogueSignalProcessor(chirp_transmitted_path, received_signal_path)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+chirp_transmitted_path = './recordings/transmitted_linear_chirp_with_prefix_and_silence.wav'
+received_signal_path = './recordings/0520TestRecordings.m4a'
+asp = AnalogueSignalProcessor(chirp_transmitted_path, received_signal_path,20,8000)
 
 # Load the chirp signals
 asp.load_audio_files()
 
 # Find the delay
-delay = asp.find_delay(plot=True)
+delay = asp.find_delay(0,10,plot=True)
 
 # Trim the received signal
 start_index = int(delay)
-received_signal_trimmed = asp.recv[start_index:]
+received_signal_trimmed = asp.recv[start_index+8*48000:]
 
 # Save the trimmed signal to a new file (or directly process it)
 trimmed_signal_path = './files/trimmed_signal.csv'
+print("Saving trimmed signal to:", trimmed_signal_path)
 pd.DataFrame(received_signal_trimmed).to_csv(trimmed_signal_path, index=False, header=False)
 
 # Compute the frequency response
@@ -183,14 +202,19 @@ impulse_response = asp.get_FIR(plot=True, truncate=True)
 
 
 # Initialize Receiver with the trimmed signal
-receiver = Receiver(channel_impulse_response=impulse_response, received_file=trimmed_signal_path, prefix_length=32, block_size=1024)
+print("strat demodulating ")
+receiver = Receiver(channel_file =trimmed_signal_path, received_file=trimmed_signal_path,channel_impulse_response=impulse_response, prefix_length=32, block_size=1024)
+
 binary_data = receiver.process_signal()
-bytes_data = receiver.binary_to_bytes(binary_data)
-filename, file_size, content = receiver.parse_bytes_data(bytes_data)
-print("Filename:", filename)
-print("File Size:", file_size)
-print(content[0:10])
+filepath3='./files/received_image.bin'
+binfile = receiver.binary_to_bin_file(binary_data, filepath3)
+
+# bytes_data = receiver.binary_to_bytes(binary_data)
+# filename, file_size, content = receiver.parse_bytes_data(bytes_data)
+# print("Filename:", filename)
+# print("File Size:", file_size)
+# print(content[0:10])
 
 # Save the byte array to a file
-output_file_path = './files/test_image_received.tiff'
-receiver.save_file(output_file_path, content)
+# output_file_path = './files/test_image_received.tiff'
+# receiver.save_file(output_file_path, content)

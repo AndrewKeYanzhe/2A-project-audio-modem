@@ -40,8 +40,8 @@ def plot_signals(transmitted_signal_path, received_signal_path):
     plt.show()
 
 # File paths (Replace 'path_to_files' with the actual path to your audio files)
-transmitted_signal_path = 'recordings/transmitted_5.26pm.wav'
-received_signal_path = 'recordings/received_5.26pm.m4a'
+transmitted_signal_path = './files/transmitted_data.csv'
+received_signal_path = './files/transmitted_data.csv'
 
 # Call the function to plot the signals
 plot_signals(transmitted_signal_path, received_signal_path)

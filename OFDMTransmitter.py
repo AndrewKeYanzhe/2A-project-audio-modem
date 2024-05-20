@@ -78,7 +78,7 @@ class OFDMTransmitter:
 
     def audio_to_binary(self, audio_data):
         """Convert audio data to a binary string."""
-        binary_data = ''.join(format(byte, '08b') for byte in audio_data.astype(np.uint8))
+        binary_data = ''.join(format(byte, '08b') for byte in audio_data)
         return binary_data
 
     def file_data_to_binary_with_header(self, binary_data, filename):
@@ -122,18 +122,24 @@ class OFDMTransmitter:
         combined_signal = np.concatenate((chirp_data, signal))
         sd.play(combined_signal, samplerate=fs)
         sd.wait()
+    def just_play_signal(self, signal, fs):
+        sd.play(signal, samplerate=fs)
+        sd.wait()
 
 
 # Example usage
 transmitter = OFDMTransmitter()
 
 # Load the binary data from file
-file_path1 = './files/test.tiff'
+file_path1 = './files/binary_blocks_test_file.bin'
 data = transmitter.load_binary_data(file_path1)
 
 # Convert file data to binary with header
-filename = "files/test.tiff"
-binary_data = transmitter.file_data_to_binary_with_header(data, filename)
+filename = "transmitted_5.26pm.wav"
+#if with header
+#binary_data = transmitter.file_data_to_binary_with_header(data, filename)
+#if withouth header
+binary_data = transmitter.audio_to_binary(data)
 
 # Transmit the signal
 block_size = 511
@@ -154,12 +160,13 @@ chirp_data, chirp_sr = librosa.load('recordings/transmitted_linear_chirp_with_pr
 
 # Play the combined transmitted signal with chirp
 fs = 48000
-transmitter.play_signal(transmitted_signal, chirp_data, fs)
+transmitter.play_signal(transmitted_signal,chirp_data, fs)
 
 # Simulate receiving the signal
-channel_impulse_response = transmitter.load_data('./files/channel.csv')
-received_signal = transmitter.receive_signal(channel_impulse_response, transmitted_signal)
 
-# Save the received signal to a CSV file
-receive_csv_path = './files/received_with_channel.csv'
-transmitter.save_to_csv(receive_csv_path, received_signal)
+# channel_impulse_response = transmitter.load_data('./files/channel.csv')
+# received_signal = transmitter.receive_signal(channel_impulse_response, transmitted_signal)
+
+# # Save the received signal to a CSV file
+# receive_csv_path = './files/received_with_channel.csv'
+# transmitter.save_to_csv(receive_csv_path, received_signal)

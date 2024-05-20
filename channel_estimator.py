@@ -176,7 +176,7 @@ class AnalogueSignalProcessor:
         truncated_recv = self.recv[self.delay+start_index:self.delay+end_index]
         
         # Temporary code to calculate the direct FIR filter
-        self.direct_FIR(truncated_trans, truncated_recv, plot=True, file_path='FIR_filters/direct_5.56pm.csv', truncate=True)
+        # self.direct_FIR(truncated_trans, truncated_recv, plot=True, file_path='FIR_filters/direct_5.56pm.csv', truncate=True)
         
         # Compute the length for FFT based on the input signal length
         max_length = len(truncated_trans)  # Assuming transmitted and received are of the same length
@@ -187,7 +187,7 @@ class AnalogueSignalProcessor:
         fft_received = np.fft.rfft(truncated_recv, n=max_length)
         
         # Frequency bins
-        frequencies = np.fft.rfftfreq(max_length, 1/fs)
+        frequencies = np.fft.rfftfreq(max_length, 1/self.fs)
         self.frequencies = frequencies
         
         # Filter the frequencies to keep only the range from f_low to f_high, and zero out the rest

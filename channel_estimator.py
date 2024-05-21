@@ -85,6 +85,7 @@ class AnalogueSignalProcessor:
     def find_delay(self, start_time=None, end_time=None, plot=False):
         """
         Find the delay between the transmitted and received signals.
+        Note the start_time and end_time is what we use to truncate the received signal.
         """
         # Check if the signals are loaded
         if self.trans is None or self.recv is None:
@@ -108,18 +109,11 @@ class AnalogueSignalProcessor:
         
         # Matched filtering to find correlation
         logging.info('Finding delay... (If this takes too long, you can specify the range to search for delay by providing start_time and end_time to truncate the received signal)')
-        start_time = time.time()
-
-        # correlation = np.correlate(filtered_recv, filtered_trans, mode='full')
+        correlation_start_time = time.time()
         correlation = scipy.signal.correlate(filtered_recv, filtered_trans, mode='full') #much faster than numpy.correlate which does not use fft
-
-
-
-        end_time = time.time()
-
-        execution_time = end_time - start_time
-        print("Execution time:", execution_time, "seconds")
-        
+        correlation_end_time = time.time()
+        execution_time = correlation_end_time - correlation_start_time
+        logging.info(f"Execution time: {execution_time} seconds")
         
         # Finding delay
         relative_delay = np.argmax(correlation) - (len(self.trans) - 1)
@@ -295,7 +289,7 @@ class AnalogueSignalProcessor:
             
         # debug messages
         # write the following prints into logging
-        logging.info('FIR filter length:', len(self.fir_filter))
+        logging.info(f'FIR filter length:{len(self.fir_filter)}')
         if self.fir_filter.shape[0] > self.fs*1.0:
             logging.warning('Invalid FIR filter length > 1 second')
         return self.fir_filter

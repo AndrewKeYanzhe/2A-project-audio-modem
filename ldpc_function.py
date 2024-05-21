@@ -26,7 +26,7 @@ decode_ldpc(signal) does the inverse
 
 
 import random
-import py.ldpc as ldpc
+import ldpc.py.ldpc as ldpc
 import numpy as np
 
 np.set_printoptions(threshold=np.inf)

@@ -65,10 +65,13 @@ class AnalogueSignalProcessor:
         self.fs = None # Sampling rate - will be set after loading the signals
         self.trans = None # Transmitted signal array
         self.recv = None # Received signal array
+        self.trans_chirp = None # Chirp section of the transmitted signal
+        self.recv_chirp = None # Chirp section of the received signal
         self.delay = None # Delay between the signals
         self.frequency_response = None # Frequency response of the channel
         self.frequencies = None # Frequency bins
         self.fir_filter = None # FIR filter
+        self.direct_FIR = None # Direct FIR filter
     def load_audio_files(self):
         """
         Load the transmitted and received audio files, warning if the sampling rates are different.
@@ -182,22 +185,19 @@ class AnalogueSignalProcessor:
             f_low = 1000
             f_high = 10000
         
-        # truncate both signals
+        # truncate both signals to the chirp section
         start_index = int(chirp_start_time*self.fs)
         end_index = int(chirp_end_time*self.fs)
-        truncated_trans = self.trans[start_index:end_index]
-        truncated_recv = self.recv[self.delay+start_index:self.delay+end_index]
-        
-        # Temporary code to calculate the direct FIR filter
-        # self.direct_FIR(truncated_trans, truncated_recv, plot=True, file_path='FIR_filters/direct_5.56pm.csv', truncate=True)
+        self.trans_chirp = self.trans[start_index:end_index]
+        self.recv_chirp = self.recv[self.delay+start_index:self.delay+end_index]
         
         # Compute the length for FFT based on the input signal length
-        max_length = len(truncated_trans)  # Assuming transmitted and received are of the same length
+        max_length = len(self.trans_chirp)  # Assuming transmitted and received are of the same length
 
         logging.info('Computing frequency response...')
         # Compute FFT
-        fft_transmitted = np.fft.rfft(truncated_trans, n=max_length)
-        fft_received = np.fft.rfft(truncated_recv, n=max_length)
+        fft_transmitted = np.fft.rfft(self.trans_chirp, n=max_length)
+        fft_received = np.fft.rfft(self.recv_chirp, n=max_length)
         
         # Frequency bins
         frequencies = np.fft.rfftfreq(max_length, 1/self.fs)
@@ -293,39 +293,47 @@ class AnalogueSignalProcessor:
         if self.fir_filter.shape[0] > self.fs*1.0:
             logging.warning('Invalid FIR filter length > 1 second')
         return self.fir_filter
-    def direct_FIR(self, chirp_trans, chirp_recv, plot=False, file_path=None, truncate=False):
+    def get_direct_FIR(self, plot=False, file_path=None, truncate=False):
         """
         Compute the FIR by cross-correlating the chirp section of the transmitted and received signals.
         """
+        
+        # Check if the the chirp sections of the transmitted and received signals are available
+        if self.trans_chirp is None or self.recv_chirp is None:
+            logging.error('Chirp sections of the transmitted and received signals are not available. Find the delay first.')
+            return
         logging.info('Computing direct FIR filter...')
         # Calculate the correlation function between the chirp sections of the transmitted and received signals
-        correlation = np.correlate(chirp_recv, chirp_trans, mode='full')
+        correlation = scipy.signal.correlate(self.recv_chirp, self.trans_chirp, mode='full')
         
-        if plot:
-            plt.figure(figsize=(8, 6))
-            plt.plot(correlation)
-            plt.title('Direct FIR Filter Calculation')
-            plt.xlabel('Samples')
-            plt.ylabel('Amplitude')
-            plt.show()
+        # direct_FIR shoud be the shifted by len(self.trans.chirp) - 1
+        self.direct_FIR = np.roll(correlation, len(self.trans_chirp)-1)
             
         if truncate:
             logging.info('Truncating the direc FIR filter to contain 90% of the energy.')
             # Truncate the FIR filter to contain 90% of the energy
-            energy = np.sum(correlation**2)
+            energy = np.sum(self.direct_FIR**2)
             cumulative_energy = 0
-            for i in range(len(correlation)):
-                cumulative_energy += correlation[i]**2
+            for i in range(len(self.direct_FIR)):
+                cumulative_energy += self.direct_FIR[i]**2
                 if cumulative_energy / energy >= 0.9:
                     break
-            correlation = correlation[:i]
+            self.direct_FIR = self.direct_FIR[:i]
             logging.info('Truncated direct FIR filter length = {}'.format(i))
+        
+        if plot:
+            plt.figure(figsize=(8, 6))
+            plt.plot(self.direct_FIR)
+            plt.title('Direct FIR Filter Calculation - to find the FIR length')
+            plt.xlabel('Samples')
+            plt.ylabel('Amplitude')
+            plt.show()
         
         if file_path:
             logging.info('Saving FIR filter to {}'.format(file_path))
-            pd.DataFrame(correlation).to_csv(file_path, index=False)
+            pd.DataFrame(self.direct_FIR).to_csv(file_path, index=False)
         
-        return correlation
+        return self.direct_FIR
     
     
 if __name__ == '__main__':
@@ -358,4 +366,5 @@ if __name__ == '__main__':
     # when your received signal comes with the information bits - make it faster!
     delay = signal_processor.find_delay(plot=True) 
     frequency_bins, frequency_response = signal_processor.get_frequency_response(chirp_start_time, chirp_end_time, plot=True)
-    FIR = signal_processor.get_FIR(plot=True, truncate=True, file_path='FIR_filters/5.26pm.csv')
+    FIR = signal_processor.get_FIR(plot=True, truncate=True, file_path='FIR_filters/5.56pm.csv')
+    direct_FIR = signal_processor.get_direct_FIR(plot=True, truncate=True, file_path='FIR_filters/direct_5.56pm.csv')

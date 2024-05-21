@@ -22,11 +22,10 @@ import numpy as np
 import pandas as pd
 import librosa
 import sounddevice as sd
-
 from scipy.io.wavfile import write
 from scipy.signal import chirp
-
 from ChirpSignalGenerator import ChirpSignalGenerator
+from utils import save_as_wav
 
 class OFDMTransmitter:
 
@@ -117,11 +116,14 @@ class OFDMTransmitter:
         received_signal = np.convolve(transmitted_signal, channel_impulse_response, mode='full')
         return received_signal
 
-    def play_signal(self, signal, chirp_data, fs):
+    def play_signal(self, signal, chirp_data, fs, save_path=None):
         """Play the combined chirp and transmitted signal."""
         combined_signal = np.concatenate((chirp_data, signal))
         sd.play(combined_signal, samplerate=fs)
         sd.wait()
+        if save_path:
+            save_as_wav(combined_signal, save_path, fs)
+        
     def just_play_signal(self, signal, fs):
         sd.play(signal, samplerate=fs)
         sd.wait()
@@ -160,7 +162,7 @@ chirp_data, chirp_sr = librosa.load('recordings/transmitted_linear_chirp_with_pr
 
 # Play the combined transmitted signal with chirp
 fs = 48000
-transmitter.play_signal(transmitted_signal,chirp_data, fs)
+transmitter.play_signal(transmitted_signal,chirp_data, fs, save_path='recordings/transmitted_signal_with_chirp_0520_1541.wav')
 
 # Simulate receiving the signal
 

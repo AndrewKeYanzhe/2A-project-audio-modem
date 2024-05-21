@@ -18,36 +18,43 @@ def extract_OFDM_bins(binary_string, num_bins=1024, fs=48000, f_low=20, f_high=8
     print("num_chunks:", num_chunks)
     chunks = [binary_string[i*chunk_size:(i+1)*chunk_size] for i in range(num_chunks)]
     
+    start_index = f_low * num_bins // fs
+    end_index = f_high * num_bins // fs
+    print("start_index:", start_index)
+    print("end_index:", end_index)
+    
+    # keep only the bins corresponding to the specified frequency range
     for i, chunk in enumerate(chunks):
-        # print("Chunk", i, ":", chunk)
-        start_index = f_low * num_bins // fs
-        end_index = f_high * num_bins // fs
-        chunk = chunk[start_index:end_index]
-        # print(chunk[start_index:end_index])
-        
-        # count the number of 1s in the chunk
-        num_ones = chunk.count('1')
-        num_zeros = chunk.count('0')
-        if num_ones > num_zeros:
-            print(f"Chunk {i} is decoded as 1")
-        else:
-            print(f"Chunk {i} is decoded as 0")
+        chunks[i] = chunk[start_index:end_index]
+
     return chunks
     
     
 
 
 # Example usage
-bin_file_path1 = './files/binary_blocks_test_file.bin'
-bin_file_path2 = './files/received_image.bin'
+bin_file_path1 = 'binaries/transmitted_bin_0520_1541.bin'
+bin_file_path2 = 'binaries/received_binary_0520_1541.bin'
 byte_data1 = load_bin_file(bin_file_path1)
 byte_data2 = load_bin_file(bin_file_path2)
 binary_string1 = bytes_to_binary_string(byte_data1)
 binary_string2 = bytes_to_binary_string(byte_data2)
 
-# # Output the binary string (first 100 bits for demonstration)
-# print("Binary String1 (first 500 bits):", binary_string1[0:2000])
-# print("Binary String2 (first 500 bits):", binary_string2[0:2000])
+print(len(binary_string1)/1022)
+print(len(binary_string2)/1022)
 
-# Extract OFDM bins
-extract_OFDM_bins(binary_string2[0:100000])
+
+transmitted_chunks = extract_OFDM_bins(binary_string1)
+actual_block_nums = len(transmitted_chunks)
+received_chunks = extract_OFDM_bins(binary_string2)[0:actual_block_nums]
+
+# concatenate the chunks into a single binary string
+transmitted_binary_string = ''.join(transmitted_chunks)
+received_binary_string = ''.join(received_chunks)
+
+print(len(transmitted_binary_string), len(received_binary_string))
+
+# calculate the bit error rate
+num_errors = sum([1 for i in range(len(transmitted_binary_string)) if transmitted_binary_string[i] != received_binary_string[i]])
+ber = num_errors / len(transmitted_binary_string)
+print(f"Bit error rate: {ber:.2f}")

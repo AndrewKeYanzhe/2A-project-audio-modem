@@ -128,47 +128,48 @@ class OFDMTransmitter:
         sd.play(signal, samplerate=fs)
         sd.wait()
 
+if __name__ == "__main__":
 
-# Example usage
-transmitter = OFDMTransmitter()
+    # Example usage
+    transmitter = OFDMTransmitter()
 
-# Load the binary data from file
-file_path1 = './binaries/transmitted_bin_0520_1541.bin'
-data = transmitter.load_binary_data(file_path1)
+    # Load the binary data from file
+    file_path1 = './binaries/transmitted_bin_0520_1541.bin'
+    data = transmitter.load_binary_data(file_path1)
 
-# Convert file data to binary with header
-filename = "transmitted_5.26pm.wav"
-#if with header
-#binary_data = transmitter.file_data_to_binary_with_header(data, filename)
-#if withouth header
-binary_data = transmitter.audio_to_binary(data)
+    # Convert file data to binary with header
+    filename = "transmitted_5.26pm.wav"
+    #if with header
+    #binary_data = transmitter.file_data_to_binary_with_header(data, filename)
+    #if withouth header
+    binary_data = transmitter.audio_to_binary(data)
 
-# Transmit the signal
-block_size = 511
-prefix_length = 32
-transmitted_signal = transmitter.transmit_signal(binary_data, block_size, prefix_length)
+    # Transmit the signal
+    block_size = 511
+    prefix_length = 32
+    transmitted_signal = transmitter.transmit_signal(binary_data, block_size, prefix_length)
 
-# Save the transmitted signal to a CSV file
-output_csv_path = './files/transmitted_data.csv'
-transmitter.save_to_csv(output_csv_path, transmitted_signal)
+    # Save the transmitted signal to a CSV file
+    output_csv_path = './files/transmitted_data.csv'
+    transmitter.save_to_csv(output_csv_path, transmitted_signal)
 
-# Generate the chirp signal with ChirpSignalGenerator and save it
-generator = ChirpSignalGenerator()
-generator.generate_chirp_signal()
-generator.save_as_wav('recordings/transmitted_linear_chirp_with_prefix_and_silence.wav')
+    # Generate the chirp signal with ChirpSignalGenerator and save it
+    generator = ChirpSignalGenerator()
+    generator.generate_chirp_signal()
+    generator.save_as_wav('recordings/transmitted_linear_chirp_with_prefix_and_silence.wav')
 
-# Load the chirp data from the saved file
-chirp_data, chirp_sr = librosa.load('recordings/transmitted_linear_chirp_with_prefix_and_silence.wav', sr=None)
+    # Load the chirp data from the saved file
+    chirp_data, chirp_sr = librosa.load('recordings/transmitted_linear_chirp_with_prefix_and_silence.wav', sr=None)
 
-# Play the combined transmitted signal with chirp
-fs = 48000
-transmitter.play_signal(transmitted_signal,chirp_data, fs, save_path='recordings/transmitted_signal_with_chirp_0520_1541.wav')
+    # Play the combined transmitted signal with chirp
+    fs = 48000
+    transmitter.play_signal(transmitted_signal,chirp_data, fs, save_path='recordings/transmitted_signal_with_chirp_0520_1541.wav')
 
-# Simulate receiving the signal
+    # Simulate receiving the signal
 
-# channel_impulse_response = transmitter.load_data('./files/channel.csv')
-# received_signal = transmitter.receive_signal(channel_impulse_response, transmitted_signal)
+    # channel_impulse_response = transmitter.load_data('./files/channel.csv')
+    # received_signal = transmitter.receive_signal(channel_impulse_response, transmitted_signal)
 
-# # Save the received signal to a CSV file
-# receive_csv_path = './files/received_with_channel.csv'
-# transmitter.save_to_csv(receive_csv_path, received_signal)
+    # # Save the received signal to a CSV file
+    # receive_csv_path = './files/received_with_channel.csv'
+    # transmitter.save_to_csv(receive_csv_path, received_signal)

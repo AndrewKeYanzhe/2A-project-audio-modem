@@ -133,7 +133,7 @@ class OFDMTransmitter:
 transmitter = OFDMTransmitter()
 
 # Load the binary data from file
-file_path1 = 'files/1533pm.bin'
+file_path1 = './binaries/transmitted_bin_0520_1541.bin'
 data = transmitter.load_binary_data(file_path1)
 
 # Convert file data to binary with header

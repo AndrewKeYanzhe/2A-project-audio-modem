@@ -251,6 +251,59 @@ class AnalogueSignalProcessor:
         plt.xlabel('Frequency (Hz)')
         plt.ylabel('Phase (Degrees)')
         plt.show()
+        
+    def truncate_fir_filter(self, fir_filter, energy_percent=0.9, last_100_threshold=0.01):
+        """
+        Truncate an FIR filter to retain a specified percentage of its total energy
+        and to stop if the last 100 samples' energy is below a certain percentage of the total energy.
+
+        Parameters:
+            fir_filter (np.array): The FIR filter coefficients.
+            energy_percent (float): The desired percentage of total energy to retain (default is 0.9).
+            last_100_threshold (float): The threshold percentage for the last 100 samples' energy (default is 0.01).
+
+        Returns:
+            np.array: The truncated FIR filter.
+        """
+        logging.info('Starting to truncate the FIR filter.')
+        
+        # Calculate total energy of the FIR filter
+        total_energy = np.sum(fir_filter**2)
+        cumulative_energy = 0
+        threshold_energy = last_100_threshold * total_energy  # Calculate threshold energy based on percentage
+
+        # Initialize variables for efficient last 100 sample energy calculation
+        last_100_energy = 0
+        if len(fir_filter) >= 100:
+            last_100_energy = np.sum(fir_filter[:100]**2)
+
+        i = 0
+        while i < len(fir_filter):
+            cumulative_energy += fir_filter[i]**2
+
+            # Update the last 100 samples energy if at least 100 samples have been processed
+            if i >= 100:
+                # Update last 100 samples' energy
+                last_100_energy += fir_filter[i]**2 - fir_filter[i-100]**2
+
+                # Check if the energy of the last 100 samples is below the threshold
+                if last_100_energy < threshold_energy:
+                    logging.info('Last 100 samples energy below threshold. Stopping truncation.')
+                    break
+
+            # Check if cumulative energy has reached the desired percentage
+            if cumulative_energy / total_energy >= energy_percent:
+                logging.info('Desired energy percentage reached. Stopping truncation.')
+                break
+
+            i += 1
+
+        # Truncate the filter to the determined point
+        truncated_filter = fir_filter[:i+1]
+        logging.info(f'Truncated FIR filter length = {i+1}')
+
+        return truncated_filter
+
     def get_FIR(self, plot=False, file_path=None, truncate=False):
         """
         Compute the inverse FFT of the frequency response to get the FIR filter.
@@ -264,16 +317,7 @@ class AnalogueSignalProcessor:
         self.fir_filter = np.fft.irfft(self.frequency_response)
         
         if truncate:
-            logging.info('Truncating the FIR filter to contain 90% of the energy.')
-            # Truncate the FIR filter to contain 90% of the energy
-            energy = np.sum(self.fir_filter**2)
-            cumulative_energy = 0
-            for i in range(len(self.fir_filter)):
-                cumulative_energy += self.fir_filter[i]**2
-                if cumulative_energy / energy >= 0.9:
-                    break
-            self.fir_filter = self.fir_filter[:i]
-            logging.info('Truncated FIR filter length = {}'.format(i))
+            self.fir_filter = self.truncate_fir_filter(self.fir_filter, 0.9, 0.01)
         
         if plot:
             t = np.arange(len(self.fir_filter)) / self.fs
@@ -310,16 +354,7 @@ class AnalogueSignalProcessor:
         self.direct_FIR = np.roll(correlation, len(self.trans_chirp)-1)
             
         if truncate:
-            logging.info('Truncating the direc FIR filter to contain 90% of the energy.')
-            # Truncate the FIR filter to contain 90% of the energy
-            energy = np.sum(self.direct_FIR**2)
-            cumulative_energy = 0
-            for i in range(len(self.direct_FIR)):
-                cumulative_energy += self.direct_FIR[i]**2
-                if cumulative_energy / energy >= 0.9:
-                    break
-            self.direct_FIR = self.direct_FIR[:i]
-            logging.info('Truncated direct FIR filter length = {}'.format(i))
+            self.direct_FIR = self.truncate_fir_filter(self.direct_FIR, 0.9, 0.01)
         
         if plot:
             plt.figure(figsize=(8, 6))

@@ -463,7 +463,7 @@ class code:
         vdeg = self.vdeg
         cdeg = self.cdeg
         intrlv = self.intrlv
-        c_ldpc = ct.CDLL('./bin/c_ldpc.so')
+        c_ldpc = ct.CDLL('./ldpc/bin/c_ldpc.so')
         # preliminary consistency checks
         if len(ch) != len(vdeg):
             raise NameError('Channel inputs not consistent with variable degrees')
@@ -489,12 +489,12 @@ class code:
         return app, it
 
     def Lxor(self, L1, L2, corrflag=1):
-        c_ldpc = ct.CDLL('./bin/c_ldpc.so')
+        c_ldpc = ct.CDLL('./ldpc/bin/c_ldpc.so')
         c_ldpc.Lxor.restype = ct.c_double
         return c_ldpc.Lxor(ct.c_double(L1), ct.c_double(L2), corrflag)
 
     def Lxfb(self, L, corrflag=1):
-        c_ldpc = ct.CDLL('./bin/c_ldpc.so')
+        c_ldpc = ct.CDLL('./ldpc/bin/c_ldpc.so')
         dc = len(L)
         L = np.array(L, dtype=float)
         L_p = L.ctypes.data_as(ct.POINTER(ct.c_double))

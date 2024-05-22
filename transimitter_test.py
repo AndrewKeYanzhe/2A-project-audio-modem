@@ -8,14 +8,12 @@ file_path1 = './recordings/transmitted_linear_chirp_with_prefix_and_silence.wav'
 data = transmitter.load_binary_data(file_path1)
 
 # Convert file data to binary with header
-filename = "transmitted_linear_chirp_with_prefix_and_silence.wav.wav"
+filename = "transmitted_linear_chirp_with_prefix_and_silence.wav"
 
 binary_data = transmitter.file_data_to_binary_with_header(data, filename)
-
-
 # Transmit the signal
-block_size = 511
-prefix_length = 32
+block_size = 32767 #(real_blocksize-2)/2
+prefix_length = 65536
 transmitted_signal = transmitter.transmit_signal(binary_data, block_size, prefix_length)
 
 # Save the transmitted signal to a CSV file
@@ -36,7 +34,7 @@ transmitter.save_to_csv(output_csv_path, transmitted_signal)
 
 # Simulate receiving the signal
 
-channel_impulse_response = transmitter.load_data('./files/channel.csv')
+channel_impulse_response = transmitter.load_data('./FIR_filters/channel.csv')
 received_signal = transmitter.receive_signal(channel_impulse_response, transmitted_signal)
 
 # # Save the received signal to a CSV file

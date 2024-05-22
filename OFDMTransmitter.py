@@ -53,7 +53,10 @@ class OFDMTransmitter:
     def add_cyclic_prefix(self, signal, prefix_length):
         """Copy the last k symbols in the block and append them to the beginning of the block."""
         return np.concatenate((signal[-prefix_length:], signal))
-
+    #block_size here is 
+   
+   
+    # (real_blocksize-2)/2
     def split_data_into_blocks(self, binary_data, block_size, prefix_length):
         """Split binary data into blocks, append cyclic prefix, and combine new blocks."""
         total_bits_needed = (block_size * 2) * ((len(binary_data) + block_size * 2 - 1) // (block_size * 2))
@@ -66,9 +69,9 @@ class OFDMTransmitter:
             end_index = start_index + block_size * 2
             block_data = binary_data_padded[start_index:end_index]
             symbols = self.map_bits_to_symbols(block_data)
-            symbols_extended = np.zeros(1024, dtype=complex)
-            symbols_extended[1:512] = symbols[:511]
-            symbols_extended[513:] = np.conj(np.flip(symbols[:511]))
+            symbols_extended = np.zeros(block_size*2+2, dtype=complex) 
+            symbols_extended[1:block_size+1] = symbols[:block_size]
+            symbols_extended[block_size+2:] = np.conj(np.flip(symbols[:block_size]))
             time_domain_signal = self.inverse_dft(symbols_extended)
             transmitted_signal = self.add_cyclic_prefix(time_domain_signal, prefix_length)
             blocks_with_prefix.append(transmitted_signal)
@@ -138,7 +141,7 @@ if __name__ == "__main__":
     data = transmitter.load_binary_data(file_path1)
 
     # Convert file data to binary with header
-    filename = "transmitted_5.26pm.wav"
+    #filename = "transmitted_5.26pm.wav"
     #if with header
     #binary_data = transmitter.file_data_to_binary_with_header(data, filename)
     #if withouth header

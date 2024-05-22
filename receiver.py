@@ -40,6 +40,7 @@ class Receiver:
         self.block_size = block_size
         #self.channel_impulse_response = None
         self.received_signal = None
+        self.received_constellations = None
         self.g_n = None
 
     def load_data(self, file_path):
@@ -169,8 +170,9 @@ class Receiver:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     
-    # Example usage
+    # Example usage with simulated data
     """
     receiver = Receiver(channel_file='./files/channel.csv', received_file='./files/received_with_channel.csv', prefix_length=32, block_size=1024)
     binary_data = receiver.process_signal()
@@ -194,13 +196,18 @@ if __name__ == "__main__":
 
     # Parameters
     fs =  48000
-
-
-    # Initialize AnalogueSignalProcessor with the chirp signals
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    recording_name = '0521_1806'
+    OFDM_prefix_length = 65536
+    OFDM_block_size = 65536
+    chirp_start_time = 2.0  # Example start time of chirp
+    chirp_end_time = 7.0    # Example end time of chirp
+    chirp_f_low = 20
+    chirp_f_high = 8000
     chirp_transmitted_path = './recordings/transmitted_linear_chirp_with_prefix_and_silence.wav'
-    received_signal_path = './recordings/0520_1541.m4a'
-    asp = AnalogueSignalProcessor(chirp_transmitted_path, received_signal_path,20,8000)
+    received_signal_path = './recordings/'+recording_name+'.m4a'
+    
+    # Initialize AnalogueSignalProcessor with the chirp signals
+    asp = AnalogueSignalProcessor(chirp_transmitted_path, received_signal_path,chirp_f_low,chirp_f_high)
 
     # Load the chirp signals
     asp.load_audio_files()
@@ -213,16 +220,16 @@ if __name__ == "__main__":
     received_signal_trimmed = asp.recv[start_index+8*fs:]
 
     # Save the trimmed signal to a new file (or directly process it)
-    trimmed_signal_path = './files/trimmed_received_signal_0520_1541.csv'
+    trimmed_signal_path = './files/trimmed_received_signal_' + recording_name + '.csv'
     logging.info(f"Saving trimmed received signal to:{trimmed_signal_path}")
     pd.DataFrame(received_signal_trimmed).to_csv(trimmed_signal_path, index=False, header=False)
+    
     # Also save the trimmed signal to a WAV file
-    trimmed_signal_path_wav = './recordings/trimmed_received_signal_0520_1541.wav'
+    trimmed_signal_path_wav = './recordings/trimmed_received_signal_' + recording_name + '.wav'
     save_as_wav(signal=received_signal_trimmed, file_path=trimmed_signal_path_wav, fs=fs)
+    logging.info(f"Saving trimmed received signal to:{trimmed_signal_path_wav}")
 
     # Compute the frequency response
-    chirp_start_time = 2.0  # Example start time of chirp
-    chirp_end_time = 7.0    # Example end time of chirp
     frequencies, frequency_response = asp.get_frequency_response(chirp_start_time, chirp_end_time, plot=False)
 
     # Compute the FIR filter (impulse response) from the frequency response
@@ -230,12 +237,15 @@ if __name__ == "__main__":
     direct_impulse_response = asp.get_direct_FIR(plot=True, truncate=True)
 
     # Initialize Receiver with the trimmed signal
-    print("strat demodulating ")
-    receiver = Receiver(channel_file =trimmed_signal_path, received_file=trimmed_signal_path,channel_impulse_response=impulse_response, prefix_length=32, block_size=1024)
+    print("start demodulating ")
+    receiver = Receiver(channel_file =trimmed_signal_path,
+                        received_file=trimmed_signal_path,
+                        channel_impulse_response=impulse_response,
+                        prefix_length=OFDM_prefix_length, block_size=OFDM_block_size)
 
     binary_data = receiver.process_signal()
-    filepath3='./binaries/received_binary_0520_1541.bin'
-    binfile = receiver.binary_to_bin_file(binary_data, filepath3)
+    deomudulated_binary_path='./binaries/received_binary_'+recording_name+'.bin'
+    binfile = receiver.binary_to_bin_file(binary_data, deomudulated_binary_path)
 
     # bytes_data = receiver.binary_to_bytes(binary_data)
     # filename, file_size, content = receiver.parse_bytes_data(bytes_data)

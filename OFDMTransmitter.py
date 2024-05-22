@@ -26,6 +26,7 @@ from scipy.io.wavfile import write
 from scipy.signal import chirp
 from ChirpSignalGenerator import ChirpSignalGenerator
 from utils import save_as_wav
+import logging
 
 class OFDMTransmitter:
 
@@ -53,7 +54,9 @@ class OFDMTransmitter:
     def add_cyclic_prefix(self, signal, prefix_length):
         """Copy the last k symbols in the block and append them to the beginning of the block."""
         return np.concatenate((signal[-prefix_length:], signal))
-
+    #block_size here is 
+   
+    # (real_blocksize-2)/2
     def split_data_into_blocks(self, binary_data, block_size, prefix_length):
         """Split binary data into blocks, append cyclic prefix, and combine new blocks."""
         total_bits_needed = (block_size * 2) * ((len(binary_data) + block_size * 2 - 1) // (block_size * 2))
@@ -66,9 +69,9 @@ class OFDMTransmitter:
             end_index = start_index + block_size * 2
             block_data = binary_data_padded[start_index:end_index]
             symbols = self.map_bits_to_symbols(block_data)
-            symbols_extended = np.zeros(1024, dtype=complex)
-            symbols_extended[1:512] = symbols[:511]
-            symbols_extended[513:] = np.conj(np.flip(symbols[:511]))
+            symbols_extended = np.zeros(block_size*2+2, dtype=complex) 
+            symbols_extended[1:block_size+1] = symbols[:block_size]
+            symbols_extended[block_size+2:] = np.conj(np.flip(symbols[:block_size]))
             time_domain_signal = self.inverse_dft(symbols_extended)
             transmitted_signal = self.add_cyclic_prefix(time_domain_signal, prefix_length)
             blocks_with_prefix.append(transmitted_signal)
@@ -118,7 +121,8 @@ class OFDMTransmitter:
 
     def play_signal(self, signal, chirp_data, fs, save_path=None):
         """Play the combined chirp and transmitted signal."""
-        combined_signal = np.concatenate((chirp_data, signal))
+        _,normalized_signal = self.normalize_signal(signal)
+        combined_signal = np.concatenate((chirp_data, normalized_signal))
         sd.play(combined_signal, samplerate=fs)
         sd.wait()
         if save_path:
@@ -127,31 +131,45 @@ class OFDMTransmitter:
     def just_play_signal(self, signal, fs):
         sd.play(signal, samplerate=fs)
         sd.wait()
+        
+    def normalize_signal(self, signal):
+        """Normalizes the signal to 16-bit integer values and floating-point values."""
+        signal_int = np.int16(signal / np.max(np.abs(signal)) * 32767)
+        signal_normalized = signal / np.max(np.abs(signal))
+        return signal_int, signal_normalized
 
 if __name__ == "__main__":
+
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    
+    # Parameters
+    fs = 48000
+    block_size = (65536-2)//2
+    prefix_length = 65536
+    recording_name = '0522_1309'
 
     # Example usage
     transmitter = OFDMTransmitter()
 
     # Load the binary data from file
-    file_path1 = './binaries/transmitted_bin_0520_1541.bin'
-    data = transmitter.load_binary_data(file_path1)
+    transmitted_binary_path = './binaries/transmitted_bin_0520_1541.bin'
+    logging.info(f"Loading binary data from {transmitted_binary_path}.")
+    data = transmitter.load_binary_data(transmitted_binary_path)
 
     # Convert file data to binary with header
-    filename = "transmitted_5.26pm.wav"
-    #if with header
+    #filename = "transmitted_5.26pm.wav"
+    ## if with header
     #binary_data = transmitter.file_data_to_binary_with_header(data, filename)
     #if withouth header
     binary_data = transmitter.audio_to_binary(data)
 
     # Transmit the signal
-    block_size = 511
-    prefix_length = 32
     transmitted_signal = transmitter.transmit_signal(binary_data, block_size, prefix_length)
 
     # Save the transmitted signal to a CSV file
-    output_csv_path = './files/transmitted_data.csv'
+    output_csv_path = './files/transmitted_data_' + recording_name + '.csv'
     transmitter.save_to_csv(output_csv_path, transmitted_signal)
+    logging.info(f"Transmitted signal has been saved to {output_csv_path}.")
 
     # Generate the chirp signal with ChirpSignalGenerator and save it
     generator = ChirpSignalGenerator()
@@ -162,9 +180,10 @@ if __name__ == "__main__":
     chirp_data, chirp_sr = librosa.load('recordings/transmitted_linear_chirp_with_prefix_and_silence.wav', sr=None)
 
     # Play the combined transmitted signal with chirp
-    fs = 48000
-    transmitter.play_signal(transmitted_signal,chirp_data, fs, save_path='recordings/transmitted_signal_with_chirp_0520_1541.wav')
 
+    save_path ='recordings/transmitted_signal_with_chirp_' + recording_name + '.wav'
+    transmitter.play_signal(transmitted_signal,chirp_data, fs, save_path=save_path)
+    logging.info(f"Saving the combined transmitted signal with chirp to{save_path}.")
     # Simulate receiving the signal
 
     # channel_impulse_response = transmitter.load_data('./files/channel.csv')

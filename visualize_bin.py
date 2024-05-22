@@ -1,3 +1,5 @@
+from matplotlib import pyplot as plt
+
 def load_bin_file(file_path):
     """Load a .bin file and return its contents as a byte array."""
     with open(file_path, 'rb') as bin_file:
@@ -49,8 +51,8 @@ actual_block_nums = len(transmitted_chunks)
 received_chunks = extract_OFDM_bins(binary_string2)[0:actual_block_nums]
 
 # concatenate the chunks into a single binary string
-transmitted_binary_string = ''.join(transmitted_chunks)
-received_binary_string = ''.join(received_chunks)
+transmitted_binary_string = ''.join(transmitted_chunks[-2:])
+received_binary_string = ''.join(received_chunks[-2:])
 
 print(len(transmitted_binary_string), len(received_binary_string))
 
@@ -58,3 +60,15 @@ print(len(transmitted_binary_string), len(received_binary_string))
 num_errors = sum([1 for i in range(len(transmitted_binary_string)) if transmitted_binary_string[i] != received_binary_string[i]])
 ber = num_errors / len(transmitted_binary_string)
 print(f"Bit error rate: {ber:.2f}")
+
+# plot the ber as a function of OFDM block number
+ber_list = []
+for i in range(actual_block_nums):
+    num_errors = sum(1 for j in range(len(transmitted_chunks[i])) if transmitted_chunks[i][j] != received_chunks[i][j])
+    ber = num_errors / len(transmitted_chunks[i])
+    ber_list.append(ber)
+plt.plot(ber_list)
+plt.xlabel('OFDM block number')
+plt.ylabel('Bit error rate')
+plt.title('Bit error rate vs OFDM block number')
+plt.show()

@@ -87,7 +87,12 @@ class Receiver:
     def process_signal(self):
         """Process the received signal to recover binary data."""
         # Load the channel impulse response and the received signal
-        #self.channel_impulse_response = self.load_data(self.channel_file)(这是原来的代码，channel。csv情况下)
+        
+        #### Matthew is playing here, please remember to remove this line####
+        self.channel_impulse_response = self.load_data(self.channel_file)
+        self.channel_impulse_response = np.roll(self.channel_impulse_response, -1000)
+        ######################################################################
+
 
         self.received_signal = self.load_data(self.received_file)
 
@@ -113,7 +118,7 @@ class Receiver:
             complete_binary_data += binary_data
 
             # Save the constellation points for plotting
-            all_constellations.extend(x_n[1:(self.block_size // 2)])
+            all_constellations.extend(x_n[100:101])
 
         self.plot_constellation(all_constellations)
         print("Recovered Binary Data Length:", len(complete_binary_data))

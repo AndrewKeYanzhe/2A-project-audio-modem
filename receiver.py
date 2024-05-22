@@ -99,18 +99,23 @@ class Receiver:
 
         # Process each block
         complete_binary_data = ''
+        all_constellations = []
         for block in blocks:
             # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
 
             # Compensate for the channel effects
             x_n = self.channel_compensation(r_n, self.g_n)            
-            # self.plot_constellation(x_n[1:(self.block_size // 2)])
+            
             
             # Demap QPSK symbols to binary data
             binary_data = self.qpsk_demapper(x_n[1:(self.block_size // 2)])  # Assuming data is only in these bins
             complete_binary_data += binary_data
 
+            # Save the constellation points for plotting
+            all_constellations.extend(x_n[1:(self.block_size // 2)])
+
+        self.plot_constellation(all_constellations)
         print("Recovered Binary Data Length:", len(complete_binary_data))
         return complete_binary_data
 
@@ -221,8 +226,8 @@ if __name__ == "__main__":
     frequencies, frequency_response = asp.get_frequency_response(chirp_start_time, chirp_end_time, plot=False)
 
     # Compute the FIR filter (impulse response) from the frequency response
-    impulse_response = asp.get_FIR(plot=False, truncate=True)
-    direct_impulse_response = asp.get_direct_FIR(plot=False, truncate=True)
+    impulse_response = asp.get_FIR(plot=True, truncate=True)
+    direct_impulse_response = asp.get_direct_FIR(plot=True, truncate=True)
 
     # Initialize Receiver with the trimmed signal
     print("strat demodulating ")

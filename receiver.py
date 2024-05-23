@@ -261,8 +261,8 @@ if __name__ == "__main__":
 
 
     # Compute the FIR filter (impulse response) from the frequency response
-    # impulse_response = asp.get_FIR(plot=True, truncate=False)
-    # direct_impulse_response = asp.get_direct_FIR(plot=True, truncate=False)
+    impulse_response = asp.get_FIR(plot=True, truncate=False)
+    direct_impulse_response = asp.get_direct_FIR(plot=True, truncate=False)
 
     # # Initialize Receiver with the trimmed signal
     print("start demodulating ")

@@ -85,10 +85,13 @@ class ChirpSignalGenerator:
         sd.play(signal_normalized, self.fs)
         sd.wait()  # Wait until the sound has finished playing
 
-# Example usage
-generator = ChirpSignalGenerator()
-generator.generate_chirp_signal()
-generator.save_as_wav('recordings/transmitted_linear_chirp_with_prefix_and_silence.wav')
 
-# If you want to play the signal, call the play_signal method
-# generator.play_signal()
+
+if __name__ == "__main__":
+    # Example usage
+    generator = ChirpSignalGenerator()
+    generator.generate_chirp_signal()
+    generator.save_as_wav('recordings/transmitted_linear_chirp_with_prefix_and_silence.wav')
+
+    # If you want to play the signal, call the play_signal method
+    # generator.play_signal()

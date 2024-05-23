@@ -27,11 +27,14 @@ from scipy.signal import chirp
 from ChirpSignalGenerator import ChirpSignalGenerator
 from utils import save_as_wav
 import logging
+from AudioProcessor import AudioProcessor
+import matplotlib.pyplot as plt
 
 class OFDMTransmitter:
 
     def __init__(self):
-        pass
+        self.constellation_points = []
+
 
     def map_bits_to_symbols(self, binary_data):
         """Map 2N information bits to N constellation symbols using QPSK with Gray coding."""
@@ -69,7 +72,8 @@ class OFDMTransmitter:
             end_index = start_index + block_size * 2
             block_data = binary_data_padded[start_index:end_index]
             symbols = self.map_bits_to_symbols(block_data)
-            symbols_extended = np.zeros(block_size*2+2, dtype=complex) 
+            self.constellation_points.extend(symbols)  # Save constellation points for visualization
+            symbols_extended = np.zeros(block_size * 2 + 2, dtype=complex)
             symbols_extended[1:block_size+1] = symbols[:block_size]
             symbols_extended[block_size+2:] = np.conj(np.flip(symbols[:block_size]))
             time_domain_signal = self.inverse_dft(symbols_extended)
@@ -77,9 +81,41 @@ class OFDMTransmitter:
             blocks_with_prefix.append(transmitted_signal)
         
         return np.concatenate(blocks_with_prefix)
+    
+    def plot_constellation(self):
+        """Plot the QPSK constellation diagram."""
+        if not self.constellation_points:
+            print("No constellation points to plot.")
+            return
+
+        plt.scatter(np.real(self.constellation_points), np.imag(self.constellation_points))
+        plt.axhline(0, color='black', lw=0.5)
+        plt.axvline(0, color='black', lw=0.5)
+        plt.xlabel('In-Phase')
+        plt.ylabel('Quadrature')
+        plt.title('QPSK Constellation')
+        plt.grid()
+        plt.show()
+
+
+
+    def get_constellation_label(self, point):
+        """Get label for constellation point."""
+        if point == complex(1, 1):
+            return 0
+        elif point == complex(-1, 1):
+            return 1
+        elif point == complex(-1, -1):
+            return 2
+        elif point == complex(1, -1):
+            return 3
+        else:
+            return -1  # Unknown point
+
+
 
     def audio_to_binary(self, audio_data):
-        """Convert audio data to a binary string."""
+        """Convert audio data to a binary string.this change the data from raw bytes to binary string."""
         binary_data = ''.join(format(byte, '08b') for byte in audio_data)
         return binary_data
 
@@ -144,9 +180,9 @@ if __name__ == "__main__":
     
     # Parameters
     fs = 48000
-    block_size = (65536-2)//2
-    prefix_length = 65536
-    recording_name = '0522_1309'
+    block_size = (4096-2)//2
+    prefix_length = 512
+    recording_name = '0523_1237'
 
     # Example usage
     transmitter = OFDMTransmitter()
@@ -171,8 +207,11 @@ if __name__ == "__main__":
     transmitter.save_to_csv(output_csv_path, transmitted_signal)
     logging.info(f"Transmitted signal has been saved to {output_csv_path}.")
 
+    # Plot the QPSK constellation diagram
+    transmitter.plot_constellation()
+
     # Generate the chirp signal with ChirpSignalGenerator and save it
-    generator = ChirpSignalGenerator()
+    generator = ChirpSignalGenerator(f_low=1000, f_high=8000)
     generator.generate_chirp_signal()
     generator.save_as_wav('recordings/transmitted_linear_chirp_with_prefix_and_silence.wav')
 
@@ -192,3 +231,8 @@ if __name__ == "__main__":
     # # Save the received signal to a CSV file
     # receive_csv_path = './files/received_with_channel.csv'
     # transmitter.save_to_csv(receive_csv_path, received_signal)
+    # audio_processor = AudioProcessor(save_path)
+    # csv_file_path = './files/no_channel.csv'
+    # audio_processor.load_audio()
+    # audio_processor.save_to_csv(csv_file_path)
+

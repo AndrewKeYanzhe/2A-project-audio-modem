@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import scipy
 from channel_estimator import AnalogueSignalProcessor
 from utils import save_as_wav
 import matplotlib.pyplot as plt
@@ -32,13 +33,14 @@ from scipy.io.wavfile import write
         save_file(file_path, content): Save the content to a file.
     """
 class Receiver:
-    def __init__(self, channel_file, received_file, channel_impulse_response, prefix_length, block_size):
+    def __init__(self, channel_file, received_file,fs,frequencies, channel_impulse_response, prefix_length, block_size):
         self.channel_file = channel_file
+        self.fs= fs
+        self.frequencies = frequencies
         self.channel_impulse_response = channel_impulse_response
         self.received_file = received_file
         self.prefix_length = prefix_length
         self.block_size = block_size
-        #self.channel_impulse_response = None
         self.received_signal = None
         self.received_constellations = None
         self.g_n = None
@@ -63,7 +65,8 @@ class Receiver:
 
     def channel_compensation(self, r_n, g_n):
         """Compensate for the channel effects in the frequency domain."""
-        return r_n / g_n
+        epsilon = 1e-10  # To avoid division by zero or very small values
+        return r_n / (g_n + epsilon)
 
     def qpsk_demapper(self, compensated_symbols):
         """Demap QPSK symbols to binary data."""
@@ -82,51 +85,72 @@ class Receiver:
                 if dist < min_dist:
                     min_dist = dist
                     bits = mapping
-            binary_data += bits
+            if bits is not None:
+                binary_data += bits
+            else:
+                logging.warning(f"No matching constellation point found for symbol {symbol}")
         return binary_data
+
+    def interpolate_frequency_response(self, subcarrier_frequencies):
+        """Interpolate the frequency response to match the OFDM subcarrier frequencies."""
+        interpolation_function = scipy.interpolate.interp1d(self.frequencies, self.channel_impulse_response, kind='linear', fill_value="extrapolate")
+        interpolated_response = interpolation_function(subcarrier_frequencies)
+    
+        # Add epsilon to avoid division by zero in channel compensation
+        epsilon = 1e-10
+        interpolated_response = np.where(np.abs(interpolated_response) < epsilon, epsilon, interpolated_response)
+    
+        return interpolated_response
 
     def process_signal(self):
         """Process the received signal to recover binary data."""
         # Load the channel impulse response and the received signal
-        #self.channel_impulse_response = self.load_data(self.channel_file)(这是原来的代码，channel。csv情况下)
+        #self.channel_impulse_response = self.load_data(self.channel_file)#(这是原来的代码，channel。csv情况下,这样做的话channel_impulse_response指FIR，所以下面要fft)
 
         self.received_signal = self.load_data(self.received_file)
 
         # Remove cyclic prefix and get blocks
         blocks = self.remove_cyclic_prefix(self.received_signal)
+        # Define subcarrier frequencies for OFDM
+        subcarrier_frequencies = np.fft.fftfreq(self.block_size, d=1/self.fs)
+
+        # Interpolate the frequency response to match the subcarrier frequencies
+        interpolated_response = self.interpolate_frequency_response(subcarrier_frequencies)
+
 
         # Estimate channel frequency response
-        self.g_n = self.apply_fft(self.channel_impulse_response, self.block_size)
-
+        #self.g_n = self.apply_fft(self.channel_impulse_response, self.block_size)（这是原来的代码，channel。csv情况下,这样做的话channel_impulse_response指FIR）
         # Process each block
         complete_binary_data = ''
         all_constellations = []
         for block in blocks:
-            # Apply FFT to the block
+        # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
+            self.g_n = interpolated_response
+        # Compensate for the channel effects
+            x_n = self.channel_compensation(r_n, self.g_n)
 
-            # Compensate for the channel effects
-            x_n = self.channel_compensation(r_n, self.g_n)            
-            
-            
-            # Demap QPSK symbols to binary data
+
+        # Save the constellation points for plotting
+            all_constellations.extend(x_n[1000:10000])      
+        
+        # Demap QPSK symbols to binary data
             binary_data = self.qpsk_demapper(x_n[1:(self.block_size // 2)])  # Assuming data is only in these bins
             complete_binary_data += binary_data
-
-            # Save the constellation points for plotting
-            all_constellations.extend(x_n[1:(self.block_size // 2)])
-
-        self.plot_constellation(all_constellations)
+        #plotting the constellation
+        self.plot_constellation(r_n[1:(self.block_size // 2)], title="Constellation Before Compensation")
+        self.plot_constellation(all_constellations, title="Constellation After Compensation")
         print("Recovered Binary Data Length:", len(complete_binary_data))
         return complete_binary_data
 
-    def plot_constellation(self, symbols):
-        plt.scatter(np.real(symbols), np.imag(symbols))
+    def plot_constellation(self, symbols, title="QPSK Constellation"):
+        plt.figure(figsize=(10, 6))
+        plt.scatter(np.real(symbols), np.imag(symbols), marker='.')
         plt.axhline(0, color='black', lw=0.5)
         plt.axvline(0, color='black', lw=0.5)
         plt.xlabel('In-Phase')
         plt.ylabel('Quadrature')
-        plt.title('QPSK Constellation')
+        plt.title(title)
         plt.grid()
         plt.show()
 
@@ -186,25 +210,19 @@ if __name__ == "__main__":
     output_file_path = './files/test_image_received.tiff'
     receiver.save_file(output_file_path, content)
     """
-        
-
-    #record the input audio
-
-
-    # Example usage with AnalogueSignalProcessor
-
 
     # Parameters
     fs =  48000
-    recording_name = '0521_1806'
-    OFDM_prefix_length = 65536
-    OFDM_block_size = 65536
+    recording_name = '0523_1237'
+    OFDM_prefix_length = 512
+    OFDM_block_size = 4096
     chirp_start_time = 2.0  # Example start time of chirp
     chirp_end_time = 7.0    # Example end time of chirp
-    chirp_f_low = 20
+    chirp_f_low = 1000
     chirp_f_high = 8000
     chirp_transmitted_path = './recordings/transmitted_linear_chirp_with_prefix_and_silence.wav'
-    received_signal_path = './recordings/'+recording_name+'.m4a'
+    #received_signal_path = './recordings/'+recording_name+'.m4a'
+    received_signal_path = 'recordings/0522_1309.m4a'
     
     # Initialize AnalogueSignalProcessor with the chirp signals
     asp = AnalogueSignalProcessor(chirp_transmitted_path, received_signal_path,chirp_f_low,chirp_f_high)
@@ -213,34 +231,37 @@ if __name__ == "__main__":
     asp.load_audio_files()
 
     # Find the delay
-    delay = asp.find_delay(0,10,plot=False)
+    delay = asp.find_delay(0,10,plot=True)
 
     # Trim the received signal
     start_index = int(delay) # delay is an integer though
     received_signal_trimmed = asp.recv[start_index+8*fs:]
 
-    # Save the trimmed signal to a new file (or directly process it)
+    # # Save the trimmed signal to a new file (or directly process it)
     trimmed_signal_path = './files/trimmed_received_signal_' + recording_name + '.csv'
     logging.info(f"Saving trimmed received signal to:{trimmed_signal_path}")
     pd.DataFrame(received_signal_trimmed).to_csv(trimmed_signal_path, index=False, header=False)
     
-    # Also save the trimmed signal to a WAV file
-    trimmed_signal_path_wav = './recordings/trimmed_received_signal_' + recording_name + '.wav'
-    save_as_wav(signal=received_signal_trimmed, file_path=trimmed_signal_path_wav, fs=fs)
-    logging.info(f"Saving trimmed received signal to:{trimmed_signal_path_wav}")
+    # # Also save the trimmed signal to a WAV file
+    # trimmed_signal_path_wav = './recordings/trimmed_received_signal_' + recording_name + '.wav'
+    # save_as_wav(signal=received_signal_trimmed, file_path=trimmed_signal_path_wav, fs=fs)
+    # logging.info(f"Saving trimmed received signal to:{trimmed_signal_path_wav}")
 
     # Compute the frequency response
-    frequencies, frequency_response = asp.get_frequency_response(chirp_start_time, chirp_end_time, plot=False)
+    frequencies, frequency_response = asp.get_frequency_response(chirp_start_time, chirp_end_time, plot=True)
+
 
     # Compute the FIR filter (impulse response) from the frequency response
-    impulse_response = asp.get_FIR(plot=True, truncate=True)
-    direct_impulse_response = asp.get_direct_FIR(plot=True, truncate=True)
+    # impulse_response = asp.get_FIR(plot=True, truncate=False)
+    # direct_impulse_response = asp.get_direct_FIR(plot=True, truncate=False)
 
-    # Initialize Receiver with the trimmed signal
+    # # Initialize Receiver with the trimmed signal
     print("start demodulating ")
     receiver = Receiver(channel_file =trimmed_signal_path,
                         received_file=trimmed_signal_path,
-                        channel_impulse_response=impulse_response,
+                        fs=fs,
+                        frequencies=frequencies,
+                        channel_impulse_response=frequency_response,
                         prefix_length=OFDM_prefix_length, block_size=OFDM_block_size)
 
     binary_data = receiver.process_signal()

@@ -183,6 +183,7 @@ if __name__ == "__main__":
     block_size = (4096-2)//2
     prefix_length = 512
     recording_name = '0523_1237'
+    chirp_name = '1k_8k_0523'
 
     # Example usage
     transmitter = OFDMTransmitter()
@@ -213,13 +214,13 @@ if __name__ == "__main__":
     # Generate the chirp signal with ChirpSignalGenerator and save it
     generator = ChirpSignalGenerator(f_low=1000, f_high=8000)
     generator.generate_chirp_signal()
-    generator.save_as_wav('recordings/transmitted_linear_chirp_with_prefix_and_silence.wav')
+    chirp_path = 'chirps/' + chirp_name + '.wav'
+    generator.save_as_wav(chirp_path)
 
     # Load the chirp data from the saved file
-    chirp_data, chirp_sr = librosa.load('recordings/transmitted_linear_chirp_with_prefix_and_silence.wav', sr=None)
+    chirp_data, chirp_sr = librosa.load(chirp_path, sr=None)
 
     # Play the combined transmitted signal with chirp
-
     save_path ='recordings/transmitted_signal_with_chirp_' + recording_name + '.wav'
     transmitter.play_signal(transmitted_signal,chirp_data, fs, save_path=save_path)
     logging.info(f"Saving the combined transmitted signal with chirp to{save_path}.")

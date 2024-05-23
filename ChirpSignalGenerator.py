@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from scipy.io.wavfile import write
 import sounddevice as sd
 from scipy.signal import chirp
+import logging
 
 class ChirpSignalGenerator:
     """
@@ -67,7 +68,7 @@ class ChirpSignalGenerator:
         """Saves the signal as a WAV file."""
         signal_int, _ = self.normalize_signal()
         write(file_path, self.fs, signal_int)
-        print(f"Signal has been saved to {file_path}.")
+        logging.debug(f"Signal has been saved to {file_path}.")
 
     def plot_signal(self):
         """Plots the signal in the time domain."""

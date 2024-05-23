@@ -132,7 +132,7 @@ class Receiver:
 
 
         # Save the constellation points for plotting
-            all_constellations.extend(x_n[1000:10000])      
+            all_constellations.extend(x_n[85:850])      
         
         # Demap QPSK symbols to binary data
             binary_data = self.qpsk_demapper(x_n[1:(self.block_size // 2)])  # Assuming data is only in these bins
@@ -222,7 +222,7 @@ if __name__ == "__main__":
     chirp_f_high = 8000
     chirp_transmitted_path = './recordings/transmitted_linear_chirp_with_prefix_and_silence.wav'
     #received_signal_path = './recordings/'+recording_name+'.m4a'
-    received_signal_path = 'recordings/0522_1309.m4a'
+    received_signal_path = 'recordings/0523_1300_speaker100.m4a'
     
     # Initialize AnalogueSignalProcessor with the chirp signals
     asp = AnalogueSignalProcessor(chirp_transmitted_path, received_signal_path,chirp_f_low,chirp_f_high)
@@ -252,8 +252,8 @@ if __name__ == "__main__":
 
 
     # Compute the FIR filter (impulse response) from the frequency response
-    # impulse_response = asp.get_FIR(plot=True, truncate=False)
-    # direct_impulse_response = asp.get_direct_FIR(plot=True, truncate=False)
+    impulse_response = asp.get_FIR(plot=True, truncate=False)
+    direct_impulse_response = asp.get_direct_FIR(plot=True, truncate=False)
 
     # # Initialize Receiver with the trimmed signal
     print("start demodulating ")

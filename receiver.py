@@ -6,6 +6,15 @@ from utils import save_as_wav, cut_freq_bins
 import matplotlib.pyplot as plt
 import logging
 from scipy.io.wavfile import write
+
+from sklearn.cluster import KMeans
+from sklearn.cluster import DBSCAN
+
+import random
+
+import math
+
+
 """
     The Receiver class processes an OFDM signal to recover binary data, convert it to bytes,
     and save it to a file. It handles loading data, removing cyclic prefixes, applying FFT,
@@ -47,6 +56,7 @@ class Receiver:
         self.received_signal = None
         self.received_constellations = []
         self.compensated_constellations = []
+        self.compensated_constellations_subsampled = []
         self.g_n = None
         self.f_low = f_low
         self.f_high = f_high
@@ -148,7 +158,92 @@ class Receiver:
             complete_binary_data += binary_data
         #plotting the constellation
         self.plot_constellation(self.received_constellations, title="Constellation Before Compensation")
+
+        print(np.array(self.compensated_constellations).shape)
+        
+
+
+        compensated_constellations_subsampled = random.sample(self.compensated_constellations, len(self.compensated_constellations) // 10)
+
         self.plot_constellation(self.compensated_constellations, title="Constellation After Compensation")
+        self.plot_constellation(compensated_constellations_subsampled, title="Constellation After Compensation, subsampled 1:10")
+
+
+        data = np.array([[z.real, z.imag] for z in self.compensated_constellations])
+        # data = np.array([[z.real, z.imag] for z in subsample])
+
+
+
+
+        # Apply k-means clustering
+        kmeans = KMeans(n_clusters=5).fit(data) #a fifth cluster is used so that the cluster at 0,0 doesnt get absorbed into one of the 4 means
+
+        # Get the cluster centroids
+        centroids = kmeans.cluster_centers_
+
+        top_4 = sorted(centroids, key=lambda c: c[0]**2 + c[1]**2, reverse=True)[:4]
+        phases = [(c, math.atan2(c[1], c[0])) for c in top_4]
+
+        phases_sorted = sorted(phases, key=lambda x: x[1])
+        sum_phases = 0
+        for c, angle in phases_sorted:
+            # Convert angle from radians to degrees
+            angle_degrees = math.degrees(angle)
+            print(f"Coordinate: {c}, Magnitude: {math.sqrt(c[0]**2 + c[1]**2)}, Phase: {angle_degrees} degrees")
+            sum_phases = sum_phases + math.sqrt(c[0]**2 + c[1]**2)
+        
+        print(sum_phases)
+
+        phase_shift_needed = (45-sum_phases)/4
+        print("phase shift needed", phase_shift_needed)
+
+        # Convert centroids back to complex numbers
+        centroid_complex_numbers = [complex(c[0], c[1]) for c in centroids]
+
+        # centroid_complex_numbers
+
+        self.plot_constellation(centroid_complex_numbers, title="K means clusters")
+
+        # # Extract real and imaginary parts
+        # real_parts = [z.real for z in centroid_complex_numbers]
+        # imag_parts = [z.imag for z in centroid_complex_numbers]
+        
+        # # Plot the constellation
+        # plt.scatter(real_parts, imag_parts, marker='o', color='b', s=100)  # Increase 's' for larger dots
+
+
+
+        # # Apply DBSCAN clustering with adjusted parameters
+        # dbscan = DBSCAN(eps=2, min_samples=1)
+        # dbscan.fit(data)
+
+        # # Get cluster labels
+        # labels = dbscan.labels_
+
+        # # Output the results
+        # clusters = {}
+        # for label in np.unique(labels):
+        #     clusters[label] = data[labels == label]
+
+        # # Plot the results
+        # plt.figure(figsize=(8, 6))
+        # for label, cluster in clusters.items():
+        #     if label == -1:
+        #         # Noise points
+        #         plt.scatter(cluster[:, 0], cluster[:, 1], label='Noise', color='k')
+        #     else:
+        #         plt.scatter(cluster[:, 0], cluster[:, 1], label=f'Cluster {label}')
+        # plt.legend()
+        # plt.xlabel('X')
+        # plt.ylabel('Y')
+        # plt.title('DBSCAN Clustering with Adjusted Parameters')
+        # plt.show()
+
+
+
+        
+
+        
         logging.log(f"Recovered Binary Data Length: {len(complete_binary_data)}")
         return complete_binary_data
 
@@ -240,7 +335,7 @@ if __name__ == "__main__":
     asp.load_audio_files()
 
     # Find the delay
-    delay = asp.find_delay(0,10,plot=True)
+    delay = asp.find_delay(0,10,plot=False)
 
     # Trim the received signal
     start_index = int(delay) # delay is an integer though
@@ -261,8 +356,8 @@ if __name__ == "__main__":
 
 
     # Compute the FIR filter (impulse response) from the frequency response
-    impulse_response = asp.get_FIR(plot=True, truncate=False)
-    direct_impulse_response = asp.get_direct_FIR(plot=True, truncate=False)
+    impulse_response = asp.get_FIR(plot=False, truncate=False)
+    direct_impulse_response = asp.get_direct_FIR(plot=False, truncate=False)
 
     # # Initialize Receiver with the trimmed signal
     print("start demodulating ")

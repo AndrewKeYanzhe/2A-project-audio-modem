@@ -173,7 +173,7 @@ class Receiver:
 
 
         # Apply k-means clustering
-        kmeans = KMeans(n_clusters=5).fit(data) #a fifth cluster is used so that the cluster at 0,0 doesnt get absorbed into one of the 4 means
+        kmeans = KMeans(n_clusters=5, init='k-means++', n_init=10, random_state=42).fit(data)
 
         # Get the cluster centroids
         centroids = kmeans.cluster_centers_

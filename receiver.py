@@ -13,7 +13,7 @@ from sklearn.cluster import DBSCAN
 import random
 
 import math
-
+import cmath
 
 """
     The Receiver class processes an OFDM signal to recover binary data, convert it to bytes,
@@ -151,8 +151,8 @@ class Receiver:
             self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
         
         # Demap QPSK symbols to binary data
-            binary_data = self.qpsk_demapper(x_n[bin_low:bin_high+1]) # change: now we only demap the frequency bins of interest
-            complete_binary_data += binary_data
+            # binary_data = self.qpsk_demapper(x_n[bin_low:bin_high+1]) # change: now we only demap the frequency bins of interest
+            # complete_binary_data += binary_data
         #plotting the constellation
         self.plot_constellation(self.received_constellations, title="Constellation Before Compensation")
 
@@ -200,6 +200,46 @@ class Receiver:
         # centroid_complex_numbers
 
         self.plot_constellation(centroid_complex_numbers, title="K means clusters")
+
+
+        
+
+        shift_constellation_phase = False
+
+
+        for block in blocks:
+        # Apply FFT to the block
+            r_n = self.apply_fft(block, self.block_size)
+            self.g_n = interpolated_response
+        # Compensate for the channel effects
+            x_n = self.channel_compensation(r_n, self.g_n)
+
+        # Save the constellation points for plotting
+            # self.received_constellations.extend(r_n[bin_low:bin_high+1])
+            # self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
+        
+        # Demap QPSK symbols to binary data
+            # binary_data = self.qpsk_demapper(x_n[bin_low:bin_high+1]) # change: now we only demap the frequency bins of interest
+
+            constellations = np.copy(x_n[bin_low:bin_high+1])
+            
+            shifted_constellations = [z * cmath.exp(1j * math.radians(phase_shift_needed)) for z in constellations]
+  
+            
+            if shift_constellation_phase:
+                binary_data = self.qpsk_demapper(shifted_constellations) # change: now we only demap the frequency bins of interest
+            else:
+                binary_data = self.qpsk_demapper(constellations) # change: now we only demap the frequency bins of interest
+            
+            complete_binary_data += binary_data
+
+
+
+
+
+
+
+
 
         # # Extract real and imaginary parts
         # real_parts = [z.real for z in centroid_complex_numbers]

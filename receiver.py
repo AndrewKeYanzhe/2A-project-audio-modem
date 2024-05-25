@@ -244,7 +244,7 @@ class Receiver:
         
 
         
-        logging.log(f"Recovered Binary Data Length: {len(complete_binary_data)}")
+        logging.info(f"Recovered Binary Data Length: {len(complete_binary_data)}")
         return complete_binary_data
 
     def plot_constellation(self, symbols, title="QPSK Constellation"):

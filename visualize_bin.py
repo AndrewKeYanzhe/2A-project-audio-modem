@@ -12,10 +12,10 @@ def bytes_to_binary_string(byte_data):
     return binary_string
 
 
-def extract_OFDM_bins(binary_string, num_bins=1024, fs=48000, f_low=20, f_high=8000):
+def extract_OFDM_bins(binary_string, num_bins=4096, fs=48000, f_low=1000, f_high=8000):
     
     # segment the binary string into chunks of 1022 bits
-    chunk_size = 1022
+    chunk_size = 4094
     num_chunks = len(binary_string) // chunk_size
     print("num_chunks:", num_chunks)
     chunks = [binary_string[i*chunk_size:(i+1)*chunk_size] for i in range(num_chunks)]
@@ -36,14 +36,14 @@ def extract_OFDM_bins(binary_string, num_bins=1024, fs=48000, f_low=20, f_high=8
 
 # Example usage
 bin_file_path1 = 'binaries/transmitted_bin_0520_1541.bin'
-bin_file_path2 = 'binaries/received_binary_0520_1541.bin'
+bin_file_path2 = './binaries/received_binary_0523_1300.bin'
 byte_data1 = load_bin_file(bin_file_path1)
 byte_data2 = load_bin_file(bin_file_path2)
 binary_string1 = bytes_to_binary_string(byte_data1)
 binary_string2 = bytes_to_binary_string(byte_data2)
 
-print(len(binary_string1)/1022)
-print(len(binary_string2)/1022)
+print(len(binary_string1)/4094)
+print(len(binary_string2)/4094)
 
 
 transmitted_chunks = extract_OFDM_bins(binary_string1)

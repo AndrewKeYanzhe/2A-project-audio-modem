@@ -75,18 +75,20 @@ class AudioProcessor:
             self.audio_data = self.audio_data[:index]
         return self.audio_data
 
-# Example usage
-file_path1 = "recordings/chirp_1k_3k.m4a"
-csv_file_path = 'audio_data2.csv'
 
-audio_processor = AudioProcessor(file_path1)
-audio_processor.load_audio()
-audio_processor.save_to_csv(csv_file_path)
-audio_processor.plot_waveforms()
+if __name__ == '__main__':
+    # Example usage
+    file_path1 = "recordings/chirp_1k_3k.m4a"
+    csv_file_path = 'audio_data2.csv'
 
-# Record and truncate audio
-record_duration = 60  # seconds
-audio_processor.record_audio(record_duration)
-audio_processor.truncate_list(2000)
-audio_processor.save_to_csv('recorded_audio.csv')
-audio_processor.plot_waveforms()
+    audio_processor = AudioProcessor(file_path1)
+    audio_processor.load_audio()
+    audio_processor.save_to_csv(csv_file_path)
+    audio_processor.plot_waveforms()
+
+    # Record and truncate audio
+    record_duration = 60  # seconds
+    audio_processor.record_audio(record_duration)
+    audio_processor.truncate_list(2000)
+    audio_processor.save_to_csv('recorded_audio.csv')
+    audio_processor.plot_waveforms()

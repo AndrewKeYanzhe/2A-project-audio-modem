@@ -89,12 +89,13 @@ class OFDMTransmitter:
         n_bins = (block_size * 2) + 2
         n_low, n_high = cut_freq_bins(f_low, f_high, fs, n_bins)
         usable_subcarriers = n_high - n_low + 1
-
         bits_per_block = usable_subcarriers * 2
 
         # Calculate the total bits needed to fit the binary data into complete OFDM blocks
         total_bits_needed = bits_per_block * ((len(binary_data) + bits_per_block - 1) // bits_per_block)
-        binary_data_padded = binary_data.ljust(total_bits_needed, '0')
+        binary_data_padded = binary_data.rjust(total_bits_needed, '0')
+
+        
         num_blocks = len(binary_data_padded) // bits_per_block
         blocks_with_prefix = []
 
@@ -105,14 +106,22 @@ class OFDMTransmitter:
 
             # Map bits to symbols
             symbols = self.map_bits_to_symbols(block_data)
-            self.constellation_points.extend(symbols)  # Save constellation points for visualization
+            #self.constellation_points.extend(symbols)  # Save constellation points for visualization
 
             # Initialize the OFDM block with zeros
-            symbols_extended = np.zeros(n_bins, dtype=complex)
+            #symbols_extended = np.zeros(block_size * 2 + 2, dtype=complex)
+            # Initialize the OFDM block with random QPSK constellation points
+            constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
+            symbols_extended = np.random.choice(constellation_points, n_bins)
+            symbols_extended[0] = 0
+            symbols_extended[n_bins // 2] = 0
+            
+
 
             # Place the symbols into the specified subcarrier bins
             symbols_extended[n_low:n_low+usable_subcarriers] = symbols[:usable_subcarriers]
-            symbols_extended[n_bins-n_high-usable_subcarriers:n_bins-n_high] = np.conj(np.flip(symbols[:usable_subcarriers]))
+            #symbols_extended[n_bins-n_high-usable_subcarriers:n_bins-n_high] = np.conj(np.flip(symbols[:usable_subcarriers]))
+            symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
 
             # Perform the inverse DFT to convert to time domain
             time_domain_signal = self.inverse_dft(symbols_extended)
@@ -232,7 +241,7 @@ if __name__ == "__main__":
     transmitter = OFDMTransmitter()
 
     # Load the binary data from file
-    transmitted_binary_path = './binaries/transmitted_bin_0520_1541.bin'
+    transmitted_binary_path = 'second_try.txt'
     logging.info(f"Loading binary data from {transmitted_binary_path}.")
     data = transmitter.load_binary_data(transmitted_binary_path)
 

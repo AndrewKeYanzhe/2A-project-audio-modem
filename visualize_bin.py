@@ -42,8 +42,8 @@ byte_data2 = load_bin_file(bin_file_path2)
 binary_string1 = bytes_to_binary_string(byte_data1)
 binary_string2 = bytes_to_binary_string(byte_data2)
 
-print(len(binary_string1)/1022)
-print(len(binary_string2)/1022)
+print(len(binary_string1)/4094)
+print(len(binary_string2)/4096)
 
 
 transmitted_chunks = extract_OFDM_bins(binary_string1)

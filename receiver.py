@@ -118,30 +118,31 @@ class Receiver:
     
         return interpolated_response
 
+
     def process_signal(self):
         """Process the received signal to recover binary data."""
         # Load the channel impulse response and the received signal
         #self.channel_impulse_response = self.load_data(self.channel_file)#(这是原来的代码，channel。csv情况下,这样做的话channel_impulse_response指FIR，所以下面要fft)
-
         self.received_signal = self.load_data(self.received_file)
-
+        
         # Remove cyclic prefix and get blocks
         blocks = self.remove_cyclic_prefix(self.received_signal)
+        
         # Define subcarrier frequencies for OFDM
         subcarrier_frequencies = np.fft.fftfreq(self.block_size, d=1/self.fs)
-
+        
         # Interpolate the frequency response to match the subcarrier frequencies
         interpolated_response = self.interpolate_frequency_response(subcarrier_frequencies)
 
         # Estimate channel frequency response
         #self.g_n = self.apply_fft(self.channel_impulse_response, self.block_size)（这是原来的代码，channel。csv情况下,这样做的话channel_impulse_response指FIR）
+        
         # Process each block
         complete_binary_data = ''
+        
         # Get the frequency bins corresponding to the given frequency range
-        if self.f_low is None or self.f_high is None:
-            bin_low, bins_high = 1, self.block_size // 2
-        else:
-            bin_low,bins_high = cut_freq_bins(self.f_low, self.f_high, self.fs, self.block_size) 
+        bin_low,bins_high = cut_freq_bins(self.f_low, self.f_high, self.fs, self.block_size) 
+        
         for block in blocks:
         # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)

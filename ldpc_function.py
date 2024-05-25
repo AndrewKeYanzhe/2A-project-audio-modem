@@ -11,17 +11,20 @@ gcc -o bin/results2csv src/results2csv.c
 Usage
 -------------------------
 
-the transmitted block is 2x the size of the data block
+1. set the encoded_block_length (smaller than OFDM block size.)
 
-the transmitted block has to be a multiple of 24 (see /py/ldpc.py)
-1008 is chosen so that it fits within the 1022 bits ofdm data block
 
-hence the ldpc input data block has to be of length 504
+    the transmitted block has to be a multiple of 24 (see /py/ldpc.py)
+    e.g 4032 fits within the 4088 bits ofdm data block
 
-encode_ldpc(data) 
-    accepts 504 length data list
-    returns the 1008 length transmission block
-decode_ldpc(signal) does the inverse
+2. encode_ldpc(data) 
+
+    data is half of encoded_block_length
+    e.g. 2016
+
+3. decode_ldpc(signal)
+
+    signal is encoded_block_length
 """
 
 
@@ -34,9 +37,9 @@ np.set_printoptions(threshold=np.inf)
 
 # Create an LDPC code object
 
-encoded_block_length = 1008
+encoded_block_length = 4032
 data_block_length = int(encoded_block_length/2)
-z=int(1008/24)
+z=int(encoded_block_length/24)
 
 c = ldpc.code(standard = '802.16', rate = '1/2', z=z, ptype='A')
 
@@ -113,7 +116,10 @@ if __name__ == "__main__":
     errors = 0
     for i in range(100):
         y=encode_ldpc(data)
-        y=flip_bits(y,6) #6% of bits flipped results in no errors for 100 runs
+        y=flip_bits(y,7) 
+        #6% of bits flipped results in no errors for 100 runs. with 1008 encoded length
+        #7% of bits flipped results in no errors for 100 runs. with 4032 encoded length
+
         output = decode_ldpc(y)
         errors = errors + max(output !=data)
 

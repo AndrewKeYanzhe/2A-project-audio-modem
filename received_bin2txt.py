@@ -97,15 +97,15 @@ if __name__ == '__main__':
     fs = 48000
     time = '0525_1558'
     
-    bin_file_path1 = 'second_try.txt'
-    bin_file_path2 = 'text/received_file_0525_1558.txt'
+    bin_file_path1 = 'text/second_try.txt'
+    bin_file_path2 = './binaries/received_binary_0525_1749.bin'
     byte_data1 = load_bin_file(bin_file_path1)
     byte_data2 = load_bin_file(bin_file_path2)
     binary_string1 = bytes_to_binary_string(byte_data1)
     binary_string2 = bytes_to_binary_string(byte_data2)
 
     num_transmitted_chunks, transmitted_chunks = bin_string2chunks(binary_string1,
-                                                                   already_freq_truncated=False,
+                                                                   already_freq_truncated=True,
                                                                    f_low=f_low, f_high=f_high,
                                                                    num_bins=num_bins, fs=fs)
     
@@ -114,6 +114,9 @@ if __name__ == '__main__':
                                                              f_low=f_low, f_high=f_high,
                                                              num_bins=num_bins, fs=fs)
 
+    
+    print(f"Number of transmitted chunks: {num_transmitted_chunks}")
+    print(f"Number of received chunks: {num_received_chunks}")
     # concatenate the chunks into a single binary string
     transmitted_binary_string = ''.join(transmitted_chunks)
     received_binary_string = ''.join(received_chunks)

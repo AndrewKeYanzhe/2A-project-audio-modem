@@ -147,11 +147,11 @@ class Receiver:
             x_n = self.channel_compensation(r_n, self.g_n)
 
         # Save the constellation points for plotting
-            self.received_constellations.extend(r_n[bin_low:bins_high])
-            self.compensated_constellations.extend(x_n[bin_low:bins_high]) 
+            self.received_constellations.extend(r_n[bin_low:bins_high+1])
+            self.compensated_constellations.extend(x_n[bin_low:bins_high+1]) 
         
         # Demap QPSK symbols to binary data
-            binary_data = self.qpsk_demapper(x_n[bin_low:bins_high]) # change: now we only demap the frequency bins of interest
+            binary_data = self.qpsk_demapper(x_n[bin_low:bins_high+1]) # change: now we only demap the frequency bins of interest
             complete_binary_data += binary_data
         #plotting the constellation
         self.plot_constellation(self.received_constellations, title="Constellation Before Compensation")

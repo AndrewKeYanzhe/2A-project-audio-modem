@@ -1,5 +1,6 @@
 from matplotlib import pyplot as plt
 from utils import cut_freq_bins
+import logging
 
 def load_bin_file(file_path):
     """Load a .bin file and return its contents as a byte array."""
@@ -30,10 +31,10 @@ def bin_string2chunks(binary_string, already_freq_truncated=True,
     
     if already_freq_truncated:
         # Already truncated to the frequency range, so chunk size is end_index - start_index
-        chunks_size = end_index - start_index + 1
+        chunk_size = end_index - start_index + 1
         num_chunks = len(binary_string) // chunk_size
         # no need to truncate again
-        chunks = [binary_string[i*chunks_size:(i+1)*chunks_size] for i in range(num_chunks)]
+        chunks = [binary_string[i*chunk_size:(i+1)*chunk_size] for i in range(num_chunks)]
     
     return num_chunks, chunks
        
@@ -53,13 +54,42 @@ def save_file(file_path, content):
         file.write(content)
     print(f"File has been saved to {file_path}. Please check the file to see if the image is correctly reconstructed.")
 
-
+def calculate_ber_bytes(transmitted_chunks, received_chunks):
+    """
+    Calculate the error rate
+    between the original transmitted sequence (txt file
+    and the received sequence (txt file).
+    """
+    # I was thinking about doing a BER for actual text files, but I think it's not necessary.
+    # Since we have both transmitted and received binary strings, we can just compare them directly.
+    pass
     
-if __name__ == "__main__":
-
-
-    # Example usage
+def calculate_ber_chunks(transmitted_chunks, received_chunks, plot=True):
+    """Calculate the bit error rate for each OFDM block."""
+    # plot the ber as a function of OFDM block number
     
+    num_transmitted_chunks = len(transmitted_chunks)
+    num_received_chunks = len(received_chunks)
+    if num_transmitted_chunks != num_received_chunks:
+        logging.info("Number of transmitted and received chunks do not match.")
+        logging.info(f"Number of transmitted chunks: {num_transmitted_chunks}")
+        logging.info(f"Number of received chunks: {num_received_chunks}")
+    
+    ber_list = []
+    for i in range(num_transmitted_chunks):
+        num_errors = sum(1 for j in range(len(transmitted_chunks[i])) if transmitted_chunks[i][j] != received_chunks[i][j])
+        ber = num_errors / len(transmitted_chunks[i])
+        ber_list.append(ber)
+        
+    if plot:
+        plt.plot(ber_list)
+        plt.xlabel('OFDM block number')
+        plt.ylabel('Bit error rate')
+        plt.title('Bit error rate vs OFDM block number')
+        plt.show()
+
+if __name__ == '__main__':
+
     # Parameters
     f_low = 1000
     f_high = 8000
@@ -67,8 +97,8 @@ if __name__ == "__main__":
     fs = 48000
     time = '0525_1558'
     
-    bin_file_path1 = 'binaries/transmitted_bin_0520_1541.bin'
-    bin_file_path2 = './binaries/received_binary_0523_1300.bin'
+    bin_file_path1 = 'second_try.txt'
+    bin_file_path2 = 'text/received_file_0525_1558.txt'
     byte_data1 = load_bin_file(bin_file_path1)
     byte_data2 = load_bin_file(bin_file_path2)
     binary_string1 = bytes_to_binary_string(byte_data1)
@@ -91,29 +121,6 @@ if __name__ == "__main__":
     # save the received binary strings to a file
     byte_data2 = binary_to_bytes(received_binary_string)
     save_file('text/received_file_'+time+'.txt', byte_data2)
-    
-    
-    
-    
-    
-    
-    ###################### Error rate calculation ######################
 
-    # print(len(transmitted_binary_string), len(received_binary_string))
-
-    # # calculate the bit error rate
-    # num_errors = sum([1 for i in range(len(transmitted_binary_string)) if transmitted_binary_string[i] != received_binary_string[i]])
-    # ber = num_errors / len(transmitted_binary_string)
-    # print(f"Bit error rate: {ber:.2f}")
-
-    # # plot the ber as a function of OFDM block number
-    # ber_list = []
-    # for i in range(actual_block_nums):
-    #     num_errors = sum(1 for j in range(len(transmitted_chunks[i])) if transmitted_chunks[i][j] != received_chunks[i][j])
-    #     ber = num_errors / len(transmitted_chunks[i])
-    #     ber_list.append(ber)
-    # plt.plot(ber_list)
-    # plt.xlabel('OFDM block number')
-    # plt.ylabel('Bit error rate')
-    # plt.title('Bit error rate vs OFDM block number')
-    # plt.show()
+    # Plot the BER    
+    calculate_ber_chunks(transmitted_chunks, received_chunks, plot=True)

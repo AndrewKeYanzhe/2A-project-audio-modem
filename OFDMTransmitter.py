@@ -29,6 +29,7 @@ from utils import save_as_wav
 import logging
 from AudioProcessor import AudioProcessor
 import matplotlib.pyplot as plt
+from utils import save_as_wav, cut_freq_bins
 
 class OFDMTransmitter:
 
@@ -60,24 +61,66 @@ class OFDMTransmitter:
     #block_size here is 
    
     # (real_blocksize-2)/2
-    def split_data_into_blocks(self, binary_data, block_size, prefix_length):
+    # def split_data_into_blocks(self, binary_data, block_size, prefix_length):
+    #     """Split binary data into blocks, append cyclic prefix, and combine new blocks."""
+    #     total_bits_needed = (block_size * 2) * ((len(binary_data) + block_size * 2 - 1) // (block_size * 2))
+    #     binary_data_padded = binary_data.ljust(total_bits_needed, '0')
+    #     num_blocks = len(binary_data_padded) // (block_size * 2)
+    #     blocks_with_prefix = []
+
+    #     for i in range(num_blocks):
+    #         start_index = i * block_size * 2
+    #         end_index = start_index + block_size * 2
+    #         block_data = binary_data_padded[start_index:end_index]
+    #         symbols = self.map_bits_to_symbols(block_data)
+    #         self.constellation_points.extend(symbols)  # Save constellation points for visualization
+    #         symbols_extended = np.zeros(block_size * 2 + 2, dtype=complex)
+    #         symbols_extended[1:block_size+1] = symbols[:block_size]
+    #         symbols_extended[block_size+2:] = np.conj(np.flip(symbols[:block_size]))
+    #         time_domain_signal = self.inverse_dft(symbols_extended)
+    #         transmitted_signal = self.add_cyclic_prefix(time_domain_signal, prefix_length)
+    #         blocks_with_prefix.append(transmitted_signal)
+        
+    #     return np.concatenate(blocks_with_prefix)
+
+    def split_data_into_blocks(self, binary_data, block_size, prefix_length,fs, f_low, f_high):
         """Split binary data into blocks, append cyclic prefix, and combine new blocks."""
-        total_bits_needed = (block_size * 2) * ((len(binary_data) + block_size * 2 - 1) // (block_size * 2))
+        # Determine the frequency bin range
+        n_bins = (block_size * 2) + 2
+        n_low, n_high = cut_freq_bins(f_low, f_high, fs, n_bins)
+        usable_subcarriers = n_high - n_low + 1
+
+        bits_per_block = usable_subcarriers * 2
+
+        # Calculate the total bits needed to fit the binary data into complete OFDM blocks
+        total_bits_needed = bits_per_block * ((len(binary_data) + bits_per_block - 1) // bits_per_block)
         binary_data_padded = binary_data.ljust(total_bits_needed, '0')
-        num_blocks = len(binary_data_padded) // (block_size * 2)
+        num_blocks = len(binary_data_padded) // bits_per_block
         blocks_with_prefix = []
 
         for i in range(num_blocks):
-            start_index = i * block_size * 2
-            end_index = start_index + block_size * 2
+            start_index = i * bits_per_block
+            end_index = start_index + bits_per_block
             block_data = binary_data_padded[start_index:end_index]
+
+            # Map bits to symbols
             symbols = self.map_bits_to_symbols(block_data)
             self.constellation_points.extend(symbols)  # Save constellation points for visualization
-            symbols_extended = np.zeros(block_size * 2 + 2, dtype=complex)
-            symbols_extended[1:block_size+1] = symbols[:block_size]
-            symbols_extended[block_size+2:] = np.conj(np.flip(symbols[:block_size]))
+
+            # Initialize the OFDM block with zeros
+            symbols_extended = np.zeros(n_bins, dtype=complex)
+
+            # Place the symbols into the specified subcarrier bins
+            symbols_extended[n_low:n_low+usable_subcarriers] = symbols[:usable_subcarriers]
+            symbols_extended[n_bins-n_high-usable_subcarriers:n_bins-n_high] = np.conj(np.flip(symbols[:usable_subcarriers]))
+
+            # Perform the inverse DFT to convert to time domain
             time_domain_signal = self.inverse_dft(symbols_extended)
+            
+            # Add cyclic prefix
             transmitted_signal = self.add_cyclic_prefix(time_domain_signal, prefix_length)
+            
+            # Append the block with cyclic prefix to the list
             blocks_with_prefix.append(transmitted_signal)
         
         return np.concatenate(blocks_with_prefix)
@@ -143,9 +186,9 @@ class OFDMTransmitter:
         np.savetxt(file_path, data, delimiter=',', fmt='%1.4f')
         print(f"Data has been written to {file_path}.")
 
-    def transmit_signal(self, binary_data, block_size, prefix_length):
+    def transmit_signal(self, binary_data, block_size, prefix_length,fs, f_low, f_high):
         """Encode and transmit the binary data as an OFDM signal."""
-        transmitted_signal = self.split_data_into_blocks(binary_data, block_size, prefix_length)
+        transmitted_signal = self.split_data_into_blocks(binary_data, block_size, prefix_length,fs, f_low, f_high)
         transmitted_signal = transmitted_signal.real
         print(f"Length of transmitted signal: {len(transmitted_signal)}")
         return transmitted_signal
@@ -182,7 +225,7 @@ if __name__ == "__main__":
     fs = 48000
     block_size = (4096-2)//2
     prefix_length = 512
-    recording_name = '0523_1237'
+    recording_name = '0525_1548'
     chirp_name = '1k_8k_0523'
 
     # Example usage
@@ -201,7 +244,7 @@ if __name__ == "__main__":
     binary_data = transmitter.audio_to_binary(data)
 
     # Transmit the signal
-    transmitted_signal = transmitter.transmit_signal(binary_data, block_size, prefix_length)
+    transmitted_signal = transmitter.transmit_signal(binary_data, block_size, prefix_length,fs, 1000, 8000)
 
     # Save the transmitted signal to a CSV file
     output_csv_path = './files/transmitted_data_' + recording_name + '.csv'
@@ -209,7 +252,7 @@ if __name__ == "__main__":
     logging.info(f"Transmitted signal has been saved to {output_csv_path}.")
 
     # Plot the QPSK constellation diagram
-    transmitter.plot_constellation()
+    #transmitter.plot_constellation()
 
     # Generate the chirp signal with ChirpSignalGenerator and save it
     generator = ChirpSignalGenerator(f_low=1000, f_high=8000)

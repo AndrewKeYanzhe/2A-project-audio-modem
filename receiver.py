@@ -138,10 +138,7 @@ class Receiver:
         # Process each block
         complete_binary_data = ''
         # Get the frequency bins corresponding to the given frequency range
-        if self.f_low is None or self.f_high is None:
-            bin_low, bins_high = 1, self.block_size // 2
-        else:
-            bin_low,bins_high = cut_freq_bins(self.f_low, self.f_high, self.fs, self.block_size) 
+        bin_low,bins_high = cut_freq_bins(self.f_low, self.f_high, self.fs, self.block_size) 
         for block in blocks:
         # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
@@ -154,7 +151,7 @@ class Receiver:
             self.compensated_constellations.extend(x_n[bin_low:bins_high]) 
         
         # Demap QPSK symbols to binary data
-            binary_data = self.qpsk_demapper(x_n[1:(self.block_size // 2)])  # Assuming data is only in these bins
+            binary_data = self.qpsk_demapper(x_n[bin_low:bins_high]) # change: now we only demap the frequency bins of interest
             complete_binary_data += binary_data
         #plotting the constellation
         self.plot_constellation(self.received_constellations, title="Constellation Before Compensation")

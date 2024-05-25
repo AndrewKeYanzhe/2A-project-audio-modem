@@ -138,7 +138,7 @@ class Receiver:
         # Process each block
         complete_binary_data = ''
         # Get the frequency bins corresponding to the given frequency range
-        bin_low,bins_high = cut_freq_bins(self.f_low, self.f_high, self.fs, self.block_size) 
+        bin_low,bin_high = cut_freq_bins(self.f_low, self.f_high, self.fs, self.block_size) 
         for block in blocks:
         # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
@@ -147,11 +147,11 @@ class Receiver:
             x_n = self.channel_compensation(r_n, self.g_n)
 
         # Save the constellation points for plotting
-            self.received_constellations.extend(r_n[bin_low:bins_high+1])
-            self.compensated_constellations.extend(x_n[bin_low:bins_high+1]) 
+            self.received_constellations.extend(r_n[bin_low:bin_high+1])
+            self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
         
         # Demap QPSK symbols to binary data
-            binary_data = self.qpsk_demapper(x_n[bin_low:bins_high+1]) # change: now we only demap the frequency bins of interest
+            binary_data = self.qpsk_demapper(x_n[bin_low:bin_high+1]) # change: now we only demap the frequency bins of interest
             complete_binary_data += binary_data
         #plotting the constellation
         self.plot_constellation(self.received_constellations, title="Constellation Before Compensation")
@@ -314,7 +314,7 @@ if __name__ == "__main__":
 
     # Parameters
     fs =  48000
-    recording_name = '0523_1300'
+    recording_name = '0525_1749'
     OFDM_prefix_length = 512
     OFDM_block_size = 4096
     chirp_start_time = 2.0  # Example start time of chirp
@@ -323,7 +323,7 @@ if __name__ == "__main__":
     chirp_f_high = 8000
     chirp_transmitted_path = 'chirps/1k_8k_0523.wav'
     #received_signal_path = './recordings/'+recording_name+'.m4a'
-    received_signal_path = 'recordings/0523_1300_speaker100.m4a'
+    received_signal_path = 'recordings/0525_1832.m4a'
     
     # Initialize AnalogueSignalProcessor with the chirp signals
     asp = AnalogueSignalProcessor(chirp_transmitted_path, received_signal_path,chirp_f_low,chirp_f_high)

@@ -233,7 +233,7 @@ class Receiver:
             else:
                 binary_data = self.qpsk_demapper(constellations) # change: now we only demap the frequency bins of interest
 
-            print("binary_data length",len(binary_data))
+            # print("binary_data length",len(binary_data))
 
             block_length = len(binary_data)
             ldpc_encoded_length = (block_length//24)*24
@@ -245,7 +245,7 @@ class Receiver:
             #convert string to list
             ldpc_signal_list = np.array([int(element) for element in list(ldpc_signal)])
 
-            print(ldpc_signal_list)
+            # print(ldpc_signal_list)
 
             ldpc_decoded = decode_ldpc(ldpc_signal_list)
 
@@ -379,14 +379,17 @@ if __name__ == "__main__":
     recording_name = '0525_1749'
     OFDM_prefix_length = 512
     OFDM_block_size = 4096
-    chirp_start_time = 2.0  # Example start time of chirp
-    chirp_end_time = 7.0    # Example end time of chirp
+    chirp_start_time = 0.0  # Example start time of chirp
+    chirp_end_time = 15.0    # Example end time of chirp
     chirp_f_low = 1000
     chirp_f_high = 8000
     chirp_transmitted_path = 'chirps/1k_8k_0523.wav'
     #received_signal_path = './recordings/'+recording_name+'.m4a'
     received_signal_path = 'recordings/0525_1832.m4a'
-    received_signal_path = 'recordings/transmitted_signal_with_chirp_0525_1548.wav'
+    received_signal_path = 'recordings/0526_2347_article_speakers.m4a'
+    received_signal_path = 'recordings/0526_2347_article_speakers3.m4a'
+    # received_signal_path = 'recordings/0526_2347_article_speakers2_iphoneRec.m4a'
+    # received_signal_path = 'recordings/transmitted_signal_with_chirp_0525_1548.wav'
     
     # Initialize AnalogueSignalProcessor with the chirp signals
     asp = AnalogueSignalProcessor(chirp_transmitted_path, received_signal_path,chirp_f_low,chirp_f_high)

@@ -60,17 +60,19 @@ def compare_files_bitwise(file1, file2, max_shift=100):
 # Example usage:
 # file1_path = 'binaries/received_binary_0525_1749 constellation shifted.bin'
 ref_path = 'text/second_try.txt'
-unshifted_path = 'binaries/received_binary_0525_1749 constellation non shifted.bin'
-shifted_path = 'binaries/received_binary_0525_1749 constellation shifted.bin'
+ref_path = 'text/article.txt'
+# unshifted_path = 'binaries/received_binary_0525_1749 constellation non shifted.bin'
+unshifted_path = "binaries/received_binary_0525_1749.bin"
+# shifted_path = 'binaries/received_binary_0525_1749 constellation shifted.bin'
 shift, percentage = compare_files_bitwise(ref_path, unshifted_path)
 
 print(f'Percentage of identical bits: {percentage:.2f}%')
 print(f'Best shift: {shift}')
 
-shift2, percentage2 = compare_files_bitwise(ref_path, shifted_path)
+# shift2, percentage2 = compare_files_bitwise(ref_path, shifted_path)
 
-print(f'Percentage of identical bits with constellation phase rotation: {percentage2:.2f}%')
-print(f'Best shift2: {shift}')
+# print(f'Percentage of identical bits with constellation phase rotation: {percentage2:.2f}%')
+# print(f'Best shift2: {shift}')
 
 
 

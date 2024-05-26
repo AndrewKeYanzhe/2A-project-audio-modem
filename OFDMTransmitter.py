@@ -126,6 +126,8 @@ class OFDMTransmitter:
 
             #convert string to list
             block_data_ldpc = encode_ldpc(list(block_data))
+
+            #convert list to string
             block_data_ldpc = ''.join(str(x) for x in block_data_ldpc)
 
             print(block_data_ldpc)

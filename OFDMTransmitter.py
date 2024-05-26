@@ -31,6 +31,8 @@ from AudioProcessor import AudioProcessor
 import matplotlib.pyplot as plt
 from utils import save_as_wav, cut_freq_bins
 
+from ldpc_function import *
+
 class OFDMTransmitter:
 
     def __init__(self):
@@ -91,21 +93,53 @@ class OFDMTransmitter:
         usable_subcarriers = n_high - n_low + 1
         bits_per_block = usable_subcarriers * 2
 
+        print("bits_per_block",bits_per_block) #1194
+        
+        ldpc_encoded_length = (bits_per_block//24)*24
+
+        ldpc_data_length = int(ldpc_encoded_length/2)
+
+        print("ldpc_encoded_length",ldpc_encoded_length)
+            
+
         # Calculate the total bits needed to fit the binary data into complete OFDM blocks
-        total_bits_needed = bits_per_block * ((len(binary_data) + bits_per_block - 1) // bits_per_block)
-        binary_data_padded = binary_data.rjust(total_bits_needed, '0')
+        total_bits_needed = ldpc_data_length * ((len(binary_data) + ldpc_data_length - 1) // bits_per_block)
+        binary_data_padded = binary_data.rjust(int(total_bits_needed), '0')
+
+
 
         
-        num_blocks = len(binary_data_padded) // bits_per_block
+        num_blocks = len(binary_data_padded) // ldpc_data_length
         blocks_with_prefix = []
 
         for i in range(num_blocks):
-            start_index = i * bits_per_block
-            end_index = start_index + bits_per_block
+            start_index = i * ldpc_data_length
+            end_index = start_index + ldpc_data_length
             block_data = binary_data_padded[start_index:end_index]
 
+            print(len(block_data))
+            # print(block_data)
+            print(type(block_data))
+            # block_data = np.frombuffer(block_data, dtype=np.uint8)
+            
+
+
+            #convert string to list
+            block_data_ldpc = encode_ldpc(list(block_data))
+            block_data_ldpc = ''.join(str(x) for x in block_data_ldpc)
+
+            print(block_data_ldpc)
+
+
+            print(len(block_data_ldpc))
+
+            # block_data_ldpc_padded=block_data_ldpc.rjust(int(bits_per_block), '0')
+            block_data_ldpc_padded = block_data_ldpc + '0' * (bits_per_block - len(block_data_ldpc)) if len(block_data_ldpc) < bits_per_block else block_data_ldpc
+
+
+
             # Map bits to symbols
-            symbols = self.map_bits_to_symbols(block_data)
+            symbols = self.map_bits_to_symbols(block_data_ldpc_padded)
             #self.constellation_points.extend(symbols)  # Save constellation points for visualization
 
             # Initialize the OFDM block with zeros
@@ -241,7 +275,7 @@ if __name__ == "__main__":
     transmitter = OFDMTransmitter()
 
     # Load the binary data from file
-    transmitted_binary_path = 'second_try.txt'
+    transmitted_binary_path = 'text/article.txt'
     logging.info(f"Loading binary data from {transmitted_binary_path}.")
     data = transmitter.load_binary_data(transmitted_binary_path)
 

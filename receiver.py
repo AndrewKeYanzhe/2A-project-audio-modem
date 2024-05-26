@@ -364,6 +364,7 @@ if __name__ == "__main__":
     chirp_transmitted_path = 'chirps/1k_8k_0523.wav'
     #received_signal_path = './recordings/'+recording_name+'.m4a'
     received_signal_path = 'recordings/0525_1832.m4a'
+    received_signal_path = 'recordings/transmitted_signal_with_chirp_0525_1548.wav'
     
     # Initialize AnalogueSignalProcessor with the chirp signals
     asp = AnalogueSignalProcessor(chirp_transmitted_path, received_signal_path,chirp_f_low,chirp_f_high)

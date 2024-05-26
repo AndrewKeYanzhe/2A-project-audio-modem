@@ -15,6 +15,8 @@ import random
 import math
 import cmath
 
+from ldpc_function import *
+
 """
     The Receiver class processes an OFDM signal to recover binary data, convert it to bytes,
     and save it to a file. It handles loading data, removing cyclic prefixes, applying FFT,
@@ -230,8 +232,28 @@ class Receiver:
                 binary_data = self.qpsk_demapper(shifted_constellations) # change: now we only demap the frequency bins of interest
             else:
                 binary_data = self.qpsk_demapper(constellations) # change: now we only demap the frequency bins of interest
+
+            print("binary_data length",len(binary_data))
+
+            block_length = len(binary_data)
+            ldpc_encoded_length = (block_length//24)*24
+
+            ldpc_signal = binary_data[0:ldpc_encoded_length]
+
+            # print(list(ldpc_signal))
+
+            #convert string to list
+            ldpc_signal_list = np.array([int(element) for element in list(ldpc_signal)])
+
+            print(ldpc_signal_list)
+
+            ldpc_decoded = decode_ldpc(ldpc_signal_list)
+
             
-            complete_binary_data += binary_data
+            #convert list to string
+            ldpc_decoded = ''.join(str(x) for x in ldpc_decoded)
+
+            complete_binary_data += ldpc_decoded
 
 
 

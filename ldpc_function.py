@@ -28,6 +28,15 @@ Usage
 """
 
 
+
+"""
+TODO need to calculate signal to noise ratio at different frequencies and provide snr to ldpc for better performance
+
+higher performance with longer blocks according to jossy    
+
+"""
+
+
 import random
 import ldpc.py.ldpc as ldpc
 import numpy as np

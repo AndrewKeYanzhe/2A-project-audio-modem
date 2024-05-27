@@ -1,3 +1,9 @@
+"""
+Give script helps you to plot the BER as a function of OFDM block number.
+
+You might want to use check frequency drift.
+"""
+
 from matplotlib import pyplot as plt
 from utils import cut_freq_bins
 import logging
@@ -23,7 +29,7 @@ def bin_string2chunks(binary_string, already_freq_truncated=True,
     
     if not already_freq_truncated:
         # chunk size is the number of bins
-        chunk_size = num_bins
+        chunk_size = num_bins-2
         # The number of chunks is the number of OFDM blocks
         num_chunks = len(binary_string) // chunk_size
         # Extract the chunks - only the bins corresponding to the specified frequency range
@@ -89,16 +95,17 @@ def calculate_ber_chunks(transmitted_chunks, received_chunks, plot=True):
         plt.show()
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO)
 
     # Parameters
     f_low = 1000
     f_high = 8000
     num_bins = 4096
     fs = 48000
-    time = '0525_1558'
+    time = '0525_1947'
     
-    bin_file_path1 = 'text/second_try.txt'
-    bin_file_path2 = './binaries/received_binary_0525_1749.bin'
+    bin_file_path1 = 'text/article_2.txt'
+    bin_file_path2 = 'binaries/received_binary_0525_1749.bin'
     byte_data1 = load_bin_file(bin_file_path1)
     byte_data2 = load_bin_file(bin_file_path2)
     binary_string1 = bytes_to_binary_string(byte_data1)

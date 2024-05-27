@@ -184,16 +184,30 @@ class Receiver:
         phases = [(c, math.atan2(c[1], c[0])) for c in top_4]
 
         phases_sorted = sorted(phases, key=lambda x: x[1])
+
+        # phases_sorted = [phase + 360 if phase < 0 else phase for phase in phases_sorted]
+
+
+
+        # for key, value in phases_sorted.items():
+            # if value < 0:
+            #     phases_sorted[key] = value + 360
+
         sum_angles = 0
         for c, angle in phases_sorted:
             # Convert angle from radians to degrees
             angle_degrees = math.degrees(angle)
+            
             print(f"Coordinate: {c}, Magnitude: {math.sqrt(c[0]**2 + c[1]**2)}, Phase: {angle_degrees} degrees")
+            # print(angle_degrees)
+            if angle_degrees < 0:
+                angle_degrees = angle_degrees + 360
+            
             sum_angles = sum_angles + angle_degrees
         
-        print(sum_angles)
+        # print(sum_angles)
 
-        phase_shift_needed = (270-sum_angles)/4
+        phase_shift_needed = (720-sum_angles)/4
         print("phase shift needed", phase_shift_needed)
 
         # Convert centroids back to complex numbers

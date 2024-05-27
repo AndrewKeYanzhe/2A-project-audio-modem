@@ -141,14 +141,38 @@ class Receiver:
         complete_binary_data = ''
         # Get the frequency bins corresponding to the given frequency range
         bin_low,bin_high = cut_freq_bins(self.f_low, self.f_high, self.fs, self.block_size) 
-        for block in blocks:
-        # Apply FFT to the block
+        for index, block in enumerate(blocks):
+            
+            n_bins = 4096
+            
+
+            use_pilot_tone = True
+
+            if index == 0 and use_pilot_tone:
+                print("using pilot tone")
+                np.random.seed(1)
+                constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
+                symbols_extended = np.random.choice(constellation_points, n_bins)
+                symbols_extended[0] = 0
+                symbols_extended[n_bins // 2] = 0
+                symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
+                pilot_n = symbols_extended
+                r_n = self.apply_fft(block, self.block_size)
+                pilot_response = r_n/pilot_n
+                self.g_n = pilot_response
+
+                continue
+        
+        
+        
+            # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
-            self.g_n = interpolated_response
-        # Compensate for the channel effects
+            if use_pilot_tone == False:
+                self.g_n = interpolated_response
+            # Compensate for the channel effects
             x_n = self.channel_compensation(r_n, self.g_n)
 
-        # Save the constellation points for plotting
+            # Save the constellation points for plotting
             self.received_constellations.extend(r_n[bin_low:bin_high+1])
             self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
         
@@ -224,17 +248,18 @@ class Receiver:
 
 
         for block in blocks:
-        # Apply FFT to the block
+            # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
-            self.g_n = interpolated_response
-        # Compensate for the channel effects
+            if use_pilot_tone == False:
+                self.g_n = interpolated_response
+            # Compensate for the channel effects
             x_n = self.channel_compensation(r_n, self.g_n)
 
-        # Save the constellation points for plotting
+            # Save the constellation points for plotting
             # self.received_constellations.extend(r_n[bin_low:bin_high+1])
             # self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
         
-        # Demap QPSK symbols to binary data
+            # Demap QPSK symbols to binary data
             # binary_data = self.qpsk_demapper(x_n[bin_low:bin_high+1]) # change: now we only demap the frequency bins of interest
 
             constellations = np.copy(x_n[bin_low:bin_high+1])
@@ -411,6 +436,7 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/0526_2347_article_speakers3.m4a'
     # received_signal_path = 'recordings/0526_2347_article_speakers2_iphoneRec.m4a'
     received_signal_path = 'recordings/transmitted_signal_with_chirp_0525_1548.wav'
+    received_signal_path = 'transmitted_signal_with_chirp_0527_1635 2.wav'
     
     # Initialize AnalogueSignalProcessor with the chirp signals
     asp = AnalogueSignalProcessor(chirp_transmitted_path, received_signal_path,chirp_f_low,chirp_f_high)

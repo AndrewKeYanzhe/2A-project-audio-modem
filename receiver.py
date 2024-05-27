@@ -146,7 +146,7 @@ class Receiver:
             n_bins = 4096
             
 
-            use_pilot_tone = True
+            use_pilot_tone = False
 
             if index == 0 and use_pilot_tone:
                 print("using pilot tone")
@@ -157,21 +157,27 @@ class Receiver:
                 symbols_extended[n_bins // 2] = 0
                 symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
                 pilot_n = symbols_extended
+
                 r_n = self.apply_fft(block, self.block_size)
                 print("pilot_n length",len(pilot_n))
                 pilot_response = r_n/pilot_n
                 # print(pilot_response)
                 self.g_n = pilot_response
 
-                continue
+                
         
         
         
-            # Apply FFT to the block
-            r_n = self.apply_fft(block, self.block_size)
+            
             if use_pilot_tone == False:
+                # Apply FFT to the block
+                r_n = self.apply_fft(block, self.block_size)
                 self.g_n = interpolated_response
-            # Compensate for the channel effects
+            
+            
+            
+            
+            # Compensate for the channel effects      
             x_n = self.channel_compensation(r_n, self.g_n)
 
             # Save the constellation points for plotting
@@ -249,13 +255,16 @@ class Receiver:
         shift_constellation_phase = False
 
 
-        for block in blocks:
+        for index, block in enumerate(blocks):
+            if use_pilot_tone and index ==0:
+                continue
+                
             # Apply FFT to the block
-            r_n = self.apply_fft(block, self.block_size)
-            if use_pilot_tone == False:
-                self.g_n = interpolated_response
+            # r_n = self.apply_fft(block, self.block_size)
+            # if use_pilot_tone == False:
+            #     self.g_n = interpolated_response
             # Compensate for the channel effects
-            x_n = self.channel_compensation(r_n, self.g_n)
+            # x_n = self.channel_compensation(r_n, self.g_n)
 
             # Save the constellation points for plotting
             # self.received_constellations.extend(r_n[bin_low:bin_high+1])
@@ -276,7 +285,7 @@ class Receiver:
 
             # print("binary_data length",len(binary_data))
 
-            use_ldpc = False
+            use_ldpc = True
 
             if use_ldpc:
 
@@ -438,7 +447,7 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/0526_2347_article_speakers3.m4a'
     # received_signal_path = 'recordings/0526_2347_article_speakers2_iphoneRec.m4a'
     # received_signal_path = 'recordings/transmitted_signal_with_chirp_0525_1548.wav'
-    received_signal_path = 'recordings/transmitted_signal_with_chirp_0527_1635_pilot_tone.wav'
+    # received_signal_path = 'recordings/transmitted_signal_with_chirp_0527_1635_pilot_tone.wav'
     # received_signal_path = 'recordings/0527_1722.m4a'
     
     # Initialize AnalogueSignalProcessor with the chirp signals

@@ -235,26 +235,33 @@ class Receiver:
 
             # print("binary_data length",len(binary_data))
 
-            block_length = len(binary_data)
-            ldpc_encoded_length = (block_length//24)*24
+            use_ldpc = False
 
-            ldpc_signal = binary_data[0:ldpc_encoded_length]
+            if use_ldpc:
 
-            # print(list(ldpc_signal))
 
-            #convert string to list
-            ldpc_signal_list = np.array([int(element) for element in list(ldpc_signal)])
+                block_length = len(binary_data)
+                ldpc_encoded_length = (block_length//24)*24
 
-            # print(ldpc_signal_list)
+                ldpc_signal = binary_data[0:ldpc_encoded_length]
 
-            ldpc_decoded = decode_ldpc(ldpc_signal_list)
+                # print(list(ldpc_signal))
 
-            
-            #convert list to string
-            ldpc_decoded = ''.join(str(x) for x in ldpc_decoded)
+                #convert string to list
+                ldpc_signal_list = np.array([int(element) for element in list(ldpc_signal)])
 
-            complete_binary_data += ldpc_decoded
+                # print(ldpc_signal_list)
 
+                ldpc_decoded = decode_ldpc(ldpc_signal_list)
+
+                
+                #convert list to string
+                ldpc_decoded = ''.join(str(x) for x in ldpc_decoded)
+
+                complete_binary_data += ldpc_decoded
+
+            elif use_ldpc == False:
+                complete_binary_data += binary_data
 
 
 
@@ -389,7 +396,7 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/0526_2347_article_speakers.m4a'
     received_signal_path = 'recordings/0526_2347_article_speakers3.m4a'
     # received_signal_path = 'recordings/0526_2347_article_speakers2_iphoneRec.m4a'
-    # received_signal_path = 'recordings/transmitted_signal_with_chirp_0525_1548.wav'
+    received_signal_path = 'recordings/transmitted_signal_with_chirp_0525_1548.wav'
     
     # Initialize AnalogueSignalProcessor with the chirp signals
     asp = AnalogueSignalProcessor(chirp_transmitted_path, received_signal_path,chirp_f_low,chirp_f_high)

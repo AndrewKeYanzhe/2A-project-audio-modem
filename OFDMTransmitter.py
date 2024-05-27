@@ -93,6 +93,9 @@ class OFDMTransmitter:
         usable_subcarriers = n_high - n_low + 1
         bits_per_block = usable_subcarriers * 2
 
+
+
+
         use_ldpc = False
         
         if use_ldpc:
@@ -171,8 +174,10 @@ class OFDMTransmitter:
                 
                 # Append the block with cyclic prefix to the list
                 blocks_with_prefix.append(transmitted_signal)
+                print("transmitted_signal length",len(transmitted_signal))
 
         elif use_ldpc == False:
+
             # Calculate the total bits needed to fit the binary data into complete OFDM blocks
             total_bits_needed = bits_per_block * ((len(binary_data) + bits_per_block - 1) // bits_per_block)
             binary_data_padded = binary_data.rjust(total_bits_needed, '0')
@@ -180,6 +185,44 @@ class OFDMTransmitter:
             
             num_blocks = len(binary_data_padded) // bits_per_block
             blocks_with_prefix = []
+            
+            n_bins=4096
+
+            np.random.seed(1)
+            constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
+            symbols_extended = np.random.choice(constellation_points, n_bins)
+            print(symbols_extended[0:10])
+            symbols_extended[0] = 0
+            symbols_extended[n_bins // 2] = 0
+            symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
+            # pilot_n = symbols_extended
+            np.random.seed(None) 
+            # pilot_block_binary = ''.join(format(num, f'0{max(pilot_block).bit_length()}b') for num in pilot_block)
+
+            # blocks_with_prefix = 
+
+
+            # binary_data = pilot_block_binary+binary_data
+
+            # Perform the inverse DFT to convert to time domain
+            time_domain_signal = self.inverse_dft(symbols_extended)
+            
+            # Add cyclic prefix
+            transmitted_signal = self.add_cyclic_prefix(time_domain_signal, prefix_length)
+            
+            # Append the block with cyclic prefix to the list
+            blocks_with_prefix.append(transmitted_signal)
+
+            print("transmitted_block length pilot",len(transmitted_signal))
+
+
+
+
+
+
+
+            printed_data = 0
+            
 
             for i in range(num_blocks):
                 start_index = i * bits_per_block
@@ -213,6 +256,10 @@ class OFDMTransmitter:
                 
                 # Append the block with cyclic prefix to the list
                 blocks_with_prefix.append(transmitted_signal)
+
+                if printed_data ==0:
+                    print("transmitted_block length data",len(transmitted_signal))
+                    printed_data = 1
         
         return np.concatenate(blocks_with_prefix)
     
@@ -323,7 +370,7 @@ if __name__ == "__main__":
     transmitter = OFDMTransmitter()
 
     # Load the binary data from file
-    transmitted_binary_path = 'text/article.txt'
+    transmitted_binary_path = 'text/article_2.txt'
     logging.info(f"Loading binary data from {transmitted_binary_path}.")
     data = transmitter.load_binary_data(transmitted_binary_path)
 

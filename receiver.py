@@ -153,6 +153,7 @@ class Receiver:
                 np.random.seed(1)
                 constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
                 symbols_extended = np.random.choice(constellation_points, n_bins)
+                print(symbols_extended[0:10])
                 symbols_extended[0] = 0
                 symbols_extended[n_bins // 2] = 0
                 symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
@@ -249,7 +250,7 @@ class Receiver:
         shift_constellation_phase = False
 
 
-        for block in blocks:
+        for index, block in enumerate(blocks):
             # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
             if use_pilot_tone == False:
@@ -302,7 +303,8 @@ class Receiver:
                 complete_binary_data += ldpc_decoded
 
             elif use_ldpc == False:
-                complete_binary_data += binary_data
+                if index != 0:
+                    complete_binary_data += binary_data
 
 
 
@@ -437,8 +439,8 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/0526_2347_article_speakers.m4a'
     received_signal_path = 'recordings/0526_2347_article_speakers3.m4a'
     # received_signal_path = 'recordings/0526_2347_article_speakers2_iphoneRec.m4a'
-    # received_signal_path = 'recordings/transmitted_signal_with_chirp_0525_1548.wav'
-    received_signal_path = 'recordings/transmitted_signal_with_chirp_0527_1635_pilot_tone.wav'
+    received_signal_path = 'recordings/transmitted_signal_with_chirp_0525_1548.wav'
+    # received_signal_path = 'recordings/transmitted_signal_with_chirp_0527_1635_pilot_tone.wav'
     # received_signal_path = 'recordings/0527_1722.m4a'
     
     # Initialize AnalogueSignalProcessor with the chirp signals

@@ -158,7 +158,9 @@ class Receiver:
                 symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
                 pilot_n = symbols_extended
                 r_n = self.apply_fft(block, self.block_size)
+                print("pilot_n length",len(pilot_n))
                 pilot_response = r_n/pilot_n
+                # print(pilot_response)
                 self.g_n = pilot_response
 
                 continue
@@ -435,8 +437,9 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/0526_2347_article_speakers.m4a'
     received_signal_path = 'recordings/0526_2347_article_speakers3.m4a'
     # received_signal_path = 'recordings/0526_2347_article_speakers2_iphoneRec.m4a'
-    received_signal_path = 'recordings/transmitted_signal_with_chirp_0525_1548.wav'
-    received_signal_path = 'transmitted_signal_with_chirp_0527_1635 2.wav'
+    # received_signal_path = 'recordings/transmitted_signal_with_chirp_0525_1548.wav'
+    # received_signal_path = 'transmitted_signal_with_chirp_0527_1635.wav'
+    received_signal_path = 'recordings/0527_1722.m4a'
     
     # Initialize AnalogueSignalProcessor with the chirp signals
     asp = AnalogueSignalProcessor(chirp_transmitted_path, received_signal_path,chirp_f_low,chirp_f_high)

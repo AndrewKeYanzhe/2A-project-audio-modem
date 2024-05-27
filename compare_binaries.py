@@ -60,7 +60,7 @@ def compare_files_bitwise(file1, file2, max_shift=100):
 # Example usage:
 # file1_path = 'binaries/received_binary_0525_1749 constellation shifted.bin'
 ref_path = 'text/second_try.txt'
-ref_path = 'text/article.txt'
+# ref_path = 'text/article.txt'
 # unshifted_path = 'binaries/received_binary_0525_1749 constellation non shifted.bin'
 unshifted_path = "binaries/received_binary_0525_1749.bin"
 # shifted_path = 'binaries/received_binary_0525_1749 constellation shifted.bin'

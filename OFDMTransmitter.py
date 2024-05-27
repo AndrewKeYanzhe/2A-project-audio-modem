@@ -184,6 +184,9 @@ class OFDMTransmitter:
 
             
             num_blocks = len(binary_data_padded) // bits_per_block
+
+            print("number of blocks ", num_blocks)
+
             blocks_with_prefix = []
             
             n_bins=4096
@@ -340,7 +343,7 @@ class OFDMTransmitter:
         """Play the combined chirp and transmitted signal."""
         _,normalized_signal = self.normalize_signal(signal)
         combined_signal = np.concatenate((chirp_data, normalized_signal))
-        sd.play(combined_signal, samplerate=fs)
+        # sd.play(combined_signal, samplerate=fs)
         sd.wait()
         if save_path:
             save_as_wav(combined_signal, save_path, fs)
@@ -370,7 +373,9 @@ if __name__ == "__main__":
     transmitter = OFDMTransmitter()
 
     # Load the binary data from file
-    transmitted_binary_path = 'text/article_2.txt'
+    transmitted_binary_path = 'text/article_long.txt'
+    # transmitted_binary_path = 'P1017552 Medium.jpeg'
+    # transmitted_binary_path = 'text/article.txt'
     logging.info(f"Loading binary data from {transmitted_binary_path}.")
     data = transmitter.load_binary_data(transmitted_binary_path)
 

@@ -163,7 +163,7 @@ class Receiver:
                 # print(pilot_response)
                 self.g_n = pilot_response
 
-                continue
+                
         
         
         

@@ -28,6 +28,15 @@ Usage
 """
 
 
+
+"""
+TODO need to calculate signal to noise ratio at different frequencies and provide snr to ldpc for better performance
+
+higher performance with longer blocks according to jossy    
+
+"""
+
+
 import random
 import ldpc.py.ldpc as ldpc
 import numpy as np
@@ -37,7 +46,7 @@ np.set_printoptions(threshold=np.inf)
 
 # Create an LDPC code object
 
-encoded_block_length = 4032
+encoded_block_length = 1176
 data_block_length = int(encoded_block_length/2)
 z=int(encoded_block_length/24)
 

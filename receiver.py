@@ -15,6 +15,8 @@ import random
 import math
 import cmath
 
+from ldpc_function import *
+
 """
     The Receiver class processes an OFDM signal to recover binary data, convert it to bytes,
     and save it to a file. It handles loading data, removing cyclic prefixes, applying FFT,
@@ -139,14 +141,40 @@ class Receiver:
         complete_binary_data = ''
         # Get the frequency bins corresponding to the given frequency range
         bin_low,bin_high = cut_freq_bins(self.f_low, self.f_high, self.fs, self.block_size) 
-        for block in blocks:
-        # Apply FFT to the block
+        for index, block in enumerate(blocks):
+            
+            n_bins = 4096
+            
+
+            use_pilot_tone = True
+
+            if index == 0 and use_pilot_tone:
+                print("using pilot tone")
+                np.random.seed(1)
+                constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
+                symbols_extended = np.random.choice(constellation_points, n_bins)
+                symbols_extended[0] = 0
+                symbols_extended[n_bins // 2] = 0
+                symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
+                pilot_n = symbols_extended
+                r_n = self.apply_fft(block, self.block_size)
+                print("pilot_n length",len(pilot_n))
+                pilot_response = r_n/pilot_n
+                # print(pilot_response)
+                self.g_n = pilot_response
+
+                continue
+        
+        
+        
+            # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
-            self.g_n = interpolated_response
-        # Compensate for the channel effects
+            if use_pilot_tone == False:
+                self.g_n = interpolated_response
+            # Compensate for the channel effects
             x_n = self.channel_compensation(r_n, self.g_n)
 
-        # Save the constellation points for plotting
+            # Save the constellation points for plotting
             self.received_constellations.extend(r_n[bin_low:bin_high+1])
             self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
         
@@ -182,16 +210,30 @@ class Receiver:
         phases = [(c, math.atan2(c[1], c[0])) for c in top_4]
 
         phases_sorted = sorted(phases, key=lambda x: x[1])
+
+        # phases_sorted = [phase + 360 if phase < 0 else phase for phase in phases_sorted]
+
+
+
+        # for key, value in phases_sorted.items():
+            # if value < 0:
+            #     phases_sorted[key] = value + 360
+
         sum_angles = 0
         for c, angle in phases_sorted:
             # Convert angle from radians to degrees
             angle_degrees = math.degrees(angle)
+            
             print(f"Coordinate: {c}, Magnitude: {math.sqrt(c[0]**2 + c[1]**2)}, Phase: {angle_degrees} degrees")
+            # print(angle_degrees)
+            if angle_degrees < 0:
+                angle_degrees = angle_degrees + 360
+            
             sum_angles = sum_angles + angle_degrees
         
-        print(sum_angles)
+        # print(sum_angles)
 
-        phase_shift_needed = (270-sum_angles)/4
+        phase_shift_needed = (720-sum_angles)/4
         print("phase shift needed", phase_shift_needed)
 
         # Convert centroids back to complex numbers
@@ -208,17 +250,18 @@ class Receiver:
 
 
         for block in blocks:
-        # Apply FFT to the block
+            # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
-            self.g_n = interpolated_response
-        # Compensate for the channel effects
+            if use_pilot_tone == False:
+                self.g_n = interpolated_response
+            # Compensate for the channel effects
             x_n = self.channel_compensation(r_n, self.g_n)
 
-        # Save the constellation points for plotting
+            # Save the constellation points for plotting
             # self.received_constellations.extend(r_n[bin_low:bin_high+1])
             # self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
         
-        # Demap QPSK symbols to binary data
+            # Demap QPSK symbols to binary data
             # binary_data = self.qpsk_demapper(x_n[bin_low:bin_high+1]) # change: now we only demap the frequency bins of interest
 
             constellations = np.copy(x_n[bin_low:bin_high+1])
@@ -230,9 +273,36 @@ class Receiver:
                 binary_data = self.qpsk_demapper(shifted_constellations) # change: now we only demap the frequency bins of interest
             else:
                 binary_data = self.qpsk_demapper(constellations) # change: now we only demap the frequency bins of interest
-            
-            complete_binary_data += binary_data
 
+            # print("binary_data length",len(binary_data))
+
+            use_ldpc = False
+
+            if use_ldpc:
+
+
+                block_length = len(binary_data)
+                ldpc_encoded_length = (block_length//24)*24
+
+                ldpc_signal = binary_data[0:ldpc_encoded_length]
+
+                # print(list(ldpc_signal))
+
+                #convert string to list
+                ldpc_signal_list = np.array([int(element) for element in list(ldpc_signal)])
+
+                # print(ldpc_signal_list)
+
+                ldpc_decoded = decode_ldpc(ldpc_signal_list)
+
+                
+                #convert list to string
+                ldpc_decoded = ''.join(str(x) for x in ldpc_decoded)
+
+                complete_binary_data += ldpc_decoded
+
+            elif use_ldpc == False:
+                complete_binary_data += binary_data
 
 
 
@@ -357,13 +427,19 @@ if __name__ == "__main__":
     recording_name = '0525_1749'
     OFDM_prefix_length = 512
     OFDM_block_size = 4096
-    chirp_start_time = 2.0  # Example start time of chirp
-    chirp_end_time = 7.0    # Example end time of chirp
+    chirp_start_time = 0.0  # Example start time of chirp
+    chirp_end_time = 15.0    # Example end time of chirp
     chirp_f_low = 1000
     chirp_f_high = 8000
     chirp_transmitted_path = 'chirps/1k_8k_0523.wav'
     #received_signal_path = './recordings/'+recording_name+'.m4a'
     received_signal_path = 'recordings/0525_1832.m4a'
+    received_signal_path = 'recordings/0526_2347_article_speakers.m4a'
+    received_signal_path = 'recordings/0526_2347_article_speakers3.m4a'
+    # received_signal_path = 'recordings/0526_2347_article_speakers2_iphoneRec.m4a'
+    # received_signal_path = 'recordings/transmitted_signal_with_chirp_0525_1548.wav'
+    received_signal_path = 'recordings/transmitted_signal_with_chirp_0527_1635_pilot_tone.wav'
+    # received_signal_path = 'recordings/0527_1722.m4a'
     
     # Initialize AnalogueSignalProcessor with the chirp signals
     asp = AnalogueSignalProcessor(chirp_transmitted_path, received_signal_path,chirp_f_low,chirp_f_high)

@@ -298,7 +298,7 @@ class Receiver:
 
             # print("binary_data length",len(binary_data))
 
-            use_ldpc = True
+            
 
             if use_ldpc:
                 if index == 0:
@@ -467,10 +467,11 @@ if __name__ == "__main__":
     # received_signal_path = 'recordings/0527_1722.m4a'
     received_signal_path = 'recordings/0527_2103_pilot_iceland.m4a'
     received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
-    received_signal_path = 'recordings/transmitted_article_3_long_pilot1_ldpc1.wav'
+    received_signal_path = 'recordings/transmitted_article_3_long_pilot1_ldpc0.wav'
     # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot0_ldpc1.wav'
 
     use_pilot_tone = True
+    use_ldpc = False
 
     recording_name = os.path.splitext(os.path.basename(received_signal_path))[0]
 

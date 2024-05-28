@@ -426,7 +426,7 @@ if __name__ == "__main__":
     
 
     use_pilot_tone = True
-    use_ldpc = True
+    use_ldpc = False
 
     # Convert file data to binary with header
     #filename = "transmitted_5.26pm.wav"

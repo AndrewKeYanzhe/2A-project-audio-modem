@@ -143,6 +143,9 @@ class Receiver:
         complete_binary_data = ''
         # Get the frequency bins corresponding to the given frequency range
         bin_low,bin_high = cut_freq_bins(self.f_low, self.f_high, self.fs, self.block_size) 
+
+        print("number of blocks:",len(blocks))
+
         for index, block in enumerate(blocks):
             
             n_bins = 4096
@@ -298,10 +301,10 @@ class Receiver:
 
             # print("binary_data length",len(binary_data))
 
-            use_ldpc = True
+            
 
             if use_ldpc:
-                if index == 0:
+                if index == 0 and use_pilot_tone:
                     continue
 
 
@@ -467,9 +470,14 @@ if __name__ == "__main__":
     # received_signal_path = 'recordings/0527_1722.m4a'
     received_signal_path = 'recordings/0527_2103_pilot_iceland.m4a'
     received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
+    received_signal_path = 'recordings/transmitted_article_3_long_pilot1_ldpc0.wav'
+    received_signal_path = 'recordings/0528_1949_pilot_ldpc_iceland.m4a'
+    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot0_ldpc1.wav'
     # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot0_ldpc1.wav'
 
-    use_pilot_tone = True
+    use_pilot_tone = False
+    use_ldpc = True
+    # ldpc0 and pilot0 also has bug. TODO fix
 
     recording_name = os.path.splitext(os.path.basename(received_signal_path))[0]
 

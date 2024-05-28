@@ -168,9 +168,9 @@ class OFDMTransmitter:
                 end_index = start_index + ldpc_data_length
                 block_data = binary_data_padded[start_index:end_index]
 
-                print(len(block_data))
+                # print(len(block_data))
                 # print(block_data)
-                print(type(block_data))
+                # print(type(block_data))
                 # block_data = np.frombuffer(block_data, dtype=np.uint8)
                 
 
@@ -181,10 +181,10 @@ class OFDMTransmitter:
                 #convert list to string
                 block_data_ldpc = ''.join(str(x) for x in block_data_ldpc)
 
-                print(block_data_ldpc)
+                # print(block_data_ldpc)
 
 
-                print(len(block_data_ldpc))
+                # print(len(block_data_ldpc))
 
                 # block_data_ldpc_padded=block_data_ldpc.rjust(int(bits_per_block), '0')
                 block_data_ldpc_padded = block_data_ldpc + '0' * (bits_per_block - len(block_data_ldpc)) if len(block_data_ldpc) < bits_per_block else block_data_ldpc
@@ -218,7 +218,7 @@ class OFDMTransmitter:
                 
                 # Append the block with cyclic prefix to the list
                 blocks_with_prefix.append(transmitted_signal)
-                print("transmitted_signal length",len(transmitted_signal))
+                # print("transmitted_signal length",len(transmitted_signal))
 
         elif use_ldpc == False:
 
@@ -307,7 +307,8 @@ class OFDMTransmitter:
                 if printed_data ==0:
                     print("transmitted_block length data",len(transmitted_signal))
                     printed_data = 1
-        
+        print("number of blocks", len(blocks_with_prefix))
+
         return np.concatenate(blocks_with_prefix)
     
     def initialize_pilot_block(self, n_bins=4096, seed=1):
@@ -430,14 +431,15 @@ if __name__ == "__main__":
 
     # Load the binary data from file
     transmitted_binary_path = 'text/article_2_iceland.txt'
+    transmitted_binary_path = 'text/article_3_long.txt'
     logging.info(f"Loading binary data from {transmitted_binary_path}.")
     data = transmitter.load_binary_data(transmitted_binary_path)
 
     recording_name = os.path.splitext(os.path.basename(transmitted_binary_path))[0]
     
 
-    use_pilot_tone = False
-    use_ldpc = True
+    use_pilot_tone = True
+    use_ldpc = False
 
     # Convert file data to binary with header
     #filename = "transmitted_5.26pm.wav"

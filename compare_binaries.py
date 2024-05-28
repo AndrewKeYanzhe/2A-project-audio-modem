@@ -1,5 +1,7 @@
 from received_bin2txt import *
-
+import matplotlib.pyplot as plt
+import os
+import numpy as np
 
 def read_binary_file(file_path):
     with open(file_path, 'rb') as file:
@@ -62,7 +64,7 @@ def compare_files_bitwise(file1, file2, max_shift=100):
     return best_shift, percentage_identical
 
 #compare 2 will shift the received file +- max shift and compare with reference file. extra corrupted bits in front of and behind main text in received file is ignored
-def compare_2(file1, file2):
+def compare_2(file1, file2, bits_per_block):
     byte_data1 = load_bin_file(file1)
     byte_data2 = load_bin_file(file2)
     reference_binary_string = bytes_to_binary_string(byte_data1)
@@ -112,11 +114,71 @@ def compare_2(file1, file2):
         if matched_bits>best_match:
             best_match = matched_bits
             shift_at_best_match = shift
+
+
+        
+
+    
     
     print("bit shift at best match", shift_at_best_match)
     print("percentage of bits that are the same",best_match/len(reference_binary_string))
     bit_error_rate = 100 * (1 - best_match / len(reference_binary_string))
     print(f"bit error rate: {bit_error_rate:.1f}%")
+
+    
+    shifted_received_list = received_binary_string[shift_at_best_match:]
+    # print(reference_binary_string[:100])
+    # print(shifted_received_list[0:100])
+
+    reference_binary_string_split = [reference_binary_string[i:i + bits_per_block] for i in range(0, len(reference_binary_string), bits_per_block)]
+    
+    received_binary_string_split = [shifted_received_list[i:i + bits_per_block] for i in range(0, len(shifted_received_list), bits_per_block)]
+
+    # print(reference_binary_string_split[0])
+    # print(received_binary_string_split[0])
+
+    errors_list=[]
+
+    # matched_bits=0
+    # for j in range(len(received_binary_string_split[0])):
+    #     if received_binary_string_split[0][j] == reference_binary_string_split[0][j]:
+    #         matched_bits = matched_bits+1
+    # errors_list.append((len(received_binary_string_split[0])-matched_bits)/len(received_binary_string_split[0]))
+        
+    # print(errors_list)
+
+    
+
+
+    
+    for index, block in enumerate(reference_binary_string_split):
+        # print(block)
+        matched_bits=0
+        for j in range(len(block)):
+
+            # compared_length = compared_length + 1
+            
+            if received_binary_string_split[index][j] == block[j]:
+                matched_bits = matched_bits+1
+                
+        errors_list.append((len(block)-matched_bits)/len(block))
+        # errors_list.append(matched_bits)
+    
+    # print(type(matched_bits))
+    # print(errors_list[:10])
+        
+    # Plotting errors_list against its index
+    plt.figure(figsize=(10, 5))
+    plt.plot([x * 100 for x in errors_list], marker='o', linestyle='-', color='b')
+    plt.title('Bit error rate vs block '+os.path.splitext(os.path.basename(unshifted_path))[0])
+    plt.xlabel('block')
+    plt.ylabel('bit error % per block')
+    custom_ticks = np.linspace(0, len(errors_list), 5, dtype=int)
+    plt.xticks(custom_ticks)
+    plt.grid(True)
+    plt.show()
+
+
 # Example usage:
 # file1_path = 'binaries/received_binary_0525_1749 constellation shifted.bin'
 ref_path = 'text/article_2_iceland.txt'
@@ -137,16 +199,16 @@ unshifted_path ='binaries/received_0527_2103_pilot_iceland_decodeUsingPilot.bin'
 
 print('\nchannel from chirp')
 unshifted_path ='binaries/received_0527_2103_pilot_iceland_decodeUsingChirp.bin'
-compare_2(ref_path, unshifted_path)
+compare_2(ref_path, unshifted_path, 1194)
 
 print('\nchannel from pilot')
 unshifted_path ='binaries/received_0527_2103_pilot_iceland_decodeUsingPilot.bin'
-compare_2(ref_path, unshifted_path)
+compare_2(ref_path, unshifted_path,1194)
 
 
 print('\nchannel from pilot with ldpc')
 unshifted_path ='binaries/received_transmitted_article_2_iceland_pilot1_ldpc1.bin'
-compare_2(ref_path, unshifted_path)
+compare_2(ref_path, unshifted_path,588)
 
 # shift2, percentage2 = compare_files_bitwise(ref_path, shifted_path)
 

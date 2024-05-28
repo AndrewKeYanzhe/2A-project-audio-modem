@@ -32,6 +32,7 @@ import matplotlib.pyplot as plt
 from utils import save_as_wav, cut_freq_bins
 
 import os
+import math
 
 from ldpc_function import *
 
@@ -144,6 +145,8 @@ class OFDMTransmitter:
 
 
 
+
+            print("length of binary data", len(binary_data))
             print("bits_per_block",bits_per_block) #1194
             
             ldpc_encoded_length = (bits_per_block//24)*24
@@ -154,7 +157,8 @@ class OFDMTransmitter:
                 
 
             # Calculate the total bits needed to fit the binary data into complete OFDM blocks
-            total_bits_needed = ldpc_data_length * ((len(binary_data) + ldpc_data_length - 1) // bits_per_block)
+            # total_bits_needed = ldpc_data_length * ((len(binary_data) + ldpc_data_length - 1) // bits_per_block)
+            total_bits_needed = ldpc_data_length*math.ceil(len(binary_data)/ldpc_data_length)
             binary_data_padded = binary_data.rjust(int(total_bits_needed), '0')
 
 
@@ -431,7 +435,7 @@ if __name__ == "__main__":
 
     # Load the binary data from file
     transmitted_binary_path = 'text/article_2_iceland.txt'
-    transmitted_binary_path = 'text/article_3_long.txt'
+    # transmitted_binary_path = 'text/article_3_long.txt'
     logging.info(f"Loading binary data from {transmitted_binary_path}.")
     data = transmitter.load_binary_data(transmitted_binary_path)
 
@@ -439,7 +443,7 @@ if __name__ == "__main__":
     
 
     use_pilot_tone = True
-    use_ldpc = False
+    use_ldpc = True
 
     # Convert file data to binary with header
     #filename = "transmitted_5.26pm.wav"

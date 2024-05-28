@@ -39,7 +39,7 @@ def compare_files_bitwise(file1, file2, max_shift=100):
     best_shift = 0
     max_identical_bits = 0
 
-    for shift in range(-max_shift, max_shift + 1):
+    for shift in range(0, max_shift + 1):
         identical_bits = 0
         for i in range(max_len):
             idx1 = i // 8
@@ -54,6 +54,7 @@ def compare_files_bitwise(file1, file2, max_shift=100):
         if identical_bits > max_identical_bits:
             max_identical_bits = identical_bits
             best_shift = shift
+    
 
     percentage_identical = (max_identical_bits / max_len) * 100
     
@@ -61,7 +62,7 @@ def compare_files_bitwise(file1, file2, max_shift=100):
     return best_shift, percentage_identical
 
 #compare 2 will shift the received file +- max shift and compare with reference file. extra corrupted bits in front of and behind main text in received file is ignored
-def compare_2(file1, file2, max_shift=100):
+def compare_2(file1, file2):
     byte_data1 = load_bin_file(file1)
     byte_data2 = load_bin_file(file2)
     reference_binary_string = bytes_to_binary_string(byte_data1)
@@ -80,7 +81,24 @@ def compare_2(file1, file2, max_shift=100):
     best_match = 0
     shift_at_best_match = 0
 
-    for shift in range(-max_shift, max_shift + 1):
+    
+
+    for shift in range(0,30):
+        compared_length = 0
+        matched_bits = 0
+        for i in range(len(reference_binary_string)):
+
+            compared_length = compared_length + 1
+            if i+shift >=0 and i+shift <= len(received_binary_string)-1:
+                if reference_binary_string[i] == received_binary_string[i+shift]:
+                    matched_bits = matched_bits+1
+        # print(compared_length)
+
+        if matched_bits>best_match:
+            best_match = matched_bits
+            shift_at_best_match = shift
+
+    for shift in range(800,900):
         compared_length = 0
         matched_bits = 0
         for i in range(len(reference_binary_string)):
@@ -113,6 +131,10 @@ unshifted_path ='binaries/received_0527_2103_pilot_iceland_decodeUsingPilot.bin'
 
 # print(f'Percentage of identical bits: {percentage:.2f}%')
 # print(f'Best shift: {shift}')
+
+
+
+
 print('\nchannel from chirp')
 unshifted_path ='binaries/received_0527_2103_pilot_iceland_decodeUsingChirp.bin'
 compare_2(ref_path, unshifted_path)
@@ -121,6 +143,10 @@ print('\nchannel from pilot')
 unshifted_path ='binaries/received_0527_2103_pilot_iceland_decodeUsingPilot.bin'
 compare_2(ref_path, unshifted_path)
 
+
+print('\nchannel from pilot with ldpc')
+unshifted_path ='binaries/received_transmitted_article_2_iceland_pilot1_ldpc1.bin'
+compare_2(ref_path, unshifted_path)
 
 # shift2, percentage2 = compare_files_bitwise(ref_path, shifted_path)
 

@@ -15,6 +15,8 @@ import random
 import math
 import cmath
 
+import os
+
 from ldpc_function import *
 
 """
@@ -146,7 +148,7 @@ class Receiver:
             n_bins = 4096
             
 
-            use_pilot_tone = True
+            use_pilot_tone = False
 
             if index == 0 and use_pilot_tone:
                 print("using pilot tone")
@@ -426,7 +428,7 @@ if __name__ == "__main__":
 
     # Parameters
     fs =  48000
-    recording_name = '0525_1749'
+    # recording_name = '0525_1749'
     OFDM_prefix_length = 512
     OFDM_block_size = 4096
     chirp_start_time = 0.0  # Example start time of chirp
@@ -443,6 +445,9 @@ if __name__ == "__main__":
     # received_signal_path = 'recordings/transmitted_signal_with_chirp_0527_1635_pilot_tone.wav'
     # received_signal_path = 'recordings/0527_1722.m4a'
     received_signal_path = 'recordings/0527_2103_pilot_iceland.m4a'
+
+    recording_name = os.path.splitext(os.path.basename(received_signal_path))[0]
+
     
     # Initialize AnalogueSignalProcessor with the chirp signals
     asp = AnalogueSignalProcessor(chirp_transmitted_path, received_signal_path,chirp_f_low,chirp_f_high)
@@ -486,7 +491,7 @@ if __name__ == "__main__":
                         f_low=chirp_f_low, f_high=chirp_f_high)
 
     binary_data = receiver.process_signal()
-    deomudulated_binary_path='./binaries/received_binary_'+recording_name+'.bin'
+    deomudulated_binary_path='./binaries/received_'+recording_name+'.bin'
     binfile = receiver.binary_to_bin_file(binary_data, deomudulated_binary_path)
 
     # bytes_data = receiver.binary_to_bytes(binary_data)

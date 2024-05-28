@@ -71,10 +71,10 @@ def compare_2(file1, file2, max_shift=100):
     # reference_binary_string = bytes_to_binary_string(file1)
     # received_binary_string = bytes_to_binary_string(file2)
 
-    print("length of reference", len(reference_binary_string))
+    # print("length of reference", len(reference_binary_string))
 
-    print(reference_binary_string[:100])
-    print(received_binary_string[0:100])
+    # print(reference_binary_string[:100])
+    # print(received_binary_string[0:100])
 
     best_match = 0
     shift_at_best_match = 0
@@ -94,27 +94,28 @@ def compare_2(file1, file2, max_shift=100):
             best_match = matched_bits
             shift_at_best_match = shift
     
-    print(shift_at_best_match)
-    print(best_match/len(reference_binary_string))
+    print("bit shift at best match", shift_at_best_match)
+    print("percentage of bits that are the same",best_match/len(reference_binary_string))
 # Example usage:
 # file1_path = 'binaries/received_binary_0525_1749 constellation shifted.bin'
 ref_path = 'text/article_2.txt'
 # ref_path = 'text/article.txt'
 # unshifted_path = 'binaries/received_binary_0525_1749 constellation non shifted.bin'
 # unshifted_path = 'binaries/received_binary_0525_1749 constellation non shifted.bin'
-unshifted_path = "binaries/received_binary_0525_1749.bin"
-# unshifted_path = "binaries/received_binary_0525_1749_trimmed.bin"
-# unshifted_path = "binaries/received_binary_0525_1749 copy.bin"
-# unshifted_path = 'text/article_2.txt'
-# shifted_path = 'binaries/received_binary_0525_1749 constellation shifted.bin'
+unshifted_path ='binaries/received_0527_2103_pilot_iceland_decodeUsingPilot.bin'
+
 
 
 # shift, percentage = compare_files_bitwise(ref_path, unshifted_path)
 
 # print(f'Percentage of identical bits: {percentage:.2f}%')
 # print(f'Best shift: {shift}')
+print('\nchannel from chirp')
+unshifted_path ='binaries/received_0527_2103_pilot_iceland_decodeUsingChirp.bin'
+compare_2(ref_path, unshifted_path)
 
-
+print('\nchannel from pilot')
+unshifted_path ='binaries/received_0527_2103_pilot_iceland_decodeUsingPilot.bin'
 compare_2(ref_path, unshifted_path)
 
 

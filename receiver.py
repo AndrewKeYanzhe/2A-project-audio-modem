@@ -148,7 +148,7 @@ class Receiver:
             n_bins = 4096
             
 
-            use_pilot_tone = False
+            use_pilot_tone = True
 
             if index == 0 and use_pilot_tone:
                 print("using pilot tone")
@@ -165,6 +165,20 @@ class Receiver:
                 pilot_response = r_n/pilot_n
                 # print(pilot_response)
                 self.g_n = pilot_response
+
+                fs = 48000
+                # frequencies = np.fft.rfftfreq(max_length, 1/self.fs)
+                frequencies=subcarrier_frequencies
+                phase_response = np.angle(self.g_n, deg=True)
+
+                # Plot the phase response
+                plt.figure(figsize=(8, 6))
+                plt.plot(frequencies, phase_response)
+                plt.title('Phase Response of the Channel using pilot symbol')
+                plt.xlabel('Frequency (Hz)')
+                plt.xlim(0, 20000)
+                plt.ylabel('Phase (Degrees)')
+                plt.show()
 
                 
         

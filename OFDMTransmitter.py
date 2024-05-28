@@ -31,6 +31,8 @@ from AudioProcessor import AudioProcessor
 import matplotlib.pyplot as plt
 from utils import save_as_wav, cut_freq_bins
 
+import os
+
 from ldpc_function import *
 
 class OFDMTransmitter:
@@ -96,9 +98,51 @@ class OFDMTransmitter:
 
 
 
-        use_ldpc = False
+        # use_ldpc = True
+
+        blocks_with_prefix = []
         
         if use_ldpc:
+
+            # # Calculate the total bits needed to fit the binary data into complete OFDM blocks
+            # total_bits_needed = bits_per_block * ((len(binary_data) + bits_per_block - 1) // bits_per_block)
+            # binary_data_padded = binary_data.rjust(total_bits_needed, '0')
+
+            
+            # num_blocks = len(binary_data_padded) // bits_per_block
+            # blocks_with_prefix = []
+            
+            if use_pilot_tone:
+                n_bins=4096
+
+                np.random.seed(1)
+                constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
+                symbols_extended = np.random.choice(constellation_points, n_bins)
+                print(symbols_extended[0:10])
+                symbols_extended[0] = 0
+                symbols_extended[n_bins // 2] = 0
+                symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
+                # pilot_n = symbols_extended
+                np.random.seed(None) 
+                # pilot_block_binary = ''.join(format(num, f'0{max(pilot_block).bit_length()}b') for num in pilot_block)
+
+                # blocks_with_prefix = 
+
+
+                # binary_data = pilot_block_binary+binary_data
+
+                # Perform the inverse DFT to convert to time domain
+                time_domain_signal = self.inverse_dft(symbols_extended)
+                
+                # Add cyclic prefix
+                transmitted_signal = self.add_cyclic_prefix(time_domain_signal, prefix_length)
+                
+                # Append the block with cyclic prefix to the list
+                blocks_with_prefix.append(transmitted_signal)
+
+                print("transmitted_block length pilot",len(transmitted_signal))
+
+
 
             print("bits_per_block",bits_per_block) #1194
             
@@ -117,7 +161,7 @@ class OFDMTransmitter:
 
             
             num_blocks = len(binary_data_padded) // ldpc_data_length
-            blocks_with_prefix = []
+            
 
             for i in range(num_blocks):
                 start_index = i * ldpc_data_length
@@ -185,27 +229,38 @@ class OFDMTransmitter:
             
             num_blocks = len(binary_data_padded) // bits_per_block
             blocks_with_prefix = []
-            
-            n_bins=4096
-            np.random.seed(1)
-            constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
-            symbols_extended = np.random.choice(constellation_points, n_bins)
-            print(symbols_extended[0:10])
-            symbols_extended[0] = 0
-            symbols_extended[n_bins // 2] = 0
-            symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
-            np.random.seed(None) 
 
-            # Perform the inverse DFT to convert to time domain
-            time_domain_signal = self.inverse_dft(symbols_extended)
-            
-            # Add cyclic prefix
-            transmitted_signal = self.add_cyclic_prefix(time_domain_signal, prefix_length)
-            
-            # Append the block with cyclic prefix to the list
-            blocks_with_prefix.append(transmitted_signal)
 
-            print("transmitted_block length pilot",len(transmitted_signal))
+            if use_pilot_tone:
+            
+                n_bins=4096
+
+                np.random.seed(1)
+                constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
+                symbols_extended = np.random.choice(constellation_points, n_bins)
+                print(symbols_extended[0:10])
+                symbols_extended[0] = 0
+                symbols_extended[n_bins // 2] = 0
+                symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
+                # pilot_n = symbols_extended
+                np.random.seed(None) 
+                # pilot_block_binary = ''.join(format(num, f'0{max(pilot_block).bit_length()}b') for num in pilot_block)
+
+                # blocks_with_prefix = 
+
+
+                # binary_data = pilot_block_binary+binary_data
+
+                # Perform the inverse DFT to convert to time domain
+                time_domain_signal = self.inverse_dft(symbols_extended)
+                
+                # Add cyclic prefix
+                transmitted_signal = self.add_cyclic_prefix(time_domain_signal, prefix_length)
+                
+                # Append the block with cyclic prefix to the list
+                blocks_with_prefix.append(transmitted_signal)
+
+                print("transmitted_block length pilot",len(transmitted_signal))
 
 
 
@@ -344,7 +399,7 @@ class OFDMTransmitter:
         """Play the combined chirp and transmitted signal."""
         _,normalized_signal = self.normalize_signal(signal)
         combined_signal = np.concatenate((chirp_data, normalized_signal))
-        sd.play(combined_signal, samplerate=fs)
+        # sd.play(combined_signal, samplerate=fs)
         sd.wait()
         if save_path:
             save_as_wav(combined_signal, save_path, fs)
@@ -367,16 +422,22 @@ if __name__ == "__main__":
     fs = 48000
     block_size = (4096-2)//2
     prefix_length = 512
-    recording_name = '0525_1548'
+    # recording_name = '0525_1548'
     chirp_name = '1k_8k_0523'
 
     # Example usage
     transmitter = OFDMTransmitter()
 
     # Load the binary data from file
-    transmitted_binary_path = 'text/article_2.txt'
+    transmitted_binary_path = 'text/article_2_iceland.txt'
     logging.info(f"Loading binary data from {transmitted_binary_path}.")
     data = transmitter.load_binary_data(transmitted_binary_path)
+
+    recording_name = os.path.splitext(os.path.basename(transmitted_binary_path))[0]
+    
+
+    use_pilot_tone = False
+    use_ldpc = True
 
     # Convert file data to binary with header
     #filename = "transmitted_5.26pm.wav"
@@ -406,7 +467,7 @@ if __name__ == "__main__":
     chirp_data, chirp_sr = librosa.load(chirp_path, sr=None)
 
     # Play the combined transmitted signal with chirp
-    save_path ='recordings/transmitted_signal_with_chirp_' + recording_name + '.wav'
+    save_path ='recordings/transmitted_' + recording_name + '_pilot'+str(int(use_pilot_tone))+'_ldpc'+str(int(use_ldpc)) +'.wav'
     transmitter.play_signal(transmitted_signal,chirp_data, fs, save_path=save_path)
     logging.info(f"Saving the combined transmitted signal with chirp to{save_path}.")
     # Simulate receiving the signal

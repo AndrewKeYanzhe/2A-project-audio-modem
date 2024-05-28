@@ -86,9 +86,10 @@ def decode_ldpc(signal):
     # print("iterations",it)  # Output: 0
 
     output = np.where(app < 0, 1, 0)
-    output=output[0:data_block_length]
+    
+    # output=output[0:data_block_length]
 
-    return output
+    return output[0:data_block_length],output
 
 
 
@@ -106,7 +107,7 @@ if __name__ == "__main__":
 
     y=encode_ldpc(data)
 
-    
+    y_before_flipping = np.copy(y)
 
     print("y before flipping\n",y)
 
@@ -116,7 +117,9 @@ if __name__ == "__main__":
 
     print("y after flipping\n",y)
 
-    output = decode_ldpc(y)
+    output, entire_output = decode_ldpc(y)
+    print("entire ldpc decoded\n",entire_output)
+    print("differences between ldpc encoded before flipping and entire decoded:",max(entire_output !=y_before_flipping))
     print("decoded data\n",output)
     print("length of output ",len(output))
     print("length of encoded data ",len(y))
@@ -129,7 +132,7 @@ if __name__ == "__main__":
         #6% of bits flipped results in no errors for 100 runs. with 1008 encoded length
         #7% of bits flipped results in no errors for 100 runs. with 4032 encoded length
 
-        output = decode_ldpc(y)
+        output, entire_output = decode_ldpc(y)
         errors = errors + max(output !=data)
 
     print("errors across 100 trials: ",errors)

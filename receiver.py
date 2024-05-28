@@ -148,7 +148,7 @@ class Receiver:
             n_bins = 4096
             
 
-            use_pilot_tone = True
+            
 
             if index == 0 and use_pilot_tone:
                 print("using pilot tone")
@@ -163,6 +163,11 @@ class Receiver:
                 r_n = self.apply_fft(block, self.block_size)
                 print("pilot_n length",len(pilot_n))
                 pilot_response = r_n/pilot_n
+                
+                
+                
+                
+                
                 # print(pilot_response)
                 self.g_n = pilot_response
 
@@ -293,9 +298,11 @@ class Receiver:
 
             # print("binary_data length",len(binary_data))
 
-            use_ldpc = False
+            use_ldpc = True
 
             if use_ldpc:
+                if index == 0:
+                    continue
 
 
                 block_length = len(binary_data)
@@ -310,7 +317,7 @@ class Receiver:
 
                 # print(ldpc_signal_list)
 
-                ldpc_decoded = decode_ldpc(ldpc_signal_list)
+                ldpc_decoded, ldpc_decoded_with_redundancies = decode_ldpc(ldpc_signal_list)
 
                 
                 #convert list to string
@@ -459,6 +466,10 @@ if __name__ == "__main__":
     # received_signal_path = 'recordings/transmitted_signal_with_chirp_0527_1635_pilot_tone.wav'
     # received_signal_path = 'recordings/0527_1722.m4a'
     received_signal_path = 'recordings/0527_2103_pilot_iceland.m4a'
+    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
+    # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot0_ldpc1.wav'
+
+    use_pilot_tone = True
 
     recording_name = os.path.splitext(os.path.basename(received_signal_path))[0]
 

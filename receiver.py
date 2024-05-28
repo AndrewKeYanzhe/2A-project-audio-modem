@@ -301,7 +301,7 @@ class Receiver:
             
 
             if use_ldpc:
-                if index == 0:
+                if index == 0 and use_pilot_tone:
                     continue
 
 
@@ -468,10 +468,12 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/0527_2103_pilot_iceland.m4a'
     received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
     received_signal_path = 'recordings/transmitted_article_3_long_pilot1_ldpc0.wav'
+    received_signal_path = 'recordings/0528_1949_pilot_ldpc_iceland.m4a'
+    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot0_ldpc1.wav'
     # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot0_ldpc1.wav'
 
-    use_pilot_tone = True
-    use_ldpc = False
+    use_pilot_tone = False
+    use_ldpc = True
 
     recording_name = os.path.splitext(os.path.basename(received_signal_path))[0]
 

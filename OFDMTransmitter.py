@@ -187,7 +187,6 @@ class OFDMTransmitter:
             blocks_with_prefix = []
             
             n_bins=4096
-
             np.random.seed(1)
             constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
             symbols_extended = np.random.choice(constellation_points, n_bins)
@@ -195,14 +194,7 @@ class OFDMTransmitter:
             symbols_extended[0] = 0
             symbols_extended[n_bins // 2] = 0
             symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
-            # pilot_n = symbols_extended
             np.random.seed(None) 
-            # pilot_block_binary = ''.join(format(num, f'0{max(pilot_block).bit_length()}b') for num in pilot_block)
-
-            # blocks_with_prefix = 
-
-
-            # binary_data = pilot_block_binary+binary_data
 
             # Perform the inverse DFT to convert to time domain
             time_domain_signal = self.inverse_dft(symbols_extended)
@@ -262,6 +254,18 @@ class OFDMTransmitter:
                     printed_data = 1
         
         return np.concatenate(blocks_with_prefix)
+    
+    def initialize_pilot_block(self, n_bins=4096, seed=1):
+        """Initialize the pilot block for the OFDM signal."""
+        np.random.seed(seed)
+        constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
+        symbols_extended = np.random.choice(constellation_points, n_bins)
+        symbols_extended[0] = 0
+        symbols_extended[n_bins // 2] = 0
+        symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
+        np.random.seed(None) 
+        return symbols_extended
+        
     
     def plot_constellation(self):
         """Plot the QPSK constellation diagram."""

@@ -143,6 +143,9 @@ class Receiver:
         complete_binary_data = ''
         # Get the frequency bins corresponding to the given frequency range
         bin_low,bin_high = cut_freq_bins(self.f_low, self.f_high, self.fs, self.block_size) 
+
+        print("number of blocks:",len(blocks))
+
         for index, block in enumerate(blocks):
             
             n_bins = 4096
@@ -474,6 +477,7 @@ if __name__ == "__main__":
 
     use_pilot_tone = False
     use_ldpc = True
+    # ldpc0 and pilot0 also has bug. TODO fix
 
     recording_name = os.path.splitext(os.path.basename(received_signal_path))[0]
 

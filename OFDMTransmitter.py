@@ -307,7 +307,8 @@ class OFDMTransmitter:
                 if printed_data ==0:
                     print("transmitted_block length data",len(transmitted_signal))
                     printed_data = 1
-        
+        print("number of blocks", len(blocks_with_prefix))
+
         return np.concatenate(blocks_with_prefix)
     
     def plot_constellation(self):

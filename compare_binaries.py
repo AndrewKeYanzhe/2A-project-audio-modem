@@ -1,3 +1,6 @@
+from received_bin2txt import *
+
+
 def read_binary_file(file_path):
     with open(file_path, 'rb') as file:
         return file.read()
@@ -28,7 +31,7 @@ def compare_files(file1, file2, max_shift=30):
 
 
 def compare_files_bitwise(file1, file2, max_shift=100):
-    data1 = read_binary_file(file1)
+    data1 = read_binary_file(file1) # this is reference
     data2 = read_binary_file(file2)
 
     len1, len2 = len(data1) * 8, len(data2) * 8
@@ -56,18 +59,64 @@ def compare_files_bitwise(file1, file2, max_shift=100):
 
     return best_shift, percentage_identical
 
+#compare 2 will shift the received file +- max shift and compare with reference file. extra corrupted bits in front of and behind main text in received file is ignored
+def compare_2(file1, file2, max_shift=100):
+    byte_data1 = load_bin_file(file1)
+    byte_data2 = load_bin_file(file2)
+    reference_binary_string = bytes_to_binary_string(byte_data1)
+    received_binary_string = bytes_to_binary_string(byte_data2)
 
+
+
+    # reference_binary_string = bytes_to_binary_string(file1)
+    # received_binary_string = bytes_to_binary_string(file2)
+
+    print("length of reference", len(reference_binary_string))
+
+    print(reference_binary_string[:100])
+    print(received_binary_string[0:100])
+
+    best_match = 0
+    shift_at_best_match = 0
+
+    for shift in range(-max_shift, max_shift + 1):
+        compared_length = 0
+        matched_bits = 0
+        for i in range(len(reference_binary_string)):
+
+            compared_length = compared_length + 1
+            if i+shift >=0 and i+shift <= len(received_binary_string)-1:
+                if reference_binary_string[i] == received_binary_string[i+shift]:
+                    matched_bits = matched_bits+1
+        # print(compared_length)
+
+        if matched_bits>best_match:
+            best_match = matched_bits
+            shift_at_best_match = shift
+    
+    print(shift_at_best_match)
+    print(best_match/len(reference_binary_string))
 # Example usage:
 # file1_path = 'binaries/received_binary_0525_1749 constellation shifted.bin'
-ref_path = 'text/second_try.txt'
+ref_path = 'text/article_2.txt'
 # ref_path = 'text/article.txt'
 # unshifted_path = 'binaries/received_binary_0525_1749 constellation non shifted.bin'
+# unshifted_path = 'binaries/received_binary_0525_1749 constellation non shifted.bin'
 unshifted_path = "binaries/received_binary_0525_1749.bin"
+# unshifted_path = "binaries/received_binary_0525_1749_trimmed.bin"
+# unshifted_path = "binaries/received_binary_0525_1749 copy.bin"
+# unshifted_path = 'text/article_2.txt'
 # shifted_path = 'binaries/received_binary_0525_1749 constellation shifted.bin'
-shift, percentage = compare_files_bitwise(ref_path, unshifted_path)
 
-print(f'Percentage of identical bits: {percentage:.2f}%')
-print(f'Best shift: {shift}')
+
+# shift, percentage = compare_files_bitwise(ref_path, unshifted_path)
+
+# print(f'Percentage of identical bits: {percentage:.2f}%')
+# print(f'Best shift: {shift}')
+
+
+compare_2(ref_path, unshifted_path)
+
 
 # shift2, percentage2 = compare_files_bitwise(ref_path, shifted_path)
 

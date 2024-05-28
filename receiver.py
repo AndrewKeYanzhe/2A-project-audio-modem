@@ -13,7 +13,11 @@ from sklearn.cluster import DBSCAN
 import random
 
 import math
+import cmath
 
+import os
+
+from ldpc_function import *
 
 """
     The Receiver class processes an OFDM signal to recover binary data, convert it to bytes,
@@ -138,21 +142,62 @@ class Receiver:
         # Process each block
         complete_binary_data = ''
         # Get the frequency bins corresponding to the given frequency range
-        bin_low,bins_high = cut_freq_bins(self.f_low, self.f_high, self.fs, self.block_size) 
-        for block in blocks:
-        # Apply FFT to the block
+        bin_low,bin_high = cut_freq_bins(self.f_low, self.f_high, self.fs, self.block_size) 
+        for index, block in enumerate(blocks):
+            
+            n_bins = 4096
+            
+
+            use_pilot_tone = True
+
+            if index == 0 and use_pilot_tone:
+                print("using pilot tone")
+                np.random.seed(1)
+                constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
+                symbols_extended = np.random.choice(constellation_points, n_bins)
+                print(symbols_extended[0:10])
+                symbols_extended[0] = 0
+                symbols_extended[n_bins // 2] = 0
+                symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
+                pilot_n = symbols_extended
+                r_n = self.apply_fft(block, self.block_size)
+                print("pilot_n length",len(pilot_n))
+                pilot_response = r_n/pilot_n
+                # print(pilot_response)
+                self.g_n = pilot_response
+
+                fs = 48000
+                # frequencies = np.fft.rfftfreq(max_length, 1/self.fs)
+                frequencies=subcarrier_frequencies
+                phase_response = np.angle(self.g_n, deg=True)
+
+                # Plot the phase response
+                plt.figure(figsize=(8, 6))
+                plt.plot(frequencies, phase_response)
+                plt.title('Phase Response of the Channel using pilot symbol')
+                plt.xlabel('Frequency (Hz)')
+                plt.xlim(0, 20000)
+                plt.ylabel('Phase (Degrees)')
+                plt.show()
+
+                
+        
+        
+        
+            # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
-            self.g_n = interpolated_response
-        # Compensate for the channel effects
+            if use_pilot_tone == False:
+                self.g_n = interpolated_response
+            # Compensate for the channel effects
             x_n = self.channel_compensation(r_n, self.g_n)
 
-        # Save the constellation points for plotting
-            self.received_constellations.extend(r_n[bin_low:bins_high+1])
-            self.compensated_constellations.extend(x_n[bin_low:bins_high+1]) 
+            # Save the constellation points for plotting
+            self.received_constellations.extend(r_n[bin_low:bin_high+1])
+            self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
         
         # Demap QPSK symbols to binary data
-            binary_data = self.qpsk_demapper(x_n[bin_low:bins_high+1]) # change: now we only demap the frequency bins of interest
-            complete_binary_data += binary_data
+            # binary_data = self.qpsk_demapper(x_n[bin_low:bin_high+1]) # change: now we only demap the frequency bins of interest
+            # complete_binary_data += binary_data
         #plotting the constellation
         self.plot_constellation(self.received_constellations, title="Constellation Before Compensation")
 
@@ -173,7 +218,7 @@ class Receiver:
 
 
         # Apply k-means clustering
-        kmeans = KMeans(n_clusters=5).fit(data) #a fifth cluster is used so that the cluster at 0,0 doesnt get absorbed into one of the 4 means
+        kmeans = KMeans(n_clusters=5, init='k-means++', n_init=10, random_state=42).fit(data)
 
         # Get the cluster centroids
         centroids = kmeans.cluster_centers_
@@ -182,16 +227,30 @@ class Receiver:
         phases = [(c, math.atan2(c[1], c[0])) for c in top_4]
 
         phases_sorted = sorted(phases, key=lambda x: x[1])
-        sum_phases = 0
+
+        # phases_sorted = [phase + 360 if phase < 0 else phase for phase in phases_sorted]
+
+
+
+        # for key, value in phases_sorted.items():
+            # if value < 0:
+            #     phases_sorted[key] = value + 360
+
+        sum_angles = 0
         for c, angle in phases_sorted:
             # Convert angle from radians to degrees
             angle_degrees = math.degrees(angle)
+            
             print(f"Coordinate: {c}, Magnitude: {math.sqrt(c[0]**2 + c[1]**2)}, Phase: {angle_degrees} degrees")
-            sum_phases = sum_phases + math.sqrt(c[0]**2 + c[1]**2)
+            # print(angle_degrees)
+            if angle_degrees < 0:
+                angle_degrees = angle_degrees + 360
+            
+            sum_angles = sum_angles + angle_degrees
         
-        print(sum_phases)
+        # print(sum_angles)
 
-        phase_shift_needed = (45-sum_phases)/4
+        phase_shift_needed = (720-sum_angles)/4
         print("phase shift needed", phase_shift_needed)
 
         # Convert centroids back to complex numbers
@@ -200,6 +259,75 @@ class Receiver:
         # centroid_complex_numbers
 
         self.plot_constellation(centroid_complex_numbers, title="K means clusters")
+
+
+        
+
+        shift_constellation_phase = False
+
+
+        for index, block in enumerate(blocks):
+            # Apply FFT to the block
+            r_n = self.apply_fft(block, self.block_size)
+            if use_pilot_tone == False:
+                self.g_n = interpolated_response
+            # Compensate for the channel effects
+            x_n = self.channel_compensation(r_n, self.g_n)
+
+            # Save the constellation points for plotting
+            # self.received_constellations.extend(r_n[bin_low:bin_high+1])
+            # self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
+        
+            # Demap QPSK symbols to binary data
+            # binary_data = self.qpsk_demapper(x_n[bin_low:bin_high+1]) # change: now we only demap the frequency bins of interest
+
+            constellations = np.copy(x_n[bin_low:bin_high+1])
+            
+            shifted_constellations = [z * cmath.exp(1j * math.radians(phase_shift_needed)) for z in constellations]
+  
+            
+            if shift_constellation_phase:
+                binary_data = self.qpsk_demapper(shifted_constellations) # change: now we only demap the frequency bins of interest
+            else:
+                binary_data = self.qpsk_demapper(constellations) # change: now we only demap the frequency bins of interest
+
+            # print("binary_data length",len(binary_data))
+
+            use_ldpc = False
+
+            if use_ldpc:
+
+
+                block_length = len(binary_data)
+                ldpc_encoded_length = (block_length//24)*24
+
+                ldpc_signal = binary_data[0:ldpc_encoded_length]
+
+                # print(list(ldpc_signal))
+
+                #convert string to list
+                ldpc_signal_list = np.array([int(element) for element in list(ldpc_signal)])
+
+                # print(ldpc_signal_list)
+
+                ldpc_decoded = decode_ldpc(ldpc_signal_list)
+
+                
+                #convert list to string
+                ldpc_decoded = ''.join(str(x) for x in ldpc_decoded)
+
+                complete_binary_data += ldpc_decoded
+
+            elif use_ldpc == False:
+                if index != 0:
+                    complete_binary_data += binary_data
+
+
+
+
+
+
+
 
         # # Extract real and imaginary parts
         # real_parts = [z.real for z in centroid_complex_numbers]
@@ -314,16 +442,26 @@ if __name__ == "__main__":
 
     # Parameters
     fs =  48000
-    recording_name = '0523_1300'
+    # recording_name = '0525_1749'
     OFDM_prefix_length = 512
     OFDM_block_size = 4096
-    chirp_start_time = 2.0  # Example start time of chirp
-    chirp_end_time = 7.0    # Example end time of chirp
+    chirp_start_time = 0.0  # Example start time of chirp
+    chirp_end_time = 15.0    # Example end time of chirp
     chirp_f_low = 1000
     chirp_f_high = 8000
     chirp_transmitted_path = 'chirps/1k_8k_0523.wav'
     #received_signal_path = './recordings/'+recording_name+'.m4a'
-    received_signal_path = 'recordings/0523_1300_speaker100.m4a'
+    received_signal_path = 'recordings/0525_1832.m4a'
+    received_signal_path = 'recordings/0526_2347_article_speakers.m4a'
+    received_signal_path = 'recordings/0526_2347_article_speakers3.m4a'
+    # received_signal_path = 'recordings/0526_2347_article_speakers2_iphoneRec.m4a'
+    received_signal_path = 'recordings/transmitted_signal_with_chirp_0525_1548.wav'
+    # received_signal_path = 'recordings/transmitted_signal_with_chirp_0527_1635_pilot_tone.wav'
+    # received_signal_path = 'recordings/0527_1722.m4a'
+    received_signal_path = 'recordings/0527_2103_pilot_iceland.m4a'
+
+    recording_name = os.path.splitext(os.path.basename(received_signal_path))[0]
+
     
     # Initialize AnalogueSignalProcessor with the chirp signals
     asp = AnalogueSignalProcessor(chirp_transmitted_path, received_signal_path,chirp_f_low,chirp_f_high)
@@ -367,7 +505,7 @@ if __name__ == "__main__":
                         f_low=chirp_f_low, f_high=chirp_f_high)
 
     binary_data = receiver.process_signal()
-    deomudulated_binary_path='./binaries/received_binary_'+recording_name+'.bin'
+    deomudulated_binary_path='./binaries/received_'+recording_name+'.bin'
     binfile = receiver.binary_to_bin_file(binary_data, deomudulated_binary_path)
 
     # bytes_data = receiver.binary_to_bytes(binary_data)

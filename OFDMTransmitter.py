@@ -168,9 +168,9 @@ class OFDMTransmitter:
                 end_index = start_index + ldpc_data_length
                 block_data = binary_data_padded[start_index:end_index]
 
-                print(len(block_data))
+                # print(len(block_data))
                 # print(block_data)
-                print(type(block_data))
+                # print(type(block_data))
                 # block_data = np.frombuffer(block_data, dtype=np.uint8)
                 
 
@@ -181,10 +181,10 @@ class OFDMTransmitter:
                 #convert list to string
                 block_data_ldpc = ''.join(str(x) for x in block_data_ldpc)
 
-                print(block_data_ldpc)
+                # print(block_data_ldpc)
 
 
-                print(len(block_data_ldpc))
+                # print(len(block_data_ldpc))
 
                 # block_data_ldpc_padded=block_data_ldpc.rjust(int(bits_per_block), '0')
                 block_data_ldpc_padded = block_data_ldpc + '0' * (bits_per_block - len(block_data_ldpc)) if len(block_data_ldpc) < bits_per_block else block_data_ldpc
@@ -218,7 +218,7 @@ class OFDMTransmitter:
                 
                 # Append the block with cyclic prefix to the list
                 blocks_with_prefix.append(transmitted_signal)
-                print("transmitted_signal length",len(transmitted_signal))
+                # print("transmitted_signal length",len(transmitted_signal))
 
         elif use_ldpc == False:
 

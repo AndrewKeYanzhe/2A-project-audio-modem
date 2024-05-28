@@ -1,0 +1,45 @@
+Phase detection AF
+The biggest news is the inclusion of on-sensor phase detection, a technology Panasonic has not previously used. Phase detection works by generating two views of the scene from slightly different perspectives (typically by forming separate images that 'look' through the left and right sides of the lens) and comparing them. Just as with human vision, which uses two eyes set apart from one another, this enables the camera to establish an understanding of distance and depth in the scene.
+
+Comparing the two images lets the camera calculate how far it needs to drive focus to bring the two perspectives into alignment, at which point the aligned subject is in focus. This is especially valuable in video mode, as it allows the camera to refocus to a different distance without overshooting. It also, critically, means the camera can check that it's still in focus without having to move the lens. This means phase detection can be decisive in situations where it must hold focus, as it can confidently stay there.
+
+Previous Panasonic models relied on the company’s Depth-from-Defocus (DFD) system, which used the out-of-focus characteristics of a lens to interpret depth and drive the AF system. DFD's main shortcoming was reliably predicting movement and driving the AF system to match. In principle, phase detect autofocus should provide more reliable performance, particularly in low light levels and backlit conditions and when dealing with multiple subjects (staying locked on your chosen subject better because it knows which one in the scene it is).
+
+Subject recognition AF
+The S5II’s subject recognition and tracking modes were significantly upgraded as part of the camera’s April 2024 firmware update. Combined with its newfound depth awareness, the S5II effectively gains the capabilities found on the more recent G9 II, including improved tracking performance and additional types of subjects that can be identified and tracked.
+
+The camera is trained to recognize humans, animals, cars and motorcycles. Human detection can identify eyes, face and body (prioritized in that order) or just eyes and face; similarly, animal detection can identify eyes and body, or just bodies.
+
+In each mode, the camera will start searching from your selected AF point and the area immediately around it, meaning It will focus on the specified subject type if it's found under your AF point. This system makes it possible to use the AF point to select an individual subject in a group. Note that when using wide-area AF, Face/Eye mode will choose to focus on someone facing the camera, not simply the nearest human it can detect.
+
+Updated in-body image stabilization
+
+Panasonic has also improved its image stabilization system, promising performance twice as effective as that of the S5. For its revised system it's adopted the branding 'Active IS,' though it hasn't been very specific about how these improvements have been achieved.
+
+What the company has said is that its algorithms have been reworked and that the camera assesses camera motion more precisely. The Boost IS mode, which tries to cancel all movement for a tripod-like video look, is particularly impressive.
+
+The April '24 firmware update added a new 'High' setting to the camera's electronic image stabilization system, intended to correct extreme levels of camera movement. It applies a 1.4x crop factor to video.
+
+The stabilization system also underpins the eight-shot 96MP Handheld High Resolution mode. It includes an optional motion correction function that prevents artifacts from moving subjects in the scene.
+
+New processor
+At the heart of the S5II is a new processing engine, the first product of Panasonic's L² co-development project with Leica. The two companies shared know-how and resources to develop the new processor, which we'd expect to see in future Leica models, too.
+
+While Panasonic says the sensor in the S5II is also new, from what we've seen, its performance appears to be similar to its non-phase-detect predecessor, which suggests that its newfound ability to shoot at up to 30fps in e-shutter mode is more about having a processor able to cope with this speed.
+
+Built-in fan
+
+The S5II includes a fan mechanism to allow video shooting for extended periods. The fan is at the top of the camera, with vents under the leading edge and along the sides of the viewfinder hump, drawing the heat up and out of the camera. As usual, the fan sits outside the body's sealed area, so the vents aren't a weak point for its dust and splash-resistant design.
+
+The fan means the S5II can record for unlimited periods in most of its video modes, as tested by Panasonic at temperatures of 40°C (104°F). Panasonic points out that most of its rivals only quote figures for 22–25°C (72–77°F), which is significantly less demanding and less representative of average temperatures across much of the US.
+
+Pre-burst shooting
+The April 2024 firmware update adds a new shooting mode that captures a series of images in the buffer before the shutter button is pressed. Labeled 'SH PRE', the feature pre-captures 0.5, 1.0, or 1.5 seconds of images at 30 frames per second using the electronic shutter. It's considered to be a burst shooting mode, with settings located in the Burst Shot Setting menu.
+
+Video
+
+The S5II builds on the video capabilities of the S5 despite using a sensor with similar ~21ms readout times for its 16:9 footage.
+
+The most obvious addition to the camera's capabilities is the ability to shoot full sensor height 3:2 'open gate' video. This is available at up to 30p and provides the scope to crop into various aspect ratios or to pan around the frame in post. Alternatively, there are 6K options, either in UHD-style 16:9 aspect ratio or the DCI-like 1.89:1 format.
+
+Beyond this are the full-width 4K modes (both DCI and UHD), which are taken from 6K capture. These are offered at up to 30p and up to 10-bit 4:2:2 encoding.

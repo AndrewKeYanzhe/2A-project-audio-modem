@@ -56,6 +56,7 @@ def compare_files_bitwise(file1, file2, max_shift=100):
             best_shift = shift
 
     percentage_identical = (max_identical_bits / max_len) * 100
+    
 
     return best_shift, percentage_identical
 
@@ -96,9 +97,11 @@ def compare_2(file1, file2, max_shift=100):
     
     print("bit shift at best match", shift_at_best_match)
     print("percentage of bits that are the same",best_match/len(reference_binary_string))
+    bit_error_rate = 100 * (1 - best_match / len(reference_binary_string))
+    print(f"bit error rate: {bit_error_rate:.1f}%")
 # Example usage:
 # file1_path = 'binaries/received_binary_0525_1749 constellation shifted.bin'
-ref_path = 'text/article_2.txt'
+ref_path = 'text/article_2_iceland.txt'
 # ref_path = 'text/article.txt'
 # unshifted_path = 'binaries/received_binary_0525_1749 constellation non shifted.bin'
 # unshifted_path = 'binaries/received_binary_0525_1749 constellation non shifted.bin'

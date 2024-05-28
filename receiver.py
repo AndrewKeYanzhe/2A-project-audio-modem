@@ -304,8 +304,8 @@ class Receiver:
             
 
             if use_ldpc:
-                if index == 0 and use_pilot_tone:
-                    continue
+                # if index == 0 and use_pilot_tone:
+                #     continue
 
 
                 block_length = len(binary_data)
@@ -326,11 +326,14 @@ class Receiver:
                 #convert list to string
                 ldpc_decoded = ''.join(str(x) for x in ldpc_decoded)
 
+                # if index!=0:
+                #     complete_binary_data += ldpc_decoded
                 complete_binary_data += ldpc_decoded
 
             elif use_ldpc == False:
                 if index != 0:
                     complete_binary_data += binary_data
+            # print("length of binary data", len(complete_binary_data))
 
 
 
@@ -472,10 +475,10 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
     received_signal_path = 'recordings/transmitted_article_3_long_pilot1_ldpc0.wav'
     received_signal_path = 'recordings/0528_1949_pilot_ldpc_iceland.m4a'
-    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot0_ldpc1.wav'
-    # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot0_ldpc1.wav'
+    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
+    # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc0.wav'
 
-    use_pilot_tone = False
+    use_pilot_tone = True
     use_ldpc = True
     # ldpc0 and pilot0 also has bug. TODO fix
 
@@ -526,6 +529,7 @@ if __name__ == "__main__":
     binary_data = receiver.process_signal()
     deomudulated_binary_path='./binaries/received_'+recording_name+'.bin'
     binfile = receiver.binary_to_bin_file(binary_data, deomudulated_binary_path)
+    # binfile = receiver.binary_to_bin_file(binary_data+"00000000000000000000000000000", deomudulated_binary_path)
 
     # bytes_data = receiver.binary_to_bytes(binary_data)
     # filename, file_size, content = receiver.parse_bytes_data(bytes_data)

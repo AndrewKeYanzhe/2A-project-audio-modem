@@ -249,6 +249,7 @@ class AnalogueSignalProcessor:
         plt.plot(frequencies, phase)
         plt.title('Phase Response of the Channel')
         plt.xlabel('Frequency (Hz)')
+        plt.xlim(0, 10000)
         plt.ylabel('Phase (Degrees)')
         plt.show()
         

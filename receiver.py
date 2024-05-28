@@ -15,6 +15,8 @@ import random
 import math
 import cmath
 
+import os
+
 from ldpc_function import *
 
 """
@@ -163,6 +165,20 @@ class Receiver:
                 pilot_response = r_n/pilot_n
                 # print(pilot_response)
                 self.g_n = pilot_response
+
+                fs = 48000
+                # frequencies = np.fft.rfftfreq(max_length, 1/self.fs)
+                frequencies=subcarrier_frequencies
+                phase_response = np.angle(self.g_n, deg=True)
+
+                # Plot the phase response
+                plt.figure(figsize=(8, 6))
+                plt.plot(frequencies, phase_response)
+                plt.title('Phase Response of the Channel using pilot symbol')
+                plt.xlabel('Frequency (Hz)')
+                plt.xlim(0, 20000)
+                plt.ylabel('Phase (Degrees)')
+                plt.show()
 
                 
         
@@ -426,7 +442,7 @@ if __name__ == "__main__":
 
     # Parameters
     fs =  48000
-    recording_name = '0525_1749'
+    # recording_name = '0525_1749'
     OFDM_prefix_length = 512
     OFDM_block_size = 4096
     chirp_start_time = 0.0  # Example start time of chirp
@@ -443,6 +459,9 @@ if __name__ == "__main__":
     # received_signal_path = 'recordings/transmitted_signal_with_chirp_0527_1635_pilot_tone.wav'
     # received_signal_path = 'recordings/0527_1722.m4a'
     received_signal_path = 'recordings/0527_2103_pilot_iceland.m4a'
+
+    recording_name = os.path.splitext(os.path.basename(received_signal_path))[0]
+
     
     # Initialize AnalogueSignalProcessor with the chirp signals
     asp = AnalogueSignalProcessor(chirp_transmitted_path, received_signal_path,chirp_f_low,chirp_f_high)
@@ -486,7 +505,7 @@ if __name__ == "__main__":
                         f_low=chirp_f_low, f_high=chirp_f_high)
 
     binary_data = receiver.process_signal()
-    deomudulated_binary_path='./binaries/received_binary_'+recording_name+'.bin'
+    deomudulated_binary_path='./binaries/received_'+recording_name+'.bin'
     binfile = receiver.binary_to_bin_file(binary_data, deomudulated_binary_path)
 
     # bytes_data = receiver.binary_to_bytes(binary_data)

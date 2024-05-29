@@ -214,28 +214,32 @@ unshifted_path ='binaries/received_0527_2103_pilot_iceland_decodeUsingPilot.bin'
 
 
 
-print('\nchannel from chirp')
-unshifted_path ='binaries/received_0527_2103_pilot_iceland_decodeUsingChirp.bin'
-compare_2(ref_path, unshifted_path, 1194)
+# print('\nchannel from chirp')
+# unshifted_path ='binaries/received_0527_2103_pilot_iceland_decodeUsingChirp.bin'
+# compare_2(ref_path, unshifted_path, 1194)
 
-print('\nchannel from pilot')
-unshifted_path ='binaries/received_0527_2103_pilot_iceland_decodeUsingPilot.bin'
+# print('\nchannel from pilot')
+# unshifted_path ='binaries/received_0527_2103_pilot_iceland_decodeUsingPilot.bin'
 compare_2(ref_path, unshifted_path,1194)
 
 
+# print('\nchannel from pilot with ldpc')
+# unshifted_path ='binaries/received_0529_0825_pilot_ldpc_iceland.bin'
+# compare_2(ref_path, unshifted_path,588)
+
+# ref_path = 'text/article_4_long.txt'
+# print('\nchannel from pilot with ldpc')
+# unshifted_path ='binaries/received_0529_0833_pilot_ldpc_article4.bin'
+# compare_2(ref_path, unshifted_path,588)
+
 print('\nchannel from pilot with ldpc')
-unshifted_path ='binaries/received_0529_0825_pilot_ldpc_iceland.bin'
+unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland.bin'
 compare_2(ref_path, unshifted_path,588)
 
-ref_path = 'text/article_4_long.txt'
 print('\nchannel from pilot with ldpc')
-unshifted_path ='binaries/received_0529_0833_pilot_ldpc_article4.bin'
+unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland_kmeans.bin'
 compare_2(ref_path, unshifted_path,588)
 
-# shift2, percentage2 = compare_files_bitwise(ref_path, shifted_path)
-
-# print(f'Percentage of identical bits with constellation phase rotation: {percentage2:.2f}%')
-# print(f'Best shift2: {shift}')
 
 
 

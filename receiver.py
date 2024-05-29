@@ -270,8 +270,8 @@ class Receiver:
 
 
         
-
-        shift_constellation_phase = False
+        # flag
+        shift_constellation_phase = True
 
 
         for index, block in enumerate(blocks):
@@ -479,6 +479,7 @@ if __name__ == "__main__":
     # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc0.wav'
     received_signal_path = 'recordings/0529_0825_pilot_ldpc_iceland.m4a'
     received_signal_path = 'recordings/0529_0833_pilot_ldpc_article4.m4a'
+    received_signal_path = 'recordings/0529_0856_pilot_ldpc_iceland.m4a'
 
     use_pilot_tone = True
     use_ldpc = True

@@ -244,7 +244,7 @@ print('\nchannel from pilot')
 unshifted_path ='binaries/received_0529_0908_pilot_iceland_channelFromPilot.bin'
 pilot = compare_2(ref_path, unshifted_path,1194)
 
-print('\nchannel from pilot')
+print('\nchannel from pilot with kmeans')
 unshifted_path ='binaries/received_0529_0908_pilot_iceland_channelFromPilot_kmeans.bin'
 pilot_kmeans = compare_2(ref_path, unshifted_path,1194)
 
@@ -297,7 +297,8 @@ ldpc_kmeans = compare_2(ref_path, unshifted_path,588)
 font_size = 12
 
 # Create a figure with two subplots side by side
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
+# fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 3))
 
 # First subplot
 ax1.plot(chirp, marker='o', linestyle='-', color='b', label='chirp')
@@ -311,6 +312,19 @@ ax1.set_xticks(custom_ticks)
 ax1.grid(True)
 ax1.legend(fontsize=font_size)  # Add legend to label the lines
 ax1.set_ylim(0, 30)
+
+# # First subplot
+# ax1.plot(chirp, marker='o', linestyle='-', color='b', label='chirp')
+# ax1.plot(pilot, marker='o', linestyle='-', color='g', label='pilot')
+# # ax1.plot(pilot_kmeans, marker='o', linestyle='-', color='orange', label='pilot+kmeans')
+# ax1.set_title('Bit error rate vs block', fontsize=font_size)
+# ax1.set_xlabel('block', fontsize=font_size)
+# ax1.set_ylabel('bit error % per block', fontsize=font_size)
+# custom_ticks = np.linspace(0, len(chirp) - 1, 5, dtype=int)
+# ax1.set_xticks(custom_ticks)
+# ax1.grid(True)
+# ax1.legend(fontsize=font_size)  # Add legend to label the lines
+# ax1.set_ylim(0, 5)
 
 # Second subplot
 ax2.plot(ldpc, marker='o', linestyle='-', color='r', label='ldpc')

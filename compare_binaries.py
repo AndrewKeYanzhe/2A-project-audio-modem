@@ -294,7 +294,7 @@ ldpc_kmeans = compare_2(ref_path, unshifted_path,588)
 # # plt.yscale('log')
 # plt.show()
 
-
+font_size = 12
 
 # Create a figure with two subplots side by side
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
@@ -303,25 +303,25 @@ fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
 ax1.plot(chirp, marker='o', linestyle='-', color='b', label='chirp')
 ax1.plot(pilot, marker='o', linestyle='-', color='g', label='pilot')
 ax1.plot(pilot_kmeans, marker='o', linestyle='-', color='orange', label='pilot+kmeans')
-ax1.set_title('Bit error rate vs block')
-ax1.set_xlabel('block')
-ax1.set_ylabel('bit error % per block')
+ax1.set_title('Bit error rate vs block', fontsize=font_size)
+ax1.set_xlabel('block', fontsize=font_size)
+ax1.set_ylabel('bit error % per block', fontsize=font_size)
 custom_ticks = np.linspace(0, len(chirp) - 1, 5, dtype=int)
 ax1.set_xticks(custom_ticks)
 ax1.grid(True)
-ax1.legend()  # Add legend to label the lines
+ax1.legend(fontsize=font_size)  # Add legend to label the lines
 ax1.set_ylim(0, 30)
 
 # Second subplot
 ax2.plot(ldpc, marker='o', linestyle='-', color='r', label='ldpc')
 ax2.plot(ldpc_kmeans, marker='o', linestyle='-', color='black', label='ldpc+kmeans')
-ax2.set_title('Bit error rate vs block with ldpc')
-ax2.set_xlabel('block')
-ax2.set_ylabel('bit error % per block')
+ax2.set_title('Bit error rate vs block with ldpc', fontsize=font_size)
+ax2.set_xlabel('block', fontsize=font_size)
+ax2.set_ylabel('bit error % per block', fontsize=font_size)
 custom_ticks = np.linspace(0, len(ldpc) - 1, 5, dtype=int)
 ax2.set_xticks(custom_ticks)
 ax2.grid(True)
-ax2.legend()  # Add legend to label the lines
+ax2.legend(fontsize=font_size)  # Add legend to label the lines
 ax2.set_ylim(0, 30)
 
 plt.tight_layout()

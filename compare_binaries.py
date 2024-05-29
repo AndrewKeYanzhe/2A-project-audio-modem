@@ -185,15 +185,17 @@ def compare_2(file1, file2, bits_per_block):
     # print(errors_list[:10])
         
     # Plotting errors_list against its index
-    plt.figure(figsize=(10, 5))
-    plt.plot([x * 100 for x in errors_list], marker='o', linestyle='-', color='b')
-    plt.title('Bit error rate vs block '+os.path.splitext(os.path.basename(unshifted_path))[0])
-    plt.xlabel('block')
-    plt.ylabel('bit error % per block')
-    custom_ticks = np.linspace(0, len(errors_list), 5, dtype=int)
-    plt.xticks(custom_ticks)
-    plt.grid(True)
-    plt.show()
+    # plt.figure(figsize=(10, 5))
+    # plt.plot([x * 100 for x in errors_list], marker='o', linestyle='-', color='b')
+    # plt.title('Bit error rate vs block '+os.path.splitext(os.path.basename(unshifted_path))[0])
+    # plt.xlabel('block')
+    # plt.ylabel('bit error % per block')
+    # custom_ticks = np.linspace(0, len(errors_list), 5, dtype=int)
+    # plt.xticks(custom_ticks)
+    # plt.grid(True)
+    # plt.show() 
+
+    return [x * 100 for x in errors_list]
 
 
 # Example usage:
@@ -236,25 +238,94 @@ unshifted_path ='binaries/received_0527_2103_pilot_iceland_decodeUsingPilot.bin'
 
 print('\nchannel from chirp')
 unshifted_path ='binaries/received_0529_0908_pilot_iceland_channelFromChirp.bin'
-compare_2(ref_path, unshifted_path, 1194)
+chirp = compare_2(ref_path, unshifted_path, 1194)
 
 print('\nchannel from pilot')
 unshifted_path ='binaries/received_0529_0908_pilot_iceland_channelFromPilot.bin'
-compare_2(ref_path, unshifted_path,1194)
+pilot = compare_2(ref_path, unshifted_path,1194)
 
 print('\nchannel from pilot')
 unshifted_path ='binaries/received_0529_0908_pilot_iceland_channelFromPilot_kmeans.bin'
-compare_2(ref_path, unshifted_path,1194)
+pilot_kmeans = compare_2(ref_path, unshifted_path,1194)
 
 
 print('\nchannel from pilot with ldpc')
 unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland.bin'
-compare_2(ref_path, unshifted_path,588)
+ldpc = compare_2(ref_path, unshifted_path,588)
 
-print('\nchannel from pilot with ldpc')
+print('\nchannel from pilot with ldpc kmeans')
 unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland_kmeans.bin'
-compare_2(ref_path, unshifted_path,588)
+ldpc_kmeans = compare_2(ref_path, unshifted_path,588)
 
+# # Plotting errors_list against its index
+# plt.figure(figsize=(10, 5))
+# plt.plot(chirp, marker='o', linestyle='-', color='b', label='chirp')
+# plt.plot(pilot, marker='o', linestyle='-', color='g', label='pilot')
+# plt.plot(pilot_kmeans, marker='o', linestyle='-', color='orange', label='pilot+kmeans')
+# # plt.plot(ldpc, marker='o', linestyle='-', color='r', label='ldpc')
+# # plt.plot(ldpc_kmeans, marker='o', linestyle='-', color='black', label='ldpc+kmeans')
+# plt.title('Bit error rate vs block ' + os.path.splitext(os.path.basename(unshifted_path))[0])
+# plt.xlabel('block')
+# plt.ylabel('bit error % per block')
+# custom_ticks = np.linspace(0, len(chirp) - 1, 5, dtype=int)
+# plt.xticks(custom_ticks)
+# plt.grid(True)
+# plt.legend()  # Add legend to label the lines
+# plt.ylim=(0,30)
+# # plt.yscale('log')
+# plt.show()
+
+
+# # Plotting errors_list against its index
+# plt.figure(figsize=(10, 5))
+# # plt.plot(chirp, marker='o', linestyle='-', color='b', label='chirp')
+# # plt.plot(pilot, marker='o', linestyle='-', color='g', label='pilot')
+# # plt.plot(pilot_kmeans, marker='o', linestyle='-', color='orange', label='pilot+kmeans')
+# plt.plot(ldpc, marker='o', linestyle='-', color='r', label='ldpc')
+# plt.plot(ldpc_kmeans, marker='o', linestyle='-', color='black', label='ldpc+kmeans')
+# plt.title('Bit error rate vs block ' + os.path.splitext(os.path.basename(unshifted_path))[0])
+# plt.xlabel('block')
+# plt.ylabel('bit error % per block')
+# custom_ticks = np.linspace(0, len(ldpc) - 1, 5, dtype=int)
+# plt.xticks(custom_ticks)
+# plt.grid(True)
+# plt.legend()  # Add legend to label the lines
+# plt.ylim=(0,30)
+# # plt.yscale('log')
+# plt.show()
+
+
+
+# Create a figure with two subplots side by side
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
+
+# First subplot
+ax1.plot(chirp, marker='o', linestyle='-', color='b', label='chirp')
+ax1.plot(pilot, marker='o', linestyle='-', color='g', label='pilot')
+ax1.plot(pilot_kmeans, marker='o', linestyle='-', color='orange', label='pilot+kmeans')
+ax1.set_title('Bit error rate vs block')
+ax1.set_xlabel('block')
+ax1.set_ylabel('bit error % per block')
+custom_ticks = np.linspace(0, len(chirp) - 1, 5, dtype=int)
+ax1.set_xticks(custom_ticks)
+ax1.grid(True)
+ax1.legend()  # Add legend to label the lines
+ax1.set_ylim(0, 30)
+
+# Second subplot
+ax2.plot(ldpc, marker='o', linestyle='-', color='r', label='ldpc')
+ax2.plot(ldpc_kmeans, marker='o', linestyle='-', color='black', label='ldpc+kmeans')
+ax2.set_title('Bit error rate vs block with ldpc')
+ax2.set_xlabel('block')
+ax2.set_ylabel('bit error % per block')
+custom_ticks = np.linspace(0, len(ldpc) - 1, 5, dtype=int)
+ax2.set_xticks(custom_ticks)
+ax2.grid(True)
+ax2.legend()  # Add legend to label the lines
+ax2.set_ylim(0, 30)
+
+plt.tight_layout()
+plt.show()
 
 
 

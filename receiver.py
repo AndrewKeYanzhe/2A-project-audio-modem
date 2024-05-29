@@ -219,6 +219,8 @@ class Receiver:
         self.plot_constellation(compensated_constellations_subsampled, title="Constellation After Compensation, subsampled 1:10")
 
 
+
+        # start of kmeans
         data = np.array([[z.real, z.imag] for z in self.compensated_constellations])
         # data = np.array([[z.real, z.imag] for z in subsample])
 
@@ -282,15 +284,59 @@ class Receiver:
             x_n = self.channel_compensation(r_n, self.g_n)
 
             # Save the constellation points for plotting
-            # self.received_constellations.extend(r_n[bin_low:bin_high+1])
-            # self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
+            self.received_constellations.extend(r_n[bin_low:bin_high+1])
+            self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
+
+
+
+            # start of kmeans
+            data = np.array([[z.real, z.imag] for z in self.compensated_constellations])
+            # data = np.array([[z.real, z.imag] for z in subsample])
+
+
+
+
+            # Apply k-means clustering
+            kmeans = KMeans(n_clusters=5, init='k-means++', n_init=10, random_state=42).fit(data)
+
+            # Get the cluster centroids
+            centroids = kmeans.cluster_centers_
+
+            top_4 = sorted(centroids, key=lambda c: c[0]**2 + c[1]**2, reverse=True)[:4]
+            phases = [(c, math.atan2(c[1], c[0])) for c in top_4]
+
+            phases_sorted = sorted(phases, key=lambda x: x[1])
+
+            # phases_sorted = [phase + 360 if phase < 0 else phase for phase in phases_sorted]
+
+
+
+            # for key, value in phases_sorted.items():
+                # if value < 0:
+                #     phases_sorted[key] = value + 360
+
+            sum_angles = 0
+            for c, angle in phases_sorted:
+                # Convert angle from radians to degrees
+                angle_degrees = math.degrees(angle)
+                
+                print(f"Coordinate: {c}, Magnitude: {math.sqrt(c[0]**2 + c[1]**2)}, Phase: {angle_degrees} degrees")
+                # print(angle_degrees)
+                if angle_degrees < 0:
+                    angle_degrees = angle_degrees + 360
+                
+                sum_angles = sum_angles + angle_degrees
+            
+            # print(sum_angles)
+
+            phase_shift_needed = (720-sum_angles)/4
         
             # Demap QPSK symbols to binary data
             # binary_data = self.qpsk_demapper(x_n[bin_low:bin_high+1]) # change: now we only demap the frequency bins of interest
 
             constellations = np.copy(x_n[bin_low:bin_high+1])
             
-            shifted_constellations = [z * cmath.exp(1j * math.radians(phase_shift_needed)) for z in constellations]
+            # shifted_constellations = [z * cmath.exp(1j * math.radians(phase_shift_needed)) for z in constellations]
   
             
             if shift_constellation_phase:

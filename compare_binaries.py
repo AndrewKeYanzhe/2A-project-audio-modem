@@ -85,10 +85,25 @@ def compare_2(file1, file2, bits_per_block):
 
     
 
-    for shift in range(0,30):
+    # for shift in range(0,30):
+    #     compared_length = 0
+    #     matched_bits = 0
+    #     for i in range(len(reference_binary_string)):
+
+    #         compared_length = compared_length + 1
+    #         if i+shift >=0 and i+shift <= len(received_binary_string)-1:
+    #             if reference_binary_string[i] == received_binary_string[i+shift]:
+    #                 matched_bits = matched_bits+1
+    #     # print(compared_length)
+
+    #     if matched_bits>best_match:
+    #         best_match = matched_bits
+    #         shift_at_best_match = shift
+
+    for shift in range(0,1200):
         compared_length = 0
         matched_bits = 0
-        for i in range(len(reference_binary_string)):
+        for i in range(1000):
 
             compared_length = compared_length + 1
             if i+shift >=0 and i+shift <= len(received_binary_string)-1:
@@ -100,30 +115,24 @@ def compare_2(file1, file2, bits_per_block):
             best_match = matched_bits
             shift_at_best_match = shift
 
-    for shift in range(800,900):
-        compared_length = 0
-        matched_bits = 0
-        for i in range(len(reference_binary_string)):
+    for i in range(len(reference_binary_string)):
 
-            compared_length = compared_length + 1
-            if i+shift >=0 and i+shift <= len(received_binary_string)-1:
-                if reference_binary_string[i] == received_binary_string[i+shift]:
-                    matched_bits = matched_bits+1
-        # print(compared_length)
+        compared_length = compared_length + 1
+        if i+shift >=0 and i+shift <= len(received_binary_string)-1:
+            if reference_binary_string[i] == received_binary_string[i+shift]:
+                matched_bits = matched_bits+1
+    # print(compared_length)
 
-        if matched_bits>best_match:
-            best_match = matched_bits
-            shift_at_best_match = shift
-
+    matched_bits = 0
+    if matched_bits>best_match:
+        best_match = matched_bits
+        # shift_at_best_match = shift
 
         
 
     
     
-    print("bit shift at best match", shift_at_best_match)
-    print("percentage of bits that are the same",best_match/len(reference_binary_string))
-    bit_error_rate = 100 * (1 - best_match / len(reference_binary_string))
-    print(f"bit error rate: {bit_error_rate:.1f}%")
+    
 
     
     shifted_received_list = received_binary_string[shift_at_best_match:]
@@ -148,7 +157,7 @@ def compare_2(file1, file2, bits_per_block):
     # print(errors_list)
 
     
-
+    total_errors=0
 
     
     for index, block in enumerate(reference_binary_string_split):
@@ -160,9 +169,17 @@ def compare_2(file1, file2, bits_per_block):
             
             if received_binary_string_split[index][j] == block[j]:
                 matched_bits = matched_bits+1
+        total_errors = total_errors + len(block)-matched_bits
                 
         errors_list.append((len(block)-matched_bits)/len(block))
         # errors_list.append(matched_bits)
+
+    # total_errors = 
+    
+    print("bit shift at best match", shift_at_best_match)
+    # print("percentage of bits that are the same",best_match/len(reference_binary_string))
+    bit_error_rate = 100 * (total_errors/ len(reference_binary_string))
+    print(f"bit error rate: {bit_error_rate:.1f}%")
     
     # print(type(matched_bits))
     # print(errors_list[:10])
@@ -207,7 +224,12 @@ compare_2(ref_path, unshifted_path,1194)
 
 
 print('\nchannel from pilot with ldpc')
-unshifted_path ='binaries/received_transmitted_article_2_iceland_pilot1_ldpc1.bin'
+unshifted_path ='binaries/received_0529_0825_pilot_ldpc_iceland.bin'
+compare_2(ref_path, unshifted_path,588)
+
+ref_path = 'text/article_4_long.txt'
+print('\nchannel from pilot with ldpc')
+unshifted_path ='binaries/received_0529_0833_pilot_ldpc_article4.bin'
 compare_2(ref_path, unshifted_path,588)
 
 # shift2, percentage2 = compare_files_bitwise(ref_path, shifted_path)

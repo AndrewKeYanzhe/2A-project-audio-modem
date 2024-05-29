@@ -220,7 +220,7 @@ unshifted_path ='binaries/received_0527_2103_pilot_iceland_decodeUsingPilot.bin'
 
 # print('\nchannel from pilot')
 # unshifted_path ='binaries/received_0527_2103_pilot_iceland_decodeUsingPilot.bin'
-compare_2(ref_path, unshifted_path,1194)
+# compare_2(ref_path, unshifted_path,1194)
 
 
 # print('\nchannel from pilot with ldpc')
@@ -231,6 +231,21 @@ compare_2(ref_path, unshifted_path,1194)
 # print('\nchannel from pilot with ldpc')
 # unshifted_path ='binaries/received_0529_0833_pilot_ldpc_article4.bin'
 # compare_2(ref_path, unshifted_path,588)
+
+
+
+print('\nchannel from chirp')
+unshifted_path ='binaries/received_0529_0908_pilot_iceland_channelFromChirp.bin'
+compare_2(ref_path, unshifted_path, 1194)
+
+print('\nchannel from pilot')
+unshifted_path ='binaries/received_0529_0908_pilot_iceland_channelFromPilot.bin'
+compare_2(ref_path, unshifted_path,1194)
+
+print('\nchannel from pilot')
+unshifted_path ='binaries/received_0529_0908_pilot_iceland_channelFromPilot_kmeans.bin'
+compare_2(ref_path, unshifted_path,1194)
+
 
 print('\nchannel from pilot with ldpc')
 unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland.bin'

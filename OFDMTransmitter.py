@@ -434,7 +434,7 @@ if __name__ == "__main__":
     transmitter = OFDMTransmitter()
 
     # Load the binary data from file
-    transmitted_binary_path = 'text/article_4_long.txt'
+    transmitted_binary_path = 'text/article_2_iceland.txt'
     # transmitted_binary_path = 'text/article_3_long.txt'
     logging.info(f"Loading binary data from {transmitted_binary_path}.")
     data = transmitter.load_binary_data(transmitted_binary_path)
@@ -443,7 +443,7 @@ if __name__ == "__main__":
     
 
     use_pilot_tone = True
-    use_ldpc = True
+    use_ldpc = False
 
     # Convert file data to binary with header
     #filename = "transmitted_5.26pm.wav"

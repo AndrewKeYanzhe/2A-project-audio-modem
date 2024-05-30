@@ -404,14 +404,14 @@ if __name__ == "__main__":
     fs = 48000
     block_size = (4096-2)//2
     prefix_length = 1024
-    # recording_name = '0525_1548'
+    suffix_length = 0
     chirp_name = '1k_8k_0523'
 
     # Example usage
     transmitter = OFDMTransmitter()
 
     # Load the binary data from file
-    transmitted_binary_path = 'text/article_4_long.txt'
+    transmitted_binary_path = 'text/article_2_iceland.txt'
     # transmitted_binary_path = 'text/article_3_long.txt'
     logging.info(f"Loading binary data from {transmitted_binary_path}.")
     data = transmitter.load_binary_data(transmitted_binary_path)
@@ -430,7 +430,7 @@ if __name__ == "__main__":
     binary_data = transmitter.audio_to_binary(data)
 
     # Transmit the signal
-    transmitted_signal = transmitter.transmit_signal(binary_data, block_size, prefix_length,fs, 1000, 8000)
+    transmitted_signal = transmitter.transmit_signal(binary_data, block_size, prefix_length,fs, 1000, 8000) # Don't worry about this frequency range for now
 
     # Save the transmitted signal to a CSV file
     output_csv_path = './files/transmitted_data_' + recording_name + '.csv'
@@ -441,7 +441,8 @@ if __name__ == "__main__":
     #transmitter.plot_constellation()
 
     # Generate the chirp signal with ChirpSignalGenerator and save it
-    generator = ChirpSignalGenerator(t_chirp=1.365 ,f_low=761.72, f_high=8824.22)
+    generator = ChirpSignalGenerator(t_chirp=1.365 ,f_low=761.72, f_high=8824.22,
+                                     prefix_size=prefix_length, suffix_size=suffix_length)
     generator.generate_chirp_signal()
     chirp_path = 'chirps/' + chirp_name + '.wav'
     generator.save_as_wav(chirp_path)

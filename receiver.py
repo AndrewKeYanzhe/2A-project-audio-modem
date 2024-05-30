@@ -490,8 +490,8 @@ if __name__ == "__main__":
     # kmeans flag
     shift_constellation_phase = False
 
-    use_pilot_tone = False
-    use_ldpc = False
+    use_pilot_tone = True
+    use_ldpc = True
     # pilot1, ldpc0/1 works
     # pilot0, ldpc0/1 doesnt work
 

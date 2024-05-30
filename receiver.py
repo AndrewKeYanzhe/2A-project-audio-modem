@@ -374,6 +374,7 @@ if __name__ == "__main__":
 
     #received_signal_path
     received_signal_path = 'recordings/0529_0856_pilot_ldpc_iceland.m4a'
+    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
 
 
 

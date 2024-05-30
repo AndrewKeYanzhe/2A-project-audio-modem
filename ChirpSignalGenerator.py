@@ -28,13 +28,15 @@ class ChirpSignalGenerator:
         play_signal(): Plays the signal using the sounddevice library.
     """
 
-    def __init__(self, fs=48000, t_chirp=5.0, t_silence=0.0, f_low=20, f_high=8000, prefix_duration=0.02133):
+    def __init__(self, fs=48000, t_chirp=5.0, t_silence=0.0, f_low=20, f_high=8000,
+                 prefix_duration=0.02133,suffix_duration=0.02133):
         self.fs = fs
         self.t_chirp = t_chirp
         self.t_silence = t_silence
         self.f_low = f_low
         self.f_high = f_high
         self.prefix_duration = prefix_duration
+        self.suffix_duration = suffix_duration
         self.full_signal = None
         self.t = None
 
@@ -45,15 +47,16 @@ class ChirpSignalGenerator:
 
         # Create circular prefix (last prefix_duration seconds of chirp)
         prefix = chirp_signal[-int(self.fs * self.prefix_duration):]
+        suffix = chirp_signal[:int(self.fs * self.suffix_duration)]
 
         # Generate silence
         silence = np.zeros(int(self.fs * self.t_silence))
 
         # Combine all parts
-        self.full_signal = np.concatenate([silence, prefix, chirp_signal, silence])
+        self.full_signal = np.concatenate([silence, prefix, chirp_signal,suffix,silence])
 
         # Calculate total duration
-        t_total = 2 * self.t_silence + self.prefix_duration + self.t_chirp
+        t_total = 2 * self.t_silence + self.prefix_duration + self.t_chirp + self.suffix_duration
 
         # Ensure the time array matches the signal length
         self.t = np.linspace(0, t_total, len(self.full_signal), endpoint=False)

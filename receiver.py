@@ -317,7 +317,10 @@ class Receiver:
                 clipped_value = min(normalized_value, 1)
                 clipped_value = max(normalized_value,-1)
                 
+                # clipping improves performance
+
                 return clipped_value
+                # return normalized_value
 
             def qpsk_demap_probabilities(constellations, normalisation_factor):
                 """Demap QPSK symbols to binary data."""
@@ -346,6 +349,8 @@ class Receiver:
                     
                     binary_probabilities.append(0.5-0.5*normalize_and_clip(symbol.imag, normalisation_factor))
                     binary_probabilities.append(0.5-0.5*normalize_and_clip(symbol.real, normalisation_factor))
+                    # binary_probabilities.append(math.log(0.5-0.5*normalize_and_clip(symbol.imag, normalisation_factor)))
+                    # binary_probabilities.append(math.log(0.5-0.5*normalize_and_clip(symbol.real, normalisation_factor)))
                     
                 return binary_probabilities
 

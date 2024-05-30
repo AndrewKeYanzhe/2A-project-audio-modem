@@ -306,9 +306,12 @@ class Receiver:
 
             # print("binary_data length",len(binary_data))
 
-            def normalize_and_clip(data_in, noise_level):
-                # Normalize the value to the noise level
-                normalized_value = data_in / noise_level
+            def normalize_and_clip(data_in, normalisation_factor):
+                # Normalize the value to the normalisation_factor
+                # normalized_value = data_in / normalisation_factor 
+                # normalisation factor is 2. because 1+j,-1-j is a difference of 2 in real,imag
+                # normalisation factor calculated with kmeans is 1.97 which matches
+                normalized_value = data_in / 2
                 
                 # Clip the value at 1
                 clipped_value = min(normalized_value, 1)
@@ -316,7 +319,7 @@ class Receiver:
                 
                 return clipped_value
 
-            def qpsk_demap_probabilities(constellations, noise):
+            def qpsk_demap_probabilities(constellations, normalisation_factor):
                 """Demap QPSK symbols to binary data."""
                 constellation = {
                     complex(1, 1): '00',
@@ -341,8 +344,8 @@ class Receiver:
                 #         logging.warning(f"No matching constellation point found for symbol {symbol}")
                 for index, symbol in enumerate(constellations):
                     
-                    binary_probabilities.append(0.5-0.5*normalize_and_clip(symbol.imag, noise))
-                    binary_probabilities.append(0.5-0.5*normalize_and_clip(symbol.real, noise))
+                    binary_probabilities.append(0.5-0.5*normalize_and_clip(symbol.imag, normalisation_factor))
+                    binary_probabilities.append(0.5-0.5*normalize_and_clip(symbol.real, normalisation_factor))
                     
                 return binary_probabilities
 

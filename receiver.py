@@ -374,7 +374,7 @@ if __name__ == "__main__":
 
     #received_signal_path
     received_signal_path = 'recordings/0529_0856_pilot_ldpc_iceland.m4a'
-    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
+    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc0.wav'
 
 
 
@@ -382,7 +382,7 @@ if __name__ == "__main__":
     # channel estimation methods flag
     shift_constellation_phase = False#Kmeans
     use_pilot_tone = True#pilot
-    use_ldpc = True#ldpc
+    use_ldpc = False#ldpc
     # ldpc0 and pilot0 also has bug. TODO fix
     recording_name = os.path.splitext(os.path.basename(received_signal_path))[0]
 

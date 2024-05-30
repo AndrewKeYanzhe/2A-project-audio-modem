@@ -5,3 +5,4 @@ myenv/
 delme*
 *.pyc
 *.csv
+chirps/1k_8k_0523.wav

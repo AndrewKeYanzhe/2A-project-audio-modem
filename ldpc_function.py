@@ -136,3 +136,4 @@ if __name__ == "__main__":
         errors = errors + max(output !=data)
 
     print("errors across 100 trials: ",errors)
+    print("z",z)

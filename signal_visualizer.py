@@ -40,14 +40,14 @@ def plot_signals(transmitted_signal_path, received_signal_path):
     plt.show()
 
 # File paths (Replace 'path_to_files' with the actual path to your audio files)
-transmitted_signal_path = './files/transmitted_data.csv'
-received_signal_path = './files/transmitted_data.csv'
+transmitted_signal_path = 'chirps/1k_8k_0523.wav'
+received_signal_path = 'chirps/1k_8k_0523.wav'
 
 # Call the function to plot the signals
 plot_signals(transmitted_signal_path, received_signal_path)
 
 def plot_spectrogram(signal, fs, title):
-    f, t, Sxx = spectrogram(signal, fs=fs, window='hann', nperseg=1024, noverlap=512, nfft=2048, scaling='density', mode='magnitude')
+    f, t, Sxx = spectrogram(signal, fs=fs, window='hann', nperseg=256, scaling='density', mode='magnitude')
     plt.pcolormesh(t, f, 10 * np.log10(Sxx), shading='gouraud')
     plt.ylabel('Frequency [Hz]')
     plt.xlabel('Time [s]')

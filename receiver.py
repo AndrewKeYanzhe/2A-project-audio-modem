@@ -180,11 +180,11 @@ class Receiver:
                 phase_response = np.angle(self.g_n, deg=True)
 
                 # Plot the phase response
-                plt.figure(figsize=(8, 6))
+                plt.figure(figsize=(6, 4))
                 plt.plot(frequencies, phase_response)
-                plt.title('Phase Response of the Channel using pilot symbol')
+                plt.title('Phase Response of the Channel (Pilot symbol)')
                 plt.xlabel('Frequency (Hz)')
-                plt.xlim(0, 20000)
+                plt.xlim(0, 10000)
                 plt.ylabel('Phase (Degrees)')
                 plt.show()
 
@@ -207,7 +207,7 @@ class Receiver:
             # binary_data = self.qpsk_demapper(x_n[bin_low:bin_high+1]) # change: now we only demap the frequency bins of interest
             # complete_binary_data += binary_data
         #plotting the constellation
-        self.plot_constellation(self.received_constellations, title="Constellation Before Compensation")
+        self.plot_constellation(self.received_constellations, title="Constellation\nBefore Compensation")
 
         print(np.array(self.compensated_constellations).shape)
         
@@ -215,18 +215,18 @@ class Receiver:
 
         compensated_constellations_subsampled = random.sample(self.compensated_constellations, len(self.compensated_constellations) // 10)
 
-        self.plot_constellation(self.compensated_constellations, title="Constellation After Compensation")
-        self.plot_constellation(compensated_constellations_subsampled, title="Constellation After Compensation, subsampled 1:10")
+        self.plot_constellation(self.compensated_constellations, title="Constellation\nAfter Compensation")
+        self.plot_constellation(compensated_constellations_subsampled, title="Constellation After Compensation,\nsubsampled 1:10")
 
 
         data = np.array([[z.real, z.imag] for z in self.compensated_constellations])
         # data = np.array([[z.real, z.imag] for z in subsample])
 
 
-
+        n_clusters = 5
 
         # Apply k-means clustering
-        kmeans = KMeans(n_clusters=5, init='k-means++', n_init=10, random_state=42).fit(data)
+        kmeans = KMeans(n_clusters, init='k-means++', n_init=10, random_state=42).fit(data)
 
         # Get the cluster centroids
         centroids = kmeans.cluster_centers_
@@ -266,7 +266,7 @@ class Receiver:
 
         # centroid_complex_numbers
 
-        self.plot_constellation(centroid_complex_numbers, title="K means clusters")
+        self.plot_constellation(centroid_complex_numbers, title="k-means clusters="+str(n_clusters), dot_size=100)
 
 
         
@@ -384,15 +384,20 @@ class Receiver:
         logging.info(f"Recovered Binary Data Length: {len(complete_binary_data)}")
         return complete_binary_data
 
-    def plot_constellation(self, symbols, title="QPSK Constellation"):
-        plt.figure(figsize=(10, 6))
-        plt.scatter(np.real(symbols), np.imag(symbols), marker='.')
+    def plot_constellation(self, symbols, title="QPSK Constellation", dot_size=20):
+        font_size = 16
+        plt.figure(figsize=(4, 4))
+        plt.scatter(np.real(symbols), np.imag(symbols), marker='.', s=dot_size)
         plt.axhline(0, color='black', lw=0.5)
         plt.axvline(0, color='black', lw=0.5)
-        plt.xlabel('In-Phase')
-        plt.ylabel('Quadrature')
-        plt.title(title)
+        plt.xlabel('Real', fontsize=font_size)
+        plt.ylabel('Imaginary', fontsize=font_size)
+        plt.ylim(-4, 4)
+        plt.xlim(-4, 4)
+        plt.title(title, fontsize=font_size)
         plt.grid()
+        plt.tick_params(axis='both', which='major', labelsize=font_size)
+        plt.tight_layout()
         plt.show()
 
     def binary_to_bytes(self, binary_data):
@@ -485,9 +490,10 @@ if __name__ == "__main__":
     # kmeans flag
     shift_constellation_phase = False
 
-    use_pilot_tone = True
-    use_ldpc = True
-    # ldpc0 and pilot0 also has bug. TODO fix
+    use_pilot_tone = False
+    use_ldpc = False
+    # pilot1, ldpc0/1 works
+    # pilot0, ldpc0/1 doesnt work
 
     recording_name = os.path.splitext(os.path.basename(received_signal_path))[0]
 

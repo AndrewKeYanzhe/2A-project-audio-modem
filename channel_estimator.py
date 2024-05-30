@@ -227,27 +227,29 @@ class AnalogueSignalProcessor:
             
         frequencies = self.frequencies
         # Plot magnitude spectra of transmitted and received signals
-        plt.figure(figsize=(8, 6))
+        plt.figure(figsize=(6, 4))
         plt.plot(frequencies, mag_trans, label='Transmitted Signal')
         plt.plot(frequencies, mag_recv, label='Received Signal', alpha=0.7)
         plt.title('Magnitude Spectra of Transmitted and Received Signals')
         plt.xlabel('Frequency (Hz)')
+        plt.xlim(0, 10000)
         plt.ylabel('Magnitude (dB)')
         plt.legend()
         plt.show()
 
         # Plot the transfer function (channel frequency response)
-        plt.figure(figsize=(8, 6))
+        plt.figure(figsize=(6, 4))
         plt.plot(frequencies, mag)
-        plt.title('Transfer Function of the Channel')
+        plt.title('Magnitude response of the channel (Chirp)')
         plt.xlabel('Frequency (Hz)')
+        plt.xlim(0, 10000)
         plt.ylabel('Magnitude (dB)')
         plt.show()
         
         # Plot the phase response
-        plt.figure(figsize=(8, 6))
+        plt.figure(figsize=(6, 4))
         plt.plot(frequencies, phase)
-        plt.title('Phase Response of the Channel')
+        plt.title('Phase Response of the channel (Chirp)')
         plt.xlabel('Frequency (Hz)')
         plt.xlim(0, 10000)
         plt.ylabel('Phase (Degrees)')

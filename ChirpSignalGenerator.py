@@ -55,11 +55,11 @@ class ChirpSignalGenerator:
         # Combine all parts
         self.full_signal = np.concatenate([silence, prefix, chirp_signal,suffix,silence])
 
-        # Calculate total duration
-        t_total = 2 * self.t_silence + self.prefix_duration + self.t_chirp + self.suffix_duration
+        # # Calculate total duration
+        # t_total = 2 * self.t_silence + self.prefix_duration + self.t_chirp + self.suffix_duration
 
-        # Ensure the time array matches the signal length
-        self.t = np.linspace(0, t_total, len(self.full_signal), endpoint=False)
+        # # Ensure the time array matches the signal length
+        # self.t = np.linspace(0, t_total, len(self.full_signal), endpoint=False)
 
     def normalize_signal(self):
         """Normalizes the signal to 16-bit integer values and floating-point values."""

@@ -70,7 +70,7 @@ class OFDMTransmitter:
         # Determine the frequency bin range
         n_bins = (block_size * 2) + 2
         n_low, n_high = cut_freq_bins(f_low, f_high, fs, n_bins)
-        usable_subcarriers = n_high - n_low + 1
+        usable_subcarriers = n_high - n_low+1
         bits_per_block = usable_subcarriers * 2
 
 
@@ -411,7 +411,7 @@ if __name__ == "__main__":
     transmitter = OFDMTransmitter()
 
     # Load the binary data from file
-    transmitted_binary_path = 'text/article_2_iceland.txt'
+    transmitted_binary_path = 'text/article_4_long.txt'
     # transmitted_binary_path = 'text/article_3_long.txt'
     logging.info(f"Loading binary data from {transmitted_binary_path}.")
     data = transmitter.load_binary_data(transmitted_binary_path)

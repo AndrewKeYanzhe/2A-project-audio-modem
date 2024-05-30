@@ -467,28 +467,8 @@ if __name__ == "__main__":
     chirp_f_low = 761.72
     chirp_f_high = 8824.22
     chirp_transmitted_path = 'chirps/1k_8k_0523.wav'
-    #received_signal_path = './recordings/'+recording_name+'.m4a'
-    received_signal_path = 'recordings/0525_1832.m4a'
-    received_signal_path = 'recordings/0526_2347_article_speakers.m4a'
-    received_signal_path = 'recordings/0526_2347_article_speakers3.m4a'
-    # received_signal_path = 'recordings/0526_2347_article_speakers2_iphoneRec.m4a'
-    received_signal_path = 'recordings/transmitted_signal_with_chirp_0525_1548.wav'
-    # received_signal_path = 'recordings/transmitted_signal_with_chirp_0527_1635_pilot_tone.wav'
-    # received_signal_path = 'recordings/0527_1722.m4a'
-    received_signal_path = 'recordings/0527_2103_pilot_iceland.m4a'
     received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
-    received_signal_path = 'recordings/transmitted_article_3_long_pilot1_ldpc0.wav'
-    received_signal_path = 'recordings/0528_1949_pilot_ldpc_iceland.m4a'
-    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
-    # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc0.wav'
-    received_signal_path = 'recordings/0529_0825_pilot_ldpc_iceland.m4a'
-    received_signal_path = 'recordings/0529_0833_pilot_ldpc_article4.m4a'
-    received_signal_path = 'recordings/0529_0856_pilot_ldpc_iceland.m4a'
-    # received_signal_path = 'recordings/First_received_channel.m4a'
-    #received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
-    # received_signal_path = 'recordings/new_parameter_test2.m4a'
-    # received_signal_path = 'recordings/cat_no_channel.wav'
-    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
+
 
     # kmeans flag
     shift_constellation_phase = False
@@ -512,7 +492,7 @@ if __name__ == "__main__":
 
     # Trim the received signal
     start_index = int(delay) # delay is an integer though
-    received_signal_trimmed = asp.recv[start_index+int((1.365+0.02133)*fs):] #can directly use int()??
+    received_signal_trimmed = asp.recv[start_index+1024*2+int(1.365*fs):] #can directly use int()??
 
     # # Save the trimmed signal to a new file (or directly process it)
     trimmed_signal_path = './files/trimmed_received_signal_' + recording_name + '.csv'

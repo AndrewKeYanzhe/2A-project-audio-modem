@@ -392,8 +392,6 @@ class Receiver:
         plt.axvline(0, color='black', lw=0.5)
         plt.xlabel('Real', fontsize=font_size)
         plt.ylabel('Imaginary', fontsize=font_size)
-        plt.ylim(-4, 4)
-        plt.xlim(-4, 4)
         plt.title(title, fontsize=font_size)
         plt.grid()
         plt.tick_params(axis='both', which='major', labelsize=font_size)

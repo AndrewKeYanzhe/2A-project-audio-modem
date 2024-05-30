@@ -443,7 +443,7 @@ if __name__ == "__main__":
     
 
     use_pilot_tone = True
-    use_ldpc = False
+    use_ldpc = True
 
     # Convert file data to binary with header
     #filename = "transmitted_5.26pm.wav"
@@ -453,7 +453,7 @@ if __name__ == "__main__":
     binary_data = transmitter.audio_to_binary(data)
 
     # Transmit the signal
-    transmitted_signal = transmitter.transmit_signal(binary_data, block_size, prefix_length,fs, 1000, 8000)
+    transmitted_signal = transmitter.transmit_signal(binary_data, block_size, prefix_length,fs, 996.09, 8583.984)
 
     # Save the transmitted signal to a CSV file
     output_csv_path = './files/transmitted_data_' + recording_name + '.csv'

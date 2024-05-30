@@ -262,6 +262,7 @@ class Receiver:
         # print(sum_angles)
 
         avg_kmeans_magnitude = sum(kmeans_cluster_magnitudes) / len(kmeans_cluster_magnitudes) 
+        print("avg_kmeans_magnitude",avg_kmeans_magnitude)
 
         phase_shift_needed = (720-sum_angles)/4
         print("phase shift needed", phase_shift_needed)
@@ -362,7 +363,11 @@ class Receiver:
 
                 # print("ldpc_signal_list length",len(ldpc_signal_list))
 
-                ldpc_signal_list=np.array(qpsk_demap_probabilities(constellations, avg_kmeans_magnitude))
+
+                if shift_constellation_phase:
+                    ldpc_signal_list=np.array(qpsk_demap_probabilities(shifted_constellations, avg_kmeans_magnitude))
+                elif shifted_constellations == 0:
+                    ldpc_signal_list=np.array(qpsk_demap_probabilities(constellations, avg_kmeans_magnitude))
                 
                 ldpc_signal_list = ldpc_signal_list[0:ldpc_encoded_length]
                 # print("ldpc_signal_list length",len(ldpc_signal_list))
@@ -536,7 +541,7 @@ if __name__ == "__main__":
     # received_signal_path = 'recordings/0529_0908_pilot_iceland.m4a'
 
     # kmeans flag
-    shift_constellation_phase = False
+    shift_constellation_phase = True
 
     use_pilot_tone = True
     use_ldpc = True

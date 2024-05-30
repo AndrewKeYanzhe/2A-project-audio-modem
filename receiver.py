@@ -319,11 +319,46 @@ class Receiver:
 
                 # print(ldpc_signal_list)
 
-                ldpc_decoded, ldpc_decoded_with_redundancies = decode_ldpc(ldpc_signal_list)
+                def binary_to_gray(binary_list):
+                    gray_list = []
+                    for i in range(0, len(binary_list), 2):
+                        first_bit = binary_list[i]
+                        second_bit = binary_list[i + 1]
+                        gray_first_bit = first_bit
+                        gray_second_bit = first_bit ^ second_bit
+                        gray_list.extend([gray_first_bit, gray_second_bit])
+                    return np.array(gray_list)
+
+                # ldpc_signal_list = [0, 0, 1, 1]
+                # gray_code_list = binary_to_gray(ldpc_signal_list)
+                # gray_code_list
+
+                # ldpc_signal_list = [0]+ldpc_signal_list
+
+                ldpc_signal_list_gray = binary_to_gray(ldpc_signal_list)
+
+
+
+
+                ldpc_decoded, ldpc_decoded_with_redundancies = decode_ldpc(ldpc_signal_list_gray)
+
+                def gray_to_binary(gray_list):
+                    binary_list = []
+                    for i in range(0, len(gray_list), 2):
+                        first_bit = gray_list[i]
+                        second_bit = gray_list[i + 1] ^ gray_list[i]
+                        binary_list.extend([first_bit, second_bit])
+                    return binary_list
+                
+                ldpc_decoded_binary = gray_to_binary(ldpc_decoded)
+
+                # ldpc_decoded_binary = ldpc_decoded_binary[1:]
+
 
                 
                 #convert list to string
-                ldpc_decoded = ''.join(str(x) for x in ldpc_decoded)
+                # ldpc_decoded = ''.join(str(x) for x in ldpc_decoded)
+                ldpc_decoded = ''.join(str(x) for x in ldpc_decoded_binary)
 
                 # if index!=0:
                 #     complete_binary_data += ldpc_decoded
@@ -484,7 +519,7 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/0529_0825_pilot_ldpc_iceland.m4a'
     received_signal_path = 'recordings/0529_0833_pilot_ldpc_article4.m4a'
     received_signal_path = 'recordings/0529_0856_pilot_ldpc_iceland.m4a'
-    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
+    # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
     # received_signal_path = 'recordings/0529_0908_pilot_iceland.m4a'
     # received_signal_path = 'recordings/0529_0908_pilot_iceland.m4a'
 

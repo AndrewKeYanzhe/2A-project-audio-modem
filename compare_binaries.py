@@ -253,6 +253,11 @@ print('\nchannel from pilot with ldpc')
 unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland.bin'
 ldpc = compare_2(ref_path, unshifted_path,588)
 
+print('\nchannel from pilot with ldpc')
+unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland_old.bin'
+ldpc_old = compare_2(ref_path, unshifted_path,588)
+
+
 print('\nchannel from pilot with ldpc kmeans')
 unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland_kmeans.bin'
 ldpc_kmeans = compare_2(ref_path, unshifted_path,588)
@@ -327,8 +332,9 @@ ax1.set_ylim(0, 30)
 # ax1.set_ylim(0, 5)
 
 # Second subplot
-ax2.plot(ldpc, marker='o', linestyle='-', color='r', label='ldpc')
-ax2.plot(ldpc_kmeans, marker='o', linestyle='-', color='black', label='ldpc+kmeans')
+ax2.plot(ldpc_old, marker='o', linestyle='-', color='r', label='ldpc old')
+ax2.plot(ldpc, marker='o', linestyle='-', color='black', label='ldpc')
+# ax2.plot(ldpc_kmeans, marker='o', linestyle='-', color='black', label='ldpc+kmeans')
 ax2.set_title('Bit error rate vs block with ldpc', fontsize=font_size)
 ax2.set_xlabel('block', fontsize=font_size)
 ax2.set_ylabel('bit error % per block', fontsize=font_size)

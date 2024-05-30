@@ -461,13 +461,14 @@ if __name__ == "__main__":
     fs =  48000
     # recording_name = '0525_1749'
     OFDM_prefix_length = 1024
+    OFDM_suffix_length = 0
     OFDM_block_size = 4096
     chirp_start_time = 0.0  # Example start time of chirp
     chirp_end_time = 15.0    # Example end time of chirp
     chirp_f_low = 761.72
     chirp_f_high = 8824.22
     chirp_transmitted_path = 'chirps/1k_8k_0523.wav'
-    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
+    received_signal_path = 'recordings/0530_1700.m4a'
 
 
     # kmeans flag
@@ -488,11 +489,11 @@ if __name__ == "__main__":
     asp.load_audio_files()
 
     # Find the delay
-    delay = asp.find_delay(0,10,plot=False)
+    delay = asp.find_delay(0,10,plot=True)
 
     # Trim the received signal
     start_index = int(delay) # delay is an integer though
-    received_signal_trimmed = asp.recv[start_index+1024*2+int(1.365*fs):] #can directly use int()??
+    received_signal_trimmed = asp.recv[start_index+OFDM_prefix_length+OFDM_suffix_length+int(1.365*fs):] #can directly use int()??
 
     # # Save the trimmed signal to a new file (or directly process it)
     trimmed_signal_path = './files/trimmed_received_signal_' + recording_name + '.csv'

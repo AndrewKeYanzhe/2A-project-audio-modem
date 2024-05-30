@@ -303,7 +303,7 @@ font_size = 12
 
 # Create a figure with two subplots side by side
 # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 3))
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7, 3))
 
 # First subplot
 ax1.plot(chirp, marker='o', linestyle='-', color='b', label='chirp')
@@ -333,7 +333,7 @@ ax1.set_ylim(0, 30)
 
 # Second subplot
 ax2.plot(ldpc_old, marker='o', linestyle='-', color='r', label='ldpc old')
-ax2.plot(ldpc, marker='o', linestyle='-', color='black', label='ldpc')
+ax2.plot(ldpc, marker='o', linestyle='-', color='black', label='ldpc using probabilities')
 # ax2.plot(ldpc_kmeans, marker='o', linestyle='-', color='black', label='ldpc+kmeans')
 ax2.set_title('Bit error rate vs block with ldpc', fontsize=font_size)
 ax2.set_xlabel('block', fontsize=font_size)

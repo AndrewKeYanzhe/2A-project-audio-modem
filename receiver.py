@@ -484,16 +484,17 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/0529_0825_pilot_ldpc_iceland.m4a'
     received_signal_path = 'recordings/0529_0833_pilot_ldpc_article4.m4a'
     received_signal_path = 'recordings/0529_0856_pilot_ldpc_iceland.m4a'
-    # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc0.wav'
+    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot0_ldpc0.wav'
     # received_signal_path = 'recordings/0529_0908_pilot_iceland.m4a'
-    received_signal_path = 'recordings/0529_0908_pilot_iceland.m4a'
+    # received_signal_path = 'recordings/0529_0908_pilot_iceland.m4a'
 
     # kmeans flag
     shift_constellation_phase = False
 
-    use_pilot_tone = True
-    use_ldpc = True
-    # ldpc0 and pilot0 also has bug. TODO fix
+    use_pilot_tone = False
+    use_ldpc = False
+    # pilot1, ldpc0/1 works
+    # pilot0, ldpc0/1 doesnt work
 
     recording_name = os.path.splitext(os.path.basename(received_signal_path))[0]
 

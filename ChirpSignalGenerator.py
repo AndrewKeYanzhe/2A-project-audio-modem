@@ -29,7 +29,7 @@ class ChirpSignalGenerator:
     """
 
     def __init__(self, fs=48000, t_chirp=5.0, t_silence=0.0, f_low=20, f_high=8000,
-                 prefix_size=1024,suffix_size=0):
+                 prefix_size=1024,suffix_size=1024):
         self.fs = fs
         self.t_chirp = t_chirp
         self.t_silence = t_silence

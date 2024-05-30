@@ -213,10 +213,10 @@ class Receiver:
         
 
 
-        compensated_constellations_subsampled = random.sample(self.compensated_constellations, len(self.compensated_constellations) // 10)
+        # compensated_constellations_subsampled = random.sample(self.compensated_constellations, len(self.compensated_constellations) // 10)
 
         self.plot_constellation(self.compensated_constellations, title="Constellation\nAfter Compensation")
-        self.plot_constellation(compensated_constellations_subsampled, title="Constellation After Compensation,\nsubsampled 1:10")
+        # self.plot_constellation(compensated_constellations_subsampled, title="Constellation After Compensation,\nsubsampled 1:10")
 
 
         data = np.array([[z.real, z.imag] for z in self.compensated_constellations])
@@ -337,47 +337,6 @@ class Receiver:
 
 
 
-
-
-
-
-        # # Extract real and imaginary parts
-        # real_parts = [z.real for z in centroid_complex_numbers]
-        # imag_parts = [z.imag for z in centroid_complex_numbers]
-        
-        # # Plot the constellation
-        # plt.scatter(real_parts, imag_parts, marker='o', color='b', s=100)  # Increase 's' for larger dots
-
-
-
-        # # Apply DBSCAN clustering with adjusted parameters
-        # dbscan = DBSCAN(eps=2, min_samples=1)
-        # dbscan.fit(data)
-
-        # # Get cluster labels
-        # labels = dbscan.labels_
-
-        # # Output the results
-        # clusters = {}
-        # for label in np.unique(labels):
-        #     clusters[label] = data[labels == label]
-
-        # # Plot the results
-        # plt.figure(figsize=(8, 6))
-        # for label, cluster in clusters.items():
-        #     if label == -1:
-        #         # Noise points
-        #         plt.scatter(cluster[:, 0], cluster[:, 1], label='Noise', color='k')
-        #     else:
-        #         plt.scatter(cluster[:, 0], cluster[:, 1], label=f'Cluster {label}')
-        # plt.legend()
-        # plt.xlabel('X')
-        # plt.ylabel('Y')
-        # plt.title('DBSCAN Clustering with Adjusted Parameters')
-        # plt.show()
-
-
-
         
 
         
@@ -487,11 +446,11 @@ if __name__ == "__main__":
     asp.load_audio_files()
 
     # Find the delay
-    delay = asp.find_delay(0,10,plot=True)
+    delay = asp.find_delay(0,10,plot=False)
 
     # Trim the received signal
     start_index = int(delay) # delay is an integer though
-    received_signal_trimmed = asp.recv[start_index+1024*2+int(1.365*fs):] #can directly use int()??
+    received_signal_trimmed = asp.recv[start_index+1024*1+int(1.365*fs):] #can directly use int()??
 
     # # Save the trimmed signal to a new file (or directly process it)
     trimmed_signal_path = './files/trimmed_received_signal_' + recording_name + '.csv'
@@ -508,8 +467,8 @@ if __name__ == "__main__":
 
 
     # Compute the FIR filter (impulse response) from the frequency response
-    impulse_response = asp.get_FIR(plot=True, truncate=False)
-    direct_impulse_response = asp.get_direct_FIR(plot=True, truncate=False)
+    impulse_response = asp.get_FIR(plot=False, truncate=False)
+    direct_impulse_response = asp.get_direct_FIR(plot=False, truncate=False)
 
     # # Initialize Receiver with the trimmed signal
     print("start demodulating ")

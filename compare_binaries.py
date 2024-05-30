@@ -250,7 +250,7 @@ pilot_kmeans = compare_2(ref_path, unshifted_path,1194)
 
 
 print('\nchannel from pilot with ldpc')
-unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland.bin'
+unshifted_path ='binaries/received_0530_1700.bin'
 ldpc = compare_2(ref_path, unshifted_path,588)
 
 print('\nchannel from pilot with ldpc kmeans')

@@ -392,8 +392,6 @@ class Receiver:
         plt.axvline(0, color='black', lw=0.5)
         plt.xlabel('Real', fontsize=font_size)
         plt.ylabel('Imaginary', fontsize=font_size)
-        plt.ylim(-4, 4)
-        plt.xlim(-4, 4)
         plt.title(title, fontsize=font_size)
         plt.grid()
         plt.tick_params(axis='both', which='major', labelsize=font_size)
@@ -467,7 +465,7 @@ if __name__ == "__main__":
     chirp_f_low = 761.72
     chirp_f_high = 8824.22
     chirp_transmitted_path = 'chirps/1k_8k_0523.wav'
-    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
+    received_signal_path = 'recordings/0530_1700.m4a'
 
 
     # kmeans flag
@@ -492,7 +490,7 @@ if __name__ == "__main__":
 
     # Trim the received signal
     start_index = int(delay) # delay is an integer though
-    received_signal_trimmed = asp.recv[start_index+1024*2+int(1.365*fs):] #can directly use int()??
+    received_signal_trimmed = asp.recv[start_index+1024+int((1.365)*fs):] #can directly use int()??
 
     # # Save the trimmed signal to a new file (or directly process it)
     trimmed_signal_path = './files/trimmed_received_signal_' + recording_name + '.csv'

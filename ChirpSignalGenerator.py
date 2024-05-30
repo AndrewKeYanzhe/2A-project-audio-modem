@@ -28,7 +28,7 @@ class ChirpSignalGenerator:
         play_signal(): Plays the signal using the sounddevice library.
     """
 
-    def __init__(self, fs=48000, t_chirp=5.0, t_silence=1.0, f_low=20, f_high=8000, prefix_duration=1.0):
+    def __init__(self, fs=48000, t_chirp=5.0, t_silence=0.0, f_low=20, f_high=8000, prefix_duration=0.02133):
         self.fs = fs
         self.t_chirp = t_chirp
         self.t_silence = t_silence

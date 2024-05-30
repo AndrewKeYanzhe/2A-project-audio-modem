@@ -63,30 +63,7 @@ class OFDMTransmitter:
     def add_cyclic_prefix(self, signal, prefix_length):
         """Copy the last k symbols in the block and append them to the beginning of the block."""
         return np.concatenate((signal[-prefix_length:], signal))
-    #block_size here is 
-   
-    # (real_blocksize-2)/2
-    # def split_data_into_blocks(self, binary_data, block_size, prefix_length):
-    #     """Split binary data into blocks, append cyclic prefix, and combine new blocks."""
-    #     total_bits_needed = (block_size * 2) * ((len(binary_data) + block_size * 2 - 1) // (block_size * 2))
-    #     binary_data_padded = binary_data.ljust(total_bits_needed, '0')
-    #     num_blocks = len(binary_data_padded) // (block_size * 2)
-    #     blocks_with_prefix = []
 
-    #     for i in range(num_blocks):
-    #         start_index = i * block_size * 2
-    #         end_index = start_index + block_size * 2
-    #         block_data = binary_data_padded[start_index:end_index]
-    #         symbols = self.map_bits_to_symbols(block_data)
-    #         self.constellation_points.extend(symbols)  # Save constellation points for visualization
-    #         symbols_extended = np.zeros(block_size * 2 + 2, dtype=complex)
-    #         symbols_extended[1:block_size+1] = symbols[:block_size]
-    #         symbols_extended[block_size+2:] = np.conj(np.flip(symbols[:block_size]))
-    #         time_domain_signal = self.inverse_dft(symbols_extended)
-    #         transmitted_signal = self.add_cyclic_prefix(time_domain_signal, prefix_length)
-    #         blocks_with_prefix.append(transmitted_signal)
-        
-    #     return np.concatenate(blocks_with_prefix)
 
     def split_data_into_blocks(self, binary_data, block_size, prefix_length,fs, f_low, f_high):
         """Split binary data into blocks, append cyclic prefix, and combine new blocks."""
@@ -426,7 +403,7 @@ if __name__ == "__main__":
     # Parameters
     fs = 48000
     block_size = (4096-2)//2
-    prefix_length = 512
+    prefix_length = 1024
     # recording_name = '0525_1548'
     chirp_name = '1k_8k_0523'
 
@@ -443,7 +420,7 @@ if __name__ == "__main__":
     
 
     use_pilot_tone = True
-    use_ldpc = False
+    use_ldpc = True
 
     # Convert file data to binary with header
     #filename = "transmitted_5.26pm.wav"
@@ -464,7 +441,7 @@ if __name__ == "__main__":
     #transmitter.plot_constellation()
 
     # Generate the chirp signal with ChirpSignalGenerator and save it
-    generator = ChirpSignalGenerator(f_low=1000, f_high=8000)
+    generator = ChirpSignalGenerator(t_chirp=1.365 ,f_low=761.72, f_high=8824.22)
     generator.generate_chirp_signal()
     chirp_path = 'chirps/' + chirp_name + '.wav'
     generator.save_as_wav(chirp_path)

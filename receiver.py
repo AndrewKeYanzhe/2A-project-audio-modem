@@ -460,12 +460,12 @@ if __name__ == "__main__":
     # Parameters
     fs =  48000
     # recording_name = '0525_1749'
-    OFDM_prefix_length = 512
+    OFDM_prefix_length = 1024
     OFDM_block_size = 4096
     chirp_start_time = 0.0  # Example start time of chirp
     chirp_end_time = 15.0    # Example end time of chirp
-    chirp_f_low = 1000
-    chirp_f_high = 8000
+    chirp_f_low = 761.72
+    chirp_f_high = 8824.22
     chirp_transmitted_path = 'chirps/1k_8k_0523.wav'
     #received_signal_path = './recordings/'+recording_name+'.m4a'
     received_signal_path = 'recordings/0525_1832.m4a'
@@ -484,15 +484,17 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/0529_0825_pilot_ldpc_iceland.m4a'
     received_signal_path = 'recordings/0529_0833_pilot_ldpc_article4.m4a'
     received_signal_path = 'recordings/0529_0856_pilot_ldpc_iceland.m4a'
-    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot0_ldpc0.wav'
-    # received_signal_path = 'recordings/0529_0908_pilot_iceland.m4a'
-    # received_signal_path = 'recordings/0529_0908_pilot_iceland.m4a'
+    # received_signal_path = 'recordings/First_received_channel.m4a'
+    #received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
+    # received_signal_path = 'recordings/new_parameter_test2.m4a'
+    # received_signal_path = 'recordings/cat_no_channel.wav'
+    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
 
     # kmeans flag
     shift_constellation_phase = False
 
-    use_pilot_tone = False
-    use_ldpc = False
+    use_pilot_tone = True
+    use_ldpc = True
     # pilot1, ldpc0/1 works
     # pilot0, ldpc0/1 doesnt work
 
@@ -510,7 +512,7 @@ if __name__ == "__main__":
 
     # Trim the received signal
     start_index = int(delay) # delay is an integer though
-    received_signal_trimmed = asp.recv[start_index+8*fs:]
+    received_signal_trimmed = asp.recv[start_index+int((1.365+0.02133)*fs):] #can directly use int()??
 
     # # Save the trimmed signal to a new file (or directly process it)
     trimmed_signal_path = './files/trimmed_received_signal_' + recording_name + '.csv'
@@ -527,8 +529,8 @@ if __name__ == "__main__":
 
 
     # Compute the FIR filter (impulse response) from the frequency response
-    impulse_response = asp.get_FIR(plot=False, truncate=False)
-    direct_impulse_response = asp.get_direct_FIR(plot=False, truncate=False)
+    impulse_response = asp.get_FIR(plot=True, truncate=False)
+    direct_impulse_response = asp.get_direct_FIR(plot=True, truncate=False)
 
     # # Initialize Receiver with the trimmed signal
     print("start demodulating ")

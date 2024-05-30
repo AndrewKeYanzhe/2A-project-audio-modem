@@ -5,3 +5,4 @@ myenv/
 delme*
 *.pyc
 *.csv
+ldpc/bin/c_ldpc.so

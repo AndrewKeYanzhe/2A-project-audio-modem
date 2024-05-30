@@ -229,10 +229,10 @@ unshifted_path ='binaries/received_0527_2103_pilot_iceland_decodeUsingPilot.bin'
 # unshifted_path ='binaries/received_0529_0825_pilot_ldpc_iceland.bin'
 # compare_2(ref_path, unshifted_path,588)
 
-# ref_path = 'text/article_4_long.txt'
-# print('\nchannel from pilot with ldpc')
-# unshifted_path ='binaries/received_0529_0833_pilot_ldpc_article4.bin'
-# compare_2(ref_path, unshifted_path,588)
+ref_path = 'text/article_4_long.txt'
+print('\nchannel from pilot with ldpc')
+unshifted_path ='binaries/received_0529_0833_pilot_ldpc_article4.bin'
+compare_2(ref_path, unshifted_path,588)
 
 
 

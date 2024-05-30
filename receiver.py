@@ -122,123 +122,15 @@ class Receiver:
     
         return interpolated_response
 
-    def process_signal(self):
-        """Process the received signal to recover binary data."""
-        # Load the channel impulse response and the received signal
-        #self.channel_impulse_response = self.load_data(self.channel_file)#(这是原来的代码，channel。csv情况下,这样做的话channel_impulse_response指FIR，所以下面要fft)
-
-        self.received_signal = self.load_data(self.received_file)
-
-        # Remove cyclic prefix and get blocks
-        blocks = self.remove_cyclic_prefix(self.received_signal)
-        # Define subcarrier frequencies for OFDM
-        subcarrier_frequencies = np.fft.fftfreq(self.block_size, d=1/self.fs)
-
-        # Interpolate the frequency response to match the subcarrier frequencies
-        interpolated_response = self.interpolate_frequency_response(subcarrier_frequencies)
-
-        # Estimate channel frequency response
-        #self.g_n = self.apply_fft(self.channel_impulse_response, self.block_size)（这是原来的代码，channel。csv情况下,这样做的话channel_impulse_response指FIR）
-        # Process each block
-        complete_binary_data = ''
-        # Get the frequency bins corresponding to the given frequency range
-        bin_low,bin_high = cut_freq_bins(self.f_low, self.f_high, self.fs, self.block_size) 
-
-        print("number of blocks:",len(blocks))
-
-        for index, block in enumerate(blocks):
-            
-            n_bins = 4096
-            
-
-            
-
-            if index == 0 and use_pilot_tone:
-                print("using pilot tone")
-                np.random.seed(1)
-                constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
-                symbols_extended = np.random.choice(constellation_points, n_bins)
-                print(symbols_extended[0:10])
-                symbols_extended[0] = 0
-                symbols_extended[n_bins // 2] = 0
-                symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
-                pilot_n = symbols_extended
-                r_n = self.apply_fft(block, self.block_size)
-                print("pilot_n length",len(pilot_n))
-                pilot_response = r_n/pilot_n
-                
-                
-                
-                
-                
-                # print(pilot_response)
-                self.g_n = pilot_response
-
-                fs = 48000
-                # frequencies = np.fft.rfftfreq(max_length, 1/self.fs)
-                frequencies=subcarrier_frequencies
-                phase_response = np.angle(self.g_n, deg=True)
-
-                # Plot the phase response
-                plt.figure(figsize=(8, 6))
-                plt.plot(frequencies, phase_response)
-                plt.title('Phase Response of the Channel using pilot symbol')
-                plt.xlabel('Frequency (Hz)')
-                plt.xlim(0, 20000)
-                plt.ylabel('Phase (Degrees)')
-                plt.show()
-
-                
-        
-        
-        
-            # Apply FFT to the block
-            r_n = self.apply_fft(block, self.block_size)
-            if use_pilot_tone == False:
-                self.g_n = interpolated_response
-            # Compensate for the channel effects
-            x_n = self.channel_compensation(r_n, self.g_n)
-
-            # Save the constellation points for plotting
-            self.received_constellations.extend(r_n[bin_low:bin_high+1])
-            self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
-        
-        # Demap QPSK symbols to binary data
-            # binary_data = self.qpsk_demapper(x_n[bin_low:bin_high+1]) # change: now we only demap the frequency bins of interest
-            # complete_binary_data += binary_data
-        #plotting the constellation
-        self.plot_constellation(self.received_constellations, title="Constellation Before Compensation")
-
-        print(np.array(self.compensated_constellations).shape)
-        
-
-
-        compensated_constellations_subsampled = random.sample(self.compensated_constellations, len(self.compensated_constellations) // 10)
-
-        self.plot_constellation(self.compensated_constellations, title="Constellation After Compensation")
-        self.plot_constellation(compensated_constellations_subsampled, title="Constellation After Compensation, subsampled 1:10")
-
-
-        data = np.array([[z.real, z.imag] for z in self.compensated_constellations])
-        # data = np.array([[z.real, z.imag] for z in subsample])
-
-
-
-
-        # Apply k-means clustering
+    def Kmeans_clustering(self, compensated_constellations):
+        data = np.array([[z.real, z.imag] for z in compensated_constellations])
         kmeans = KMeans(n_clusters=5, init='k-means++', n_init=10, random_state=42).fit(data)
 
         # Get the cluster centroids
         centroids = kmeans.cluster_centers_
-
         top_4 = sorted(centroids, key=lambda c: c[0]**2 + c[1]**2, reverse=True)[:4]
         phases = [(c, math.atan2(c[1], c[0])) for c in top_4]
-
         phases_sorted = sorted(phases, key=lambda x: x[1])
-
-        # phases_sorted = [phase + 360 if phase < 0 else phase for phase in phases_sorted]
-
-
 
         # for key, value in phases_sorted.items():
             # if value < 0:
@@ -255,8 +147,6 @@ class Receiver:
                 angle_degrees = angle_degrees + 360
             
             sum_angles = sum_angles + angle_degrees
-        
-        # print(sum_angles)
 
         phase_shift_needed = (720-sum_angles)/4
         print("phase shift needed", phase_shift_needed)
@@ -265,14 +155,82 @@ class Receiver:
         centroid_complex_numbers = [complex(c[0], c[1]) for c in centroids]
 
         # centroid_complex_numbers
-
         self.plot_constellation(centroid_complex_numbers, title="K means clusters")
+        return phase_shift_needed
 
+    def process_signal(self):
+        """Process the received signal to recover binary data."""
+        self.received_signal = self.load_data(self.received_file)
+        # Remove cyclic prefix and get blocks
+        blocks = self.remove_cyclic_prefix(self.received_signal)
+        # Define subcarrier frequencies for OFDM
+        subcarrier_frequencies = np.fft.fftfreq(self.block_size, d=1/self.fs)
 
+        # Interpolate the frequency response to match the subcarrier frequencies
+        interpolated_response = self.interpolate_frequency_response(subcarrier_frequencies)
+
+        complete_binary_data = ''
+
+        # Get the frequency bins corresponding to the given frequency range
+        bin_low,bin_high = cut_freq_bins(self.f_low, self.f_high, self.fs, self.block_size) 
+
+        print("number of blocks:",len(blocks))
+        n_bins=self.block_size
         
+        #first get constellations after compensation
+        for index, block in enumerate(blocks):
+            #using pilot to obtain gn
+            if index == 0 and use_pilot_tone:
+                print("using pilot tone")
+                #obtain the pilot tone transmitter is using
+                np.random.seed(1)
+                constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
+                symbols_extended = np.random.choice(constellation_points, n_bins)
+                print(symbols_extended[0:10])
+                symbols_extended[0] = 0
+                symbols_extended[n_bins // 2] = 0
+                symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
+                r_n = self.apply_fft(block, self.block_size)
+                pilot_response = r_n/ symbols_extended
+                self.g_n = pilot_response
+
+                frequencies=subcarrier_frequencies
+                phase_response = np.angle(self.g_n, deg=True)
+
+                # Plot the phase response
+                plt.figure(figsize=(8, 6))
+                plt.plot(frequencies, phase_response)
+                plt.title('Phase Response of the Channel using pilot symbol')
+                plt.xlabel('Frequency (Hz)')
+                plt.xlim(0, 20000)
+                plt.ylabel('Phase (Degrees)')
+                plt.show()
+
+            #Or using the interpolated response to obtain gn
+            if use_pilot_tone == False:
+                self.g_n = interpolated_response  
+                         
+            # Apply FFT to the block
+            r_n = self.apply_fft(block, self.block_size)
+            # Compensate for the channel effects
+            x_n = self.channel_compensation(r_n, self.g_n)
+            # Save the constellation points for plotting
+            self.received_constellations.extend(r_n[bin_low:bin_high+1])
+            self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
         
+        #plotting the constellation
+        self.plot_constellation(self.received_constellations, title="Constellation Before Compensation")
+        self.plot_constellation(self.compensated_constellations, title="Constellation After Compensation")
+
+        #subsample the compensated constellation
+        compensated_constellations_subsampled = random.sample(self.compensated_constellations, len(self.compensated_constellations) // 10)
+        self.plot_constellation(compensated_constellations_subsampled, title="Constellation After Compensation, subsampled 1:10")
 
 
+
+        # Kmeans clustering
+        phase_shift_needed = self.Kmeans_clustering(self.compensated_constellations)
+        #shift constellation using Kmeans
         for index, block in enumerate(blocks):
             # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
@@ -280,13 +238,6 @@ class Receiver:
                 self.g_n = interpolated_response
             # Compensate for the channel effects
             x_n = self.channel_compensation(r_n, self.g_n)
-
-            # Save the constellation points for plotting
-            # self.received_constellations.extend(r_n[bin_low:bin_high+1])
-            # self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
-        
-            # Demap QPSK symbols to binary data
-            # binary_data = self.qpsk_demapper(x_n[bin_low:bin_high+1]) # change: now we only demap the frequency bins of interest
 
             constellations = np.copy(x_n[bin_low:bin_high+1])
             
@@ -332,55 +283,7 @@ class Receiver:
             elif use_ldpc == False:
                 if index != 0:
                     complete_binary_data += binary_data
-            # print("length of binary data", len(complete_binary_data))
-
-
-
-
-
-
-
-
-        # # Extract real and imaginary parts
-        # real_parts = [z.real for z in centroid_complex_numbers]
-        # imag_parts = [z.imag for z in centroid_complex_numbers]
-        
-        # # Plot the constellation
-        # plt.scatter(real_parts, imag_parts, marker='o', color='b', s=100)  # Increase 's' for larger dots
-
-
-
-        # # Apply DBSCAN clustering with adjusted parameters
-        # dbscan = DBSCAN(eps=2, min_samples=1)
-        # dbscan.fit(data)
-
-        # # Get cluster labels
-        # labels = dbscan.labels_
-
-        # # Output the results
-        # clusters = {}
-        # for label in np.unique(labels):
-        #     clusters[label] = data[labels == label]
-
-        # # Plot the results
-        # plt.figure(figsize=(8, 6))
-        # for label, cluster in clusters.items():
-        #     if label == -1:
-        #         # Noise points
-        #         plt.scatter(cluster[:, 0], cluster[:, 1], label='Noise', color='k')
-        #     else:
-        #         plt.scatter(cluster[:, 0], cluster[:, 1], label=f'Cluster {label}')
-        # plt.legend()
-        # plt.xlabel('X')
-        # plt.ylabel('Y')
-        # plt.title('DBSCAN Clustering with Adjusted Parameters')
-        # plt.show()
-
-
-
-        
-
-        
+            # print("length of binary data", len(complete_binary_data))  
         logging.info(f"Recovered Binary Data Length: {len(complete_binary_data)}")
         return complete_binary_data
 
@@ -416,6 +319,7 @@ class Receiver:
         file_content = bytes_data[start_of_image_data:start_of_image_data + file_size]
 
         return filename, file_size, file_content
+    #this function is actually almost the same as binary_to_bytes
     def binary_to_bin_file(self, binary_data, file_path):
         """Convert binary string to a .bin file."""
         padded_binary = binary_data + '0' * ((8 - len(binary_data) % 8) % 8)
@@ -461,71 +365,54 @@ if __name__ == "__main__":
     chirp_end_time = 15.0    # Example end time of chirp
     chirp_f_low = 1000
     chirp_f_high = 8000
+
+
+
+
+    #chirp path, this should be the same as the path saved in OFDM transmitter
     chirp_transmitted_path = 'chirps/1k_8k_0523.wav'
-    #received_signal_path = './recordings/'+recording_name+'.m4a'
-    received_signal_path = 'recordings/0525_1832.m4a'
-    received_signal_path = 'recordings/0526_2347_article_speakers.m4a'
-    received_signal_path = 'recordings/0526_2347_article_speakers3.m4a'
-    # received_signal_path = 'recordings/0526_2347_article_speakers2_iphoneRec.m4a'
-    received_signal_path = 'recordings/transmitted_signal_with_chirp_0525_1548.wav'
-    # received_signal_path = 'recordings/transmitted_signal_with_chirp_0527_1635_pilot_tone.wav'
-    # received_signal_path = 'recordings/0527_1722.m4a'
-    received_signal_path = 'recordings/0527_2103_pilot_iceland.m4a'
-    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
-    received_signal_path = 'recordings/transmitted_article_3_long_pilot1_ldpc0.wav'
-    received_signal_path = 'recordings/0528_1949_pilot_ldpc_iceland.m4a'
-    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
-    # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc0.wav'
-    received_signal_path = 'recordings/0529_0825_pilot_ldpc_iceland.m4a'
-    received_signal_path = 'recordings/0529_0833_pilot_ldpc_article4.m4a'
+
+    #received_signal_path
     received_signal_path = 'recordings/0529_0856_pilot_ldpc_iceland.m4a'
-    # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc0.wav'
-    # received_signal_path = 'recordings/0529_0908_pilot_iceland.m4a'
 
-    # kmeans flag
-    shift_constellation_phase = False
 
-    use_pilot_tone = True
-    use_ldpc = True
+
+
+    # channel estimation methods flag
+    shift_constellation_phase = False#Kmeans
+    use_pilot_tone = True#pilot
+    use_ldpc = True#ldpc
     # ldpc0 and pilot0 also has bug. TODO fix
-
     recording_name = os.path.splitext(os.path.basename(received_signal_path))[0]
 
     
-    # Initialize AnalogueSignalProcessor with the chirp signals
+    # Using AnalogueSignalProcessor with the chirp signals to sync 
     asp = AnalogueSignalProcessor(chirp_transmitted_path, received_signal_path,chirp_f_low,chirp_f_high)
-
     # Load the chirp signals
     asp.load_audio_files()
-
     # Find the delay
     delay = asp.find_delay(0,10,plot=False)
-
     # Trim the received signal
     start_index = int(delay) # delay is an integer though
     received_signal_trimmed = asp.recv[start_index+8*fs:]
-
     # # Save the trimmed signal to a new file (or directly process it)
     trimmed_signal_path = './files/trimmed_received_signal_' + recording_name + '.csv'
     logging.info(f"Saving trimmed received signal to:{trimmed_signal_path}")
     pd.DataFrame(received_signal_trimmed).to_csv(trimmed_signal_path, index=False, header=False)
-    
-    # # Also save the trimmed signal to a WAV file
-    # trimmed_signal_path_wav = './recordings/trimmed_received_signal_' + recording_name + '.wav'
-    # save_as_wav(signal=received_signal_trimmed, file_path=trimmed_signal_path_wav, fs=fs)
-    # logging.info(f"Saving trimmed received signal to:{trimmed_signal_path_wav}")
 
-    # Compute the frequency response
+
+
+    # Compute the frequency response using chirp
     frequencies, frequency_response = asp.get_frequency_response(chirp_start_time, chirp_end_time, plot=True)
-
-
     # Compute the FIR filter (impulse response) from the frequency response
     impulse_response = asp.get_FIR(plot=False, truncate=False)
     direct_impulse_response = asp.get_direct_FIR(plot=False, truncate=False)
 
+
+
     # # Initialize Receiver with the trimmed signal
     print("start demodulating ")
-    receiver = Receiver(channel_file =trimmed_signal_path,
+    receiver = Receiver(channel_file =trimmed_signal_path,                  
                         received_file=trimmed_signal_path,
                         fs=fs,
                         frequencies=frequencies,
@@ -533,11 +420,14 @@ if __name__ == "__main__":
                         prefix_length=OFDM_prefix_length, block_size=OFDM_block_size,
                         f_low=chirp_f_low, f_high=chirp_f_high)
 
+
+
+
     binary_data = receiver.process_signal()
     deomudulated_binary_path='./binaries/received_'+recording_name+'.bin'
-    binfile = receiver.binary_to_bin_file(binary_data, deomudulated_binary_path)
-    # binfile = receiver.binary_to_bin_file(binary_data+"00000000000000000000000000000", deomudulated_binary_path)
-
+    binfile = receiver.binary_to_bin_file(binary_data, deomudulated_binary_path)#the output is bytes format(only bytes format is used to save file)
+  
+    #below is the weekend challenge
     # bytes_data = receiver.binary_to_bytes(binary_data)
     # filename, file_size, content = receiver.parse_bytes_data(bytes_data)
     # print("Filename:", filename)

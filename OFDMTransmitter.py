@@ -426,7 +426,7 @@ if __name__ == "__main__":
     # Parameters
     fs = 48000
     block_size = (4096-2)//2
-    prefix_length = 512
+    prefix_length = 1024
     # recording_name = '0525_1548'
     chirp_name = '1k_8k_0523'
 
@@ -464,7 +464,7 @@ if __name__ == "__main__":
     #transmitter.plot_constellation()
 
     # Generate the chirp signal with ChirpSignalGenerator and save it
-    generator = ChirpSignalGenerator(f_low=1000, f_high=8000)
+    generator = ChirpSignalGenerator(f_low=761.72, f_high=8824.22)
     generator.generate_chirp_signal()
     chirp_path = 'chirps/' + chirp_name + '.wav'
     generator.save_as_wav(chirp_path)

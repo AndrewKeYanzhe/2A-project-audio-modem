@@ -455,12 +455,12 @@ if __name__ == "__main__":
     # Parameters
     fs =  48000
     # recording_name = '0525_1749'
-    OFDM_prefix_length = 512
+    OFDM_prefix_length = 1024
     OFDM_block_size = 4096
     chirp_start_time = 0.0  # Example start time of chirp
     chirp_end_time = 15.0    # Example end time of chirp
-    chirp_f_low = 1000
-    chirp_f_high = 8000
+    chirp_f_low = 761.72
+    chirp_f_high = 8824.22
     chirp_transmitted_path = 'chirps/1k_8k_0523.wav'
     #received_signal_path = './recordings/'+recording_name+'.m4a'
     received_signal_path = 'recordings/0525_1832.m4a'
@@ -478,7 +478,7 @@ if __name__ == "__main__":
     # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc0.wav'
     received_signal_path = 'recordings/0529_0825_pilot_ldpc_iceland.m4a'
     received_signal_path = 'recordings/0529_0833_pilot_ldpc_article4.m4a'
-    received_signal_path = 'recordings/0529_0856_pilot_ldpc_iceland.m4a'
+    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
     # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc0.wav'
     # received_signal_path = 'recordings/0529_0908_pilot_iceland.m4a'
 
@@ -503,7 +503,7 @@ if __name__ == "__main__":
 
     # Trim the received signal
     start_index = int(delay) # delay is an integer though
-    received_signal_trimmed = asp.recv[start_index+8*fs:]
+    received_signal_trimmed = asp.recv[start_index+6*fs:]
 
     # # Save the trimmed signal to a new file (or directly process it)
     trimmed_signal_path = './files/trimmed_received_signal_' + recording_name + '.csv'

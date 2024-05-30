@@ -29,14 +29,14 @@ class ChirpSignalGenerator:
     """
 
     def __init__(self, fs=48000, t_chirp=5.0, t_silence=0.0, f_low=20, f_high=8000,
-                 prefix_duration=0.02133,suffix_duration=0.02133):
+                 prefix_size=1024,suffix_size=1024):
         self.fs = fs
         self.t_chirp = t_chirp
         self.t_silence = t_silence
         self.f_low = f_low
         self.f_high = f_high
-        self.prefix_duration = prefix_duration
-        self.suffix_duration = suffix_duration
+        self.prefix_size = prefix_size
+        self.suffix_size = suffix_size
         self.full_signal = None
         self.t = None
 
@@ -46,8 +46,8 @@ class ChirpSignalGenerator:
         chirp_signal = chirp(t_chirp_only, f0=self.f_low, f1=self.f_high, t1=self.t_chirp, method='linear')
 
         # Create circular prefix (last prefix_duration seconds of chirp)
-        prefix = chirp_signal[-int(self.fs * self.prefix_duration):]
-        suffix = chirp_signal[:int(self.fs * self.suffix_duration)]
+        prefix = chirp_signal[-self.prefix_size:]
+        suffix = chirp_signal[:self.suffix_size]
 
         # Generate silence
         silence = np.zeros(int(self.fs * self.t_silence))

@@ -88,27 +88,57 @@ class Receiver:
         epsilon = 1e-10  # To avoid division by zero or very small values
         return r_n / (g_n + epsilon)
 
-    def qpsk_demapper(self, compensated_symbols):
-        """Demap QPSK symbols to binary data."""
+    def qpsk_demapper(self, compensated_symbols, n_bins=4096, seed=1, offset=85):
+        """Decode compensated QPSK symbols to original binary data."""
+        # Define the QPSK Gray coding constellation mapping
         constellation = {
-            complex(1, 1): '00',
-            complex(-1, 1): '01',
-            complex(-1, -1): '11',
-            complex(1, -1): '10'
+            complex(1, 1): 0,    # '00'
+            complex(-1, 1): 1,   # '01'
+            complex(-1, -1): 2,  # '11'
+            complex(1, -1): 3    # '10'
         }
-        binary_data = ''
+
+        # Demap QPSK symbols to numbers {0, 1, 2, 3}
+        demapped_numbers = []
         for symbol in compensated_symbols:
             min_dist = float('inf')
-            bits = None
+            number = None
             for point, mapping in constellation.items():
                 dist = np.abs(symbol - point)
                 if dist < min_dist:
                     min_dist = dist
-                    bits = mapping
-            if bits is not None:
-                binary_data += bits
+                    number = mapping
+            if number is not None:
+                demapped_numbers.append(number)
             else:
                 logging.warning(f"No matching constellation point found for symbol {symbol}")
+
+        # Reverse the modulus multiplication to get the original numbers
+        np.random.seed(seed)
+        constellation_points = np.array([0, 1, 2, 3])
+        number_extended = np.random.choice(constellation_points, n_bins)[85:85+648]
+
+        original_numbers = []
+
+        for i in range(len(demapped_numbers)):
+            corresponding_index = i % 648
+            for x in range(4):
+                if (x + number_extended[corresponding_index]) % 4 == demapped_numbers[i]:
+                    original_numbers.append(x)
+                    break
+
+        # Map numbers back to binary data using QPSK with Gray coding
+        reverse_constellation = {
+            0: '00',
+            1: '01',
+            2: '11',
+            3: '10'
+        }
+
+        binary_data = ''
+        for number in original_numbers:
+            binary_data += reverse_constellation[number]
+
         return binary_data
 
     def interpolate_frequency_response(self, subcarrier_frequencies):
@@ -124,9 +154,7 @@ class Receiver:
 
     def process_signal(self):
         """Process the received signal to recover binary data."""
-        # Load the channel impulse response and the received signal
-        #self.channel_impulse_response = self.load_data(self.channel_file)#(这是原来的代码，channel。csv情况下,这样做的话channel_impulse_response指FIR，所以下面要fft)
-
+        
         self.received_signal = self.load_data(self.received_file)
 
         # Remove cyclic prefix and get blocks
@@ -138,7 +166,6 @@ class Receiver:
         interpolated_response = self.interpolate_frequency_response(subcarrier_frequencies)
 
         # Estimate channel frequency response
-        #self.g_n = self.apply_fft(self.channel_impulse_response, self.block_size)（这是原来的代码，channel。csv情况下,这样做的话channel_impulse_response指FIR）
         # Process each block
         complete_binary_data = ''
         # Get the frequency bins corresponding to the given frequency range
@@ -149,16 +176,12 @@ class Receiver:
         for index, block in enumerate(blocks):
             
             n_bins = 4096
-            
-
-            
-
             if index == 0 and use_pilot_tone:
                 print("using pilot tone")
                 np.random.seed(1)
-                constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
+                constellation_points = np.array([1+1j, -1+1j, -1-1j, 1-1j])
                 symbols_extended = np.random.choice(constellation_points, n_bins)
-                print(symbols_extended[0:10])
+
                 symbols_extended[0] = 0
                 symbols_extended[n_bins // 2] = 0
                 symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
@@ -166,16 +189,9 @@ class Receiver:
                 r_n = self.apply_fft(block, self.block_size)
                 print("pilot_n length",len(pilot_n))
                 pilot_response = r_n/pilot_n
-                
-                
-                
-                
-                
-                # print(pilot_response)
+
                 self.g_n = pilot_response
 
-                fs = 48000
-                # frequencies = np.fft.rfftfreq(max_length, 1/self.fs)
                 frequencies=subcarrier_frequencies
                 phase_response = np.angle(self.g_n, deg=True)
 
@@ -188,10 +204,6 @@ class Receiver:
                 plt.ylabel('Phase (Degrees)')
                 plt.show()
 
-                
-        
-        
-        
             # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
             if use_pilot_tone == False:
@@ -202,18 +214,8 @@ class Receiver:
             # Save the constellation points for plotting
             self.received_constellations.extend(r_n[bin_low:bin_high+1])
             self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
-        
-        # Demap QPSK symbols to binary data
-            # binary_data = self.qpsk_demapper(x_n[bin_low:bin_high+1]) # change: now we only demap the frequency bins of interest
-            # complete_binary_data += binary_data
-        #plotting the constellation
+
         self.plot_constellation(self.received_constellations, title="Constellation\nBefore Compensation")
-
-        print(np.array(self.compensated_constellations).shape)
-        
-
-
-        # compensated_constellations_subsampled = random.sample(self.compensated_constellations, len(self.compensated_constellations) // 10)
 
         self.plot_constellation(self.compensated_constellations, title="Constellation\nAfter Compensation")
         # self.plot_constellation(compensated_constellations_subsampled, title="Constellation After Compensation,\nsubsampled 1:10")
@@ -221,8 +223,6 @@ class Receiver:
 
         data = np.array([[z.real, z.imag] for z in self.compensated_constellations])
         # data = np.array([[z.real, z.imag] for z in subsample])
-
-
         n_clusters = 5
 
         # Apply k-means clustering
@@ -236,14 +236,6 @@ class Receiver:
 
         phases_sorted = sorted(phases, key=lambda x: x[1])
 
-        # phases_sorted = [phase + 360 if phase < 0 else phase for phase in phases_sorted]
-
-
-
-        # for key, value in phases_sorted.items():
-            # if value < 0:
-            #     phases_sorted[key] = value + 360
-
         sum_angles = 0
         for c, angle in phases_sorted:
             # Convert angle from radians to degrees
@@ -255,9 +247,7 @@ class Receiver:
                 angle_degrees = angle_degrees + 360
             
             sum_angles = sum_angles + angle_degrees
-        
-        # print(sum_angles)
-
+ 
         phase_shift_needed = (720-sum_angles)/4
         print("phase shift needed", phase_shift_needed)
 
@@ -269,10 +259,6 @@ class Receiver:
         self.plot_constellation(centroid_complex_numbers, title="k-means clusters="+str(n_clusters), dot_size=100)
 
 
-        
-        
-
-
         for index, block in enumerate(blocks):
             # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
@@ -280,13 +266,6 @@ class Receiver:
                 self.g_n = interpolated_response
             # Compensate for the channel effects
             x_n = self.channel_compensation(r_n, self.g_n)
-
-            # Save the constellation points for plotting
-            # self.received_constellations.extend(r_n[bin_low:bin_high+1])
-            # self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
-        
-            # Demap QPSK symbols to binary data
-            # binary_data = self.qpsk_demapper(x_n[bin_low:bin_high+1]) # change: now we only demap the frequency bins of interest
 
             constellations = np.copy(x_n[bin_low:bin_high+1])
             
@@ -325,21 +304,12 @@ class Receiver:
                 #convert list to string
                 ldpc_decoded = ''.join(str(x) for x in ldpc_decoded)
 
-                # if index!=0:
-                #     complete_binary_data += ldpc_decoded
                 complete_binary_data += ldpc_decoded
 
             elif use_ldpc == False:
                 if index != 0:
                     complete_binary_data += binary_data
-            # print("length of binary data", len(complete_binary_data))
 
-
-
-
-        
-
-        
         logging.info(f"Recovered Binary Data Length: {len(complete_binary_data)}")
         return complete_binary_data
 
@@ -399,20 +369,6 @@ class Receiver:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     
-    # Example usage with simulated data
-    """
-    receiver = Receiver(channel_file='./files/channel.csv', received_file='./files/received_with_channel.csv', prefix_length=32, block_size=1024)
-    binary_data = receiver.process_signal()
-    bytes_data = receiver.binary_to_bytes(binary_data)
-    filename, file_size, content = receiver.parse_bytes_data(bytes_data)
-    print("Filename:", filename)
-    print("File Size:", file_size)
-    print(content[0:10])
-
-    # Save the byte array to a file
-    output_file_path = './files/test_image_received.tiff'
-    receiver.save_file(output_file_path, content)
-    """
 
     # Parameters
     fs =  48000
@@ -425,7 +381,7 @@ if __name__ == "__main__":
     chirp_f_low = 761.72
     chirp_f_high = 8824.22
     chirp_transmitted_path = 'chirps/1k_8k_0523.wav'
-    received_signal_path = 'recordings/0530_1700.m4a'
+    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
 
 
     # kmeans flag
@@ -463,7 +419,7 @@ if __name__ == "__main__":
     # logging.info(f"Saving trimmed received signal to:{trimmed_signal_path_wav}")
 
     # Compute the frequency response
-    frequencies, frequency_response = asp.get_frequency_response(chirp_start_time, chirp_end_time, plot=True)
+    frequencies, frequency_response = asp.get_frequency_response(chirp_start_time, chirp_end_time, plot=False)
 
 
     # Compute the FIR filter (impulse response) from the frequency response

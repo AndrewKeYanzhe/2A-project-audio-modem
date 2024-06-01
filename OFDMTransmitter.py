@@ -42,18 +42,36 @@ class OFDMTransmitter:
         self.constellation_points = []
 
 
-    def map_bits_to_symbols(self, binary_data):
-        """Map 2N information bits to N constellation symbols using QPSK with Gray coding."""
+    def map_bits_to_numbers(self, binary_data):
+        """Map 2N information bits to N numbers using QPSK with Gray coding."""
         constellation = {
-            '00': complex(1, 1),
-            '01': complex(-1, 1),
-            '11': complex(-1, -1),
-            '10': complex(1, -1)
+            '00': 0,
+            '01': 1,
+            '11': 2,
+            '10': 3
         }
-        symbols = []
+        numbers = []
         for i in range(0, len(binary_data), 2):
             bits = binary_data[i:i+2]
-            symbols.append(constellation[bits])
+            numbers.append(constellation[bits])
+        return numbers
+    
+
+    def map_numbers_to_symbols(self, numbers):
+        """Map N information numbers to N constellation symbols using QPSK with Gray coding."""
+        # Define the QPSK Gray coding constellation symbols
+        constellation = {
+            0: complex(1, 1),    # '00'
+            1: complex(-1, 1),   # '01'
+            2: complex(-1, -1),  # '11'
+            3: complex(1, -1)    # '10'
+        }    
+        # List to store the constellation symbols
+        symbols = []
+        # Iterate over the list of numbers
+        for number in numbers:
+            # Append the corresponding symbol to the list
+            symbols.append(constellation[number])
         return symbols
 
     def inverse_dft(self, symbols):
@@ -73,43 +91,19 @@ class OFDMTransmitter:
         usable_subcarriers = n_high - n_low+1
         bits_per_block = usable_subcarriers * 2
 
-
-
-
-        # use_ldpc = True
-
         blocks_with_prefix = []
         
         if use_ldpc:
-
-            # # Calculate the total bits needed to fit the binary data into complete OFDM blocks
-            # total_bits_needed = bits_per_block * ((len(binary_data) + bits_per_block - 1) // bits_per_block)
-            # binary_data_padded = binary_data.rjust(total_bits_needed, '0')
-
-            
-            # num_blocks = len(binary_data_padded) // bits_per_block
-            # blocks_with_prefix = []
-            
-            if use_pilot_tone:
-                n_bins=4096
-
+     
+            if use_pilot_tone: 
                 np.random.seed(1)
-                constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
-                symbols_extended = np.random.choice(constellation_points, n_bins)
-                print(symbols_extended[0:10])
+                constellation_points = np.array([0,1,2,3])
+                number_extended = np.random.choice(constellation_points, n_bins)
+                symbols_extended = self.map_numbers_to_symbols(number_extended)
                 symbols_extended[0] = 0
                 symbols_extended[n_bins // 2] = 0
                 symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
-                # pilot_n = symbols_extended
-                np.random.seed(None) 
-                # pilot_block_binary = ''.join(format(num, f'0{max(pilot_block).bit_length()}b') for num in pilot_block)
 
-                # blocks_with_prefix = 
-
-
-                # binary_data = pilot_block_binary+binary_data
-
-                # Perform the inverse DFT to convert to time domain
                 time_domain_signal = self.inverse_dft(symbols_extended)
                 
                 # Add cyclic prefix
@@ -117,10 +111,6 @@ class OFDMTransmitter:
                 
                 # Append the block with cyclic prefix to the list
                 blocks_with_prefix.append(transmitted_signal)
-
-                print("transmitted_block length pilot",len(transmitted_signal))
-
-
 
 
             print("length of binary data", len(binary_data))
@@ -137,23 +127,13 @@ class OFDMTransmitter:
             # total_bits_needed = ldpc_data_length * ((len(binary_data) + ldpc_data_length - 1) // bits_per_block)
             total_bits_needed = ldpc_data_length*math.ceil(len(binary_data)/ldpc_data_length)
             binary_data_padded = binary_data.rjust(int(total_bits_needed), '0')
-
-
-
-            
+ 
             num_blocks = len(binary_data_padded) // ldpc_data_length
-            
 
             for i in range(num_blocks):
                 start_index = i * ldpc_data_length
                 end_index = start_index + ldpc_data_length
                 block_data = binary_data_padded[start_index:end_index]
-
-                # print(len(block_data))
-                # print(block_data)
-                # print(type(block_data))
-                # block_data = np.frombuffer(block_data, dtype=np.uint8)
-                
 
 
                 #convert string to list
@@ -162,33 +142,29 @@ class OFDMTransmitter:
                 #convert list to string
                 block_data_ldpc = ''.join(str(x) for x in block_data_ldpc)
 
-                # print(block_data_ldpc)
-
-
-                # print(len(block_data_ldpc))
-
                 # block_data_ldpc_padded=block_data_ldpc.rjust(int(bits_per_block), '0')
                 block_data_ldpc_padded = block_data_ldpc + '0' * (bits_per_block - len(block_data_ldpc)) if len(block_data_ldpc) < bits_per_block else block_data_ldpc
 
 
 
                 # Map bits to symbols
-                symbols = self.map_bits_to_symbols(block_data_ldpc_padded)
-                #self.constellation_points.extend(symbols)  # Save constellation points for visualization
 
-                # Initialize the OFDM block with zeros
-                #symbols_extended = np.zeros(block_size * 2 + 2, dtype=complex)
-                # Initialize the OFDM block with random QPSK constellation points
-                constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
-                symbols_extended = np.random.choice(constellation_points, n_bins)
+                numbers = self.map_bits_to_numbers(block_data_ldpc_padded) #containing informations
+                np.random.seed(1)
+                constellation_points = np.array([0,1,2,3])
+                number_extended = np.random.choice(constellation_points, n_bins)
+
+                modulus_multiplication_result = list(number_extended)
+
+                # Perform modulus 4 multiplication for the relevant indices
+                for i in range(len(numbers)):
+                    corresponding_index = i + 85
+                    result = (numbers[i] + number_extended[corresponding_index]) % 4
+                    modulus_multiplication_result[corresponding_index] = result
+
+                symbols_extended = self.map_numbers_to_symbols(modulus_multiplication_result)
                 symbols_extended[0] = 0
                 symbols_extended[n_bins // 2] = 0
-                
-
-
-                # Place the symbols into the specified subcarrier bins
-                symbols_extended[n_low:n_low+usable_subcarriers] = symbols[:usable_subcarriers]
-                #symbols_extended[n_bins-n_high-usable_subcarriers:n_bins-n_high] = np.conj(np.flip(symbols[:usable_subcarriers]))
                 symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
 
                 # Perform the inverse DFT to convert to time domain
@@ -206,33 +182,19 @@ class OFDMTransmitter:
             # Calculate the total bits needed to fit the binary data into complete OFDM blocks
             total_bits_needed = bits_per_block * ((len(binary_data) + bits_per_block - 1) // bits_per_block)
             binary_data_padded = binary_data.rjust(total_bits_needed, '0')
-
-            
             num_blocks = len(binary_data_padded) // bits_per_block
             blocks_with_prefix = []
 
-
-            if use_pilot_tone:
-            
-                n_bins=4096
-
+            #manipulating the first block
+            if use_pilot_tone: 
                 np.random.seed(1)
-                constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
-                symbols_extended = np.random.choice(constellation_points, n_bins)
-                print(symbols_extended[0:10])
+                constellation_points = np.array([0,1,2,3])
+                number_extended = np.random.choice(constellation_points, n_bins)
+                symbols_extended = self.map_numbers_to_symbols(number_extended)
                 symbols_extended[0] = 0
                 symbols_extended[n_bins // 2] = 0
                 symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
-                # pilot_n = symbols_extended
-                np.random.seed(None) 
-                # pilot_block_binary = ''.join(format(num, f'0{max(pilot_block).bit_length()}b') for num in pilot_block)
 
-                # blocks_with_prefix = 
-
-
-                # binary_data = pilot_block_binary+binary_data
-
-                # Perform the inverse DFT to convert to time domain
                 time_domain_signal = self.inverse_dft(symbols_extended)
                 
                 # Add cyclic prefix
@@ -244,35 +206,30 @@ class OFDMTransmitter:
                 print("transmitted_block length pilot",len(transmitted_signal))
 
 
-
-
-
-
-
-            printed_data = 0
-            
-
             for i in range(num_blocks):
                 start_index = i * bits_per_block
                 end_index = start_index + bits_per_block
                 block_data = binary_data_padded[start_index:end_index]
 
-                # Map bits to symbols
-                symbols = self.map_bits_to_symbols(block_data)
-                #self.constellation_points.extend(symbols)  # Save constellation points for visualization
+                # Map bits to numbers
+                numbers = self.map_bits_to_numbers(block_data) #containing informations
+                np.random.seed(1)
+                constellation_points = np.array([0,1,2,3])
+                number_extended = np.random.choice(constellation_points, n_bins)
 
-                # Initialize the OFDM block with zeros
-                #symbols_extended = np.zeros(block_size * 2 + 2, dtype=complex)
-                # Initialize the OFDM block with random QPSK constellation points
-                constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
-                symbols_extended = np.random.choice(constellation_points, n_bins)
+
+                modulus_multiplication_result = list(number_extended)
+
+                # Perform modulus 4 multiplication for the relevant indices
+                for i in range(len(numbers)):
+                    corresponding_index = i + 85
+                    result = (numbers[i] + number_extended[corresponding_index]) % 4
+                    modulus_multiplication_result[corresponding_index] = result
+
+                symbols_extended = self.map_numbers_to_symbols(modulus_multiplication_result)
                 symbols_extended[0] = 0
                 symbols_extended[n_bins // 2] = 0
-                
 
-
-                # Place the symbols into the specified subcarrier bins
-                symbols_extended[n_low:n_low+usable_subcarriers] = symbols[:usable_subcarriers]
                 #symbols_extended[n_bins-n_high-usable_subcarriers:n_bins-n_high] = np.conj(np.flip(symbols[:usable_subcarriers]))
                 symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
 
@@ -285,15 +242,12 @@ class OFDMTransmitter:
                 # Append the block with cyclic prefix to the list
                 blocks_with_prefix.append(transmitted_signal)
 
-                if printed_data ==0:
-                    print("transmitted_block length data",len(transmitted_signal))
-                    printed_data = 1
         print("number of blocks", len(blocks_with_prefix))
 
         return np.concatenate(blocks_with_prefix)
     
-    def initialize_pilot_block(self, n_bins=4096, seed=1):
-        """Initialize the pilot block for the OFDM signal."""
+    def initialize_block(self, n_bins=4096, seed=1):
+        """Initialize every block for the OFDM signal."""
         np.random.seed(seed)
         constellation_points = np.array([1+1j, 1-1j, -1+1j, -1-1j])
         symbols_extended = np.random.choice(constellation_points, n_bins)
@@ -302,7 +256,7 @@ class OFDMTransmitter:
         symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
         np.random.seed(None) 
         return symbols_extended
-        
+
     
     def plot_constellation(self):
         """Plot the QPSK constellation diagram."""
@@ -437,8 +391,6 @@ if __name__ == "__main__":
     transmitter.save_to_csv(output_csv_path, transmitted_signal)
     logging.info(f"Transmitted signal has been saved to {output_csv_path}.")
 
-    # Plot the QPSK constellation diagram
-    #transmitter.plot_constellation()
 
     # Generate the chirp signal with ChirpSignalGenerator and save it
     generator = ChirpSignalGenerator(t_chirp=1.365 ,f_low=761.72, f_high=8824.22,
@@ -454,16 +406,5 @@ if __name__ == "__main__":
     save_path ='recordings/transmitted_' + recording_name + '_pilot'+str(int(use_pilot_tone))+'_ldpc'+str(int(use_ldpc)) +'.wav'
     transmitter.play_signal(transmitted_signal,chirp_data, fs, save_path=save_path)
     logging.info(f"Saving the combined transmitted signal with chirp to{save_path}.")
-    # Simulate receiving the signal
 
-    # channel_impulse_response = transmitter.load_data('./files/channel.csv')
-    # received_signal = transmitter.receive_signal(channel_impulse_response, transmitted_signal)
-
-    # # Save the received signal to a CSV file
-    # receive_csv_path = './files/received_with_channel.csv'
-    # transmitter.save_to_csv(receive_csv_path, received_signal)
-    # audio_processor = AudioProcessor(save_path)
-    # csv_file_path = './files/no_channel.csv'
-    # audio_processor.load_audio()
-    # audio_processor.save_to_csv(csv_file_path)
 

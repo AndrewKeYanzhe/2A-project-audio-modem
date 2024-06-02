@@ -288,10 +288,10 @@ class Receiver:
             shifted_constellations = [z * cmath.exp(1j * math.radians(phase_shift_needed)) for z in constellations]
   
             
-            if shift_constellation_phase:
-                binary_data = self.qpsk_demapper(shifted_constellations) # change: now we only demap the frequency bins of interest
-            else:
-                binary_data = self.qpsk_demapper(constellations) # change: now we only demap the frequency bins of interest
+            # if shift_constellation_phase:
+            #     binary_data = self.qpsk_demapper(shifted_constellations) # change: now we only demap the frequency bins of interest
+            # else:
+            #     binary_data = self.qpsk_demapper(constellations) # change: now we only demap the frequency bins of interest
 
             # print("binary_data length",len(binary_data))
 
@@ -299,8 +299,8 @@ class Receiver:
                 # Normalize the value to the normalisation_factor
                 # normalized_value = data_in / normalisation_factor 
                 # normalisation factor is 2. because 1+j,-1-j is a difference of 2 in real,imag
-                # normalisation factor calculated with kmeans is 1.97 which matches
-                normalized_value = data_in / 2
+                # normalisation factor calculated with kmeans is 1.41 which matches
+                normalized_value = data_in / 1.41
                 
                 # Clip the value at 1
                 clipped_value = min(normalized_value, 1)
@@ -320,6 +320,23 @@ class Receiver:
                     complex(1, -1): '10'
                 }
                 # print("constellation length",len(constellations))
+
+                seed=1
+
+                n_bins=4096
+
+                # Reverse the modulus multiplication to get the original numbers
+                np.random.seed(seed)
+                constellation_points = np.array([0, 90, 270, 180])
+                pseudo_random = np.random.choice(constellation_points, n_bins)
+
+                angles_radians = np.deg2rad(pseudo_random)
+                complex_exponentials = np.exp(1j * angles_radians)
+                constellations = constellations * complex_exponentials[85:85+648]
+
+
+
+                
 
                 binary_probabilities = []
                 # for symbol in constellations:
@@ -348,25 +365,30 @@ class Receiver:
                 #     continue
 
 
-                block_length = len(binary_data)
+                block_length = 1296 #TODO change hardcode
                 ldpc_encoded_length = (block_length//24)*24
 
-                ldpc_signal = binary_data[0:ldpc_encoded_length]
+                # ldpc_signal = binary_data[0:ldpc_encoded_length]
 
                 # print(list(ldpc_signal))
 
                 #convert string to list
-                ldpc_signal_list = np.array([int(element) for element in list(ldpc_signal)])
+                # ldpc_signal_list = np.array([int(element) for element in list(ldpc_signal)])
 
                 # print("ldpc_signal_list length",len(ldpc_signal_list))
 
 
                 if shift_constellation_phase:
                     ldpc_signal_list=np.array(qpsk_demap_probabilities(shifted_constellations, avg_kmeans_magnitude))
-                elif shifted_constellations == 0:
+                elif shift_constellation_phase == 0:
                     ldpc_signal_list=np.array(qpsk_demap_probabilities(constellations, avg_kmeans_magnitude))
+                    # ldpc_signal_list =np.array(self.qpsk_demapper(constellations))
                 
                 ldpc_signal_list = ldpc_signal_list[0:ldpc_encoded_length]
+                
+                
+                
+                
                 # print("ldpc_signal_list length",len(ldpc_signal_list))
                 ldpc_decoded, ldpc_decoded_with_redundancies = decode_ldpc(ldpc_signal_list)
 
@@ -455,7 +477,7 @@ if __name__ == "__main__":
     # received_signal_path = 'recordings/0602_1120_iceland_ldpc_noSuffix.m4a'
 
     # kmeans flag
-    shift_constellation_phase = True
+    shift_constellation_phase = False
 
     use_pilot_tone = True
     use_ldpc = True

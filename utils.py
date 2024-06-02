@@ -25,6 +25,12 @@ def cut_freq_bins(f_low, f_high, fs, n_bins):
         n_high = np.floor(f_high * n_bins / fs)
         return 85, 85+648-1#we hardcode the values here, -1 because of exclude last index
 
+def resample_signal(signal, fs, fs_new):
+    """Resamples the signal to the new sampling rate."""
+    logging.info(f"Resampling signal from {fs} Hz to {fs_new} Hz.")
+    n_samples_new = int(len(signal) * fs_new / fs)
+    return np.interp(np.linspace(0, 1, n_samples_new), np.linspace(0, 1, len(signal)), signal)
+
 if __name__ == "__main__":
     assert cut_freq_bins(0, 24000, 48000, 4096) == (0, 2048)
     print(cut_freq_bins(1000, 8000, 48000, 4096))

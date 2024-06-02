@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import scipy
 from channel_estimator import AnalogueSignalProcessor
-from utils import save_as_wav, cut_freq_bins
+from utils import save_as_wav, cut_freq_bins, resample_signal
 import matplotlib.pyplot as plt
 import logging
 from scipy.io.wavfile import write
@@ -381,14 +381,14 @@ if __name__ == "__main__":
     chirp_f_low = 761.72
     chirp_f_high = 8824.22
     chirp_transmitted_path = 'chirps/1k_8k_0523.wav'
-    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
+    received_signal_path = 'recordings/0602_two_chirps.m4a'
 
 
     # kmeans flag
     shift_constellation_phase = False
-
     use_pilot_tone = True
     use_ldpc = True
+    two_chirps = True
     # pilot1, ldpc0/1 works
     # pilot0, ldpc0/1 doesnt work
 
@@ -407,11 +407,23 @@ if __name__ == "__main__":
     print("delay1",delay1)
     print("delay2",delay2)
 
-    # Trim the received signal
-    start_index = int(delay1) # delay is an integer though
-    end_index = int(delay2)
-    received_signal_trimmed = asp.recv[start_index+1024*2+int(1.365*fs):end_index] #can directly use int()??
+    if two_chirps:
+        # Trim the received signal
+        start_index = int(delay1) # delay is an integer though
+        info_start_index = start_index+1024*2+int(1.365*fs)
+        info_end_index = int(delay2)
+        exact_OFDM_num = (info_end_index - info_start_index)/(4096+1024)
+        logging.info(f"Exact number of OFDM symbols between = {exact_OFDM_num}")
+        expected_OFDM_num = int(exact_OFDM_num)
+        fs_new = fs * expected_OFDM_num / exact_OFDM_num
+        logging.info(f"New sampling rate: {fs_new}")
+        received_signal_trimmed = asp.recv[info_start_index:info_end_index] #can directly use int()??
+        received_signal_trimmed = resample_signal(received_signal_trimmed, fs, fs_new)
+    else:
+        start_index = int(delay1) # delay is an integer though
+        received_signal_trimmed = asp.recv[start_index+1024*2+int(1.365*fs):] #can directly use int()??
 
+    
     # # Save the trimmed signal to a new file (or directly process it)
     trimmed_signal_path = './files/trimmed_received_signal_' + recording_name + '.csv'
     logging.info(f"Saving trimmed received signal to:{trimmed_signal_path}")

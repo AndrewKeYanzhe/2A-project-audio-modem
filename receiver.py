@@ -380,8 +380,8 @@ if __name__ == "__main__":
     chirp_end_index = 1024 + 4096*16
     chirp_f_low = 761.72
     chirp_f_high = 8824.22
-    chirp_transmitted_path = 'chirps/1k_8k_0523.wav'
-    received_signal_path = 'recordings/0602_two_chirps.m4a'
+    chirp_transmitted_path = 'chirps/1k_8k_0523_suffix.wav'
+    received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
 
 
     # kmeans flag

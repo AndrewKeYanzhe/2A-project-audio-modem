@@ -374,7 +374,7 @@ if __name__ == "__main__":
     fs =  48000
     # recording_name = '0525_1749'
     OFDM_prefix_length = 1024
-    OFDM_suffix_length = 1024
+    OFDM_suffix_length = 0
     OFDM_block_size = 4096
     chirp_start_index = 1024
     chirp_end_index = 1024 + 4096*16
@@ -403,7 +403,7 @@ if __name__ == "__main__":
 
     # Find the delay
     # delay = asp.find_delay(0,10,plot=False)
-    delay1, delay2 = asp.find_two_delays(0,10,-5, plot=True)
+    delay1, delay2 = asp.find_two_delays(0,2,-2, plot=True)
     print("delay1",delay1)
     print("delay2",delay2)
 

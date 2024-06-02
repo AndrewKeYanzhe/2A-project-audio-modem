@@ -236,6 +236,15 @@ class Receiver:
 
         phases_sorted = sorted(phases, key=lambda x: x[1])
 
+        # phases_sorted = [phase + 360 if phase < 0 else phase for phase in phases_sorted]
+
+
+
+        # for key, value in phases_sorted.items():
+            # if value < 0:
+            #     phases_sorted[key] = value + 360
+
+        kmeans_cluster_magnitudes = []
         sum_angles = 0
         for c, angle in phases_sorted:
             # Convert angle from radians to degrees
@@ -247,7 +256,14 @@ class Receiver:
                 angle_degrees = angle_degrees + 360
             
             sum_angles = sum_angles + angle_degrees
- 
+
+            kmeans_cluster_magnitudes.append(math.sqrt(c[0]**2 + c[1]**2))
+        
+        # print(sum_angles)
+
+        avg_kmeans_magnitude = sum(kmeans_cluster_magnitudes) / len(kmeans_cluster_magnitudes) 
+        print("avg_kmeans_magnitude",avg_kmeans_magnitude)
+
         phase_shift_needed = (720-sum_angles)/4
         print("phase shift needed", phase_shift_needed)
 
@@ -279,7 +295,53 @@ class Receiver:
 
             # print("binary_data length",len(binary_data))
 
-            
+            def normalize_and_clip(data_in, normalisation_factor):
+                # Normalize the value to the normalisation_factor
+                # normalized_value = data_in / normalisation_factor 
+                # normalisation factor is 2. because 1+j,-1-j is a difference of 2 in real,imag
+                # normalisation factor calculated with kmeans is 1.97 which matches
+                normalized_value = data_in / 2
+                
+                # Clip the value at 1
+                clipped_value = min(normalized_value, 1)
+                clipped_value = max(normalized_value,-1)
+                
+                # clipping improves performance
+
+                return clipped_value
+                # return normalized_value
+
+            def qpsk_demap_probabilities(constellations, normalisation_factor):
+                """Demap QPSK symbols to binary data."""
+                constellation = {
+                    complex(1, 1): '00',
+                    complex(-1, 1): '01',
+                    complex(-1, -1): '11',
+                    complex(1, -1): '10'
+                }
+                # print("constellation length",len(constellations))
+
+                binary_probabilities = []
+                # for symbol in constellations:
+                #     min_dist = float('inf')
+                #     bits = None
+                #     for point, mapping in constellation.items():
+                #         dist = np.abs(symbol - point)
+                #         if dist < min_dist:
+                #             min_dist = dist
+                #             bits = mapping
+                #     if bits is not None:
+                #         binary_data += bits
+                #     else:
+                #         logging.warning(f"No matching constellation point found for symbol {symbol}")
+                for index, symbol in enumerate(constellations):
+                    
+                    binary_probabilities.append(0.5-0.5*normalize_and_clip(symbol.imag, normalisation_factor))
+                    binary_probabilities.append(0.5-0.5*normalize_and_clip(symbol.real, normalisation_factor))
+                    # binary_probabilities.append(math.log(0.5-0.5*normalize_and_clip(symbol.imag, normalisation_factor)))
+                    # binary_probabilities.append(math.log(0.5-0.5*normalize_and_clip(symbol.real, normalisation_factor)))
+                    
+                return binary_probabilities
 
             if use_ldpc:
                 # if index == 0 and use_pilot_tone:
@@ -296,8 +358,16 @@ class Receiver:
                 #convert string to list
                 ldpc_signal_list = np.array([int(element) for element in list(ldpc_signal)])
 
-                # print(ldpc_signal_list)
+                # print("ldpc_signal_list length",len(ldpc_signal_list))
 
+
+                if shift_constellation_phase:
+                    ldpc_signal_list=np.array(qpsk_demap_probabilities(shifted_constellations, avg_kmeans_magnitude))
+                elif shifted_constellations == 0:
+                    ldpc_signal_list=np.array(qpsk_demap_probabilities(constellations, avg_kmeans_magnitude))
+                
+                ldpc_signal_list = ldpc_signal_list[0:ldpc_encoded_length]
+                # print("ldpc_signal_list length",len(ldpc_signal_list))
                 ldpc_decoded, ldpc_decoded_with_redundancies = decode_ldpc(ldpc_signal_list)
 
                 
@@ -385,7 +455,7 @@ if __name__ == "__main__":
     # received_signal_path = 'recordings/0602_1120_iceland_ldpc_noSuffix.m4a'
 
     # kmeans flag
-    shift_constellation_phase = False
+    shift_constellation_phase = True
 
     use_pilot_tone = True
     use_ldpc = True

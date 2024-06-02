@@ -358,7 +358,7 @@ if __name__ == "__main__":
     fs = 48000
     block_size = (4096-2)//2
     prefix_length = 1024
-    suffix_length = 0
+    suffix_length = 1024
     chirp_name = '1k_8k_0523'
 
     # Example usage

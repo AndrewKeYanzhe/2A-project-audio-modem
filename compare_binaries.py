@@ -341,8 +341,8 @@ ax1.set_ylim(0, 30)
 # ax1.set_ylim(0, 5)
 
 # Second subplot
-ax2.plot(ldpc_old, marker='o', linestyle='-', color='r', label='hard de-map')
-ax2.plot(ldpc_prob, marker='o', linestyle='-', color='black', label='soft de-map')
+ax2.plot(ldpc_old, marker='o', linestyle='-', color='pink', label='hard de-map')
+ax2.plot(ldpc_prob, marker='o', linestyle='-', color='red', label='soft de-map')
 # ax2.plot(ldpc_kmeans, marker='o', linestyle='-', color='black', label='ldpc+kmeans')
 ax2.set_title('Bit error rate', fontsize=font_size)
 ax2.set_xlabel('block', fontsize=font_size)
@@ -355,8 +355,8 @@ ax2.set_ylim(0, 30)
 
 
 # Second subplot
-ax3.plot(ldpc_old_kmeans, marker='o', linestyle='-', color='r', label='hard de-map/kmeans')
-ax3.plot(ldpc_prob_kmeans, marker='o', linestyle='-', color='black', label='soft de-map/kmeans')
+ax3.plot(ldpc_old_kmeans, marker='o', linestyle='-', color='#cccccc', label='hard de-map')
+ax3.plot(ldpc_prob_kmeans, marker='o', linestyle='-', color='black', label='soft de-map')
 # ax2.plot(ldpc_kmeans, marker='o', linestyle='-', color='black', label='ldpc+kmeans')
 ax3.set_title('Bit error rate (k-means)', fontsize=font_size)
 ax3.set_xlabel('block', fontsize=font_size)

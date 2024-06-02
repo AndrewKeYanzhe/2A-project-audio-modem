@@ -334,7 +334,8 @@ class OFDMTransmitter:
     def play_signal(self, signal, chirp_data, fs, save_path=None):
         """Play the combined chirp and transmitted signal."""
         _,normalized_signal = self.normalize_signal(signal)
-        combined_signal = np.concatenate((chirp_data, normalized_signal))
+        # combined_signal = np.concatenate((chirp_data, normalized_signal))
+        combined_signal = np.concatenate((chirp_data, normalized_signal, chirp_data))
         # sd.play(combined_signal, samplerate=fs)
         sd.wait()
         if save_path:

@@ -67,7 +67,8 @@ class AnalogueSignalProcessor:
         self.recv = None # Received signal array
         self.trans_chirp = None # Chirp section of the transmitted signal
         self.recv_chirp = None # Chirp section of the received signal
-        self.delay = None # Delay between the signals
+        self.delay1 = None # The delay for the first chirp
+        self.delay2 = None # The delay for the second chirp
         self.frequency_response = None # Frequency response of the channel
         self.frequencies = None # Frequency bins
         self.fir_filter = None # FIR filter
@@ -120,8 +121,8 @@ class AnalogueSignalProcessor:
         
         # Finding delay
         relative_delay = np.argmax(correlation) - (len(self.trans) - 1)
-        self.delay = relative_delay + start_time*self.fs if start_time else relative_delay
-        logging.info('Delay = {}'.format(self.delay))
+        self.delay1 = relative_delay + start_time*self.fs if start_time else relative_delay
+        logging.info('Delay = {}'.format(self.delay1))
         
         # Optionally plot the transmitted signal, realligned received signal, and the delay line
         if plot:
@@ -130,7 +131,65 @@ class AnalogueSignalProcessor:
                 received=truncated_recv,
                 delay=relative_delay # Note: The delay relative to the truncated received signal
             )
-        return self.delay
+        return self.delay1
+    
+    def find_two_delays(self, start1=0, end1=5, start2=-5, plot=False):
+        """
+        
+        Find the start positions of the two chirp signals in the received signal.
+        Note the start1 and end1 (+ve) are used to truncate the first received signal,
+        while start2 and end2 (-ve) are used to truncate the second received signal.
+        """
+        
+        if start1 and end1:
+            truncated_recv1 = self.recv[int(start1*self.fs):int(end1*self.fs)]
+            offset1 = int(start1*self.fs)
+        else:
+            truncated_recv1 = self.recv
+            offset1 = 0
+        
+        if start2:
+            truncated_recv2 = self.recv[int(start2*self.fs):]
+            offset2 = len(self.recv) + int(start2*self.fs)
+        else:
+            truncated_recv2 = self.recv
+            offset2 = 0
+            
+        # Bandpass filtering both signals
+        if self.f_low and self.f_high: # if f_low and f_high are provided
+            logging.info('Bandpass filtering the signals (for matched filtering only), f_low = {}, f_high = {}'.format(self.f_low, self.f_high))
+            filtered_trans = bandpass_filter(self.trans, self.f_low, self.f_high, self.fs)
+            filtered_recv1 = bandpass_filter(truncated_recv1, self.f_low, self.f_high, self.fs)
+            filtered_recv2 = bandpass_filter(truncated_recv2, self.f_low, self.f_high, self.fs)
+        else:
+            filtered_trans = self.trans
+            filtered_recv1 = truncated_recv1
+            filtered_recv2 = truncated_recv2
+                
+        # Matched filtering to find correlation
+        logging.info('Finding delay... (If this takes too long, you can specify the range to search for delay by providing start_time and end_time to truncate the received signal)')
+        correlation1 = scipy.signal.correlate(filtered_recv1, filtered_trans, mode='full')
+        correlation2 = scipy.signal.correlate(filtered_recv2, filtered_trans, mode='full')
+        relative_delay1 = np.argmax(correlation1) - (len(self.trans) - 1)
+        relative_delay2 = np.argmax(correlation2) - (len(self.trans) - 1)
+        self.delay1 = relative_delay1 + offset1
+        self.delay2 = relative_delay2 + offset2
+        
+        if plot:
+            self.plot_time_domain_signals(
+                transmitted=self.trans,
+                received=truncated_recv1,
+                delay=relative_delay1 # Note: The delay relative to the truncated received signal
+            )
+            self.plot_time_domain_signals(
+                transmitted=self.trans,
+                received=truncated_recv2,
+                delay=relative_delay2 # Note: The delay relative to the truncated received signal
+            )
+        
+        return self.delay1, self.delay2
+        
+    
     def plot_time_domain_signals(self, transmitted, received, delay=None):
         """
         Plot the time domain signals of the transmitted and received signals with time as the x-axis.
@@ -162,7 +221,7 @@ class AnalogueSignalProcessor:
 
         plt.tight_layout()
         plt.show()
-    def get_frequency_response(self, chirp_start_time, chirp_end_time, plot=False):
+    def get_frequency_response(self, chirp_start_index, chirp_end_index, plot=False):
         """
         Compute the frequency response of the channel.
         The chirp start and end times are used to truncate the transmitted and received signals.
@@ -173,7 +232,7 @@ class AnalogueSignalProcessor:
             logging.error('Signals are not loaded. Load the signals first.')
             return
         # Check if the delay is found
-        if self.delay is None:
+        if self.delay1 is None:
             logging.error('Delay is not found. Find the delay first.')
             return
         
@@ -186,10 +245,10 @@ class AnalogueSignalProcessor:
             f_high = 10000
         
         # truncate both signals to the chirp section
-        start_index = int(chirp_start_time*self.fs)
-        end_index = int(chirp_end_time*self.fs)
+        start_index = chirp_start_index
+        end_index = chirp_end_index
         self.trans_chirp = self.trans[start_index:end_index]
-        self.recv_chirp = self.recv[self.delay+start_index:self.delay+end_index]
+        self.recv_chirp = self.recv[self.delay1+start_index:self.delay1+end_index]
         
         # Compute the length for FFT based on the input signal length
         max_length = len(self.trans_chirp)  # Assuming transmitted and received are of the same length
@@ -383,11 +442,11 @@ if __name__ == '__main__':
     f_low = 20
     f_high = 8000
     fs=48000
-    chirp_start_time = 2.0
-    chirp_end_time = 7.0
+    chirp_start_index = 1024
+    chirp_end_index = 1024 + 16*4096
     # File paths
-    transmitted_signal_path = 'recordings/transmitted_5.56pm.wav'
-    received_signal_path = 'recordings/received_5.56pm.m4a'
+    transmitted_signal_path = 'chirps/1k_8k_0523.wav'
+    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
     
     # # Test Parameters
     # f_low = 1000
@@ -402,7 +461,8 @@ if __name__ == '__main__':
     signal_processor.load_audio_files()
     # For delay calcualtion: you will need to add the chirp start and end times
     # when your received signal comes with the information bits - make it faster!
-    delay = signal_processor.find_delay(plot=True) 
-    frequency_bins, frequency_response = signal_processor.get_frequency_response(chirp_start_time, chirp_end_time, plot=True)
+    delay1, delay2 = signal_processor.find_two_delays(start1=0, end1=5, start2=-5, plot=True)
+    print(delay1, delay2)
+    frequency_bins, frequency_response = signal_processor.get_frequency_response(chirp_start_index, chirp_end_index, plot=True)
     FIR = signal_processor.get_FIR(plot=True, truncate=True, file_path='FIR_filters/5.56pm.csv')
     direct_FIR = signal_processor.get_direct_FIR(plot=True, truncate=True, file_path='FIR_filters/direct_5.56pm.csv')

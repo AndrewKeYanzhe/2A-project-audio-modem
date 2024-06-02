@@ -374,10 +374,10 @@ if __name__ == "__main__":
     fs =  48000
     # recording_name = '0525_1749'
     OFDM_prefix_length = 1024
-    OFDM_suffix_length = 0
+    OFDM_suffix_length = 1024
     OFDM_block_size = 4096
-    chirp_start_time = 0.0  # Example start time of chirp
-    chirp_end_time = 15.0    # Example end time of chirp
+    chirp_start_index = 1024
+    chirp_end_index = 1024 + 4096*16
     chirp_f_low = 761.72
     chirp_f_high = 8824.22
     chirp_transmitted_path = 'chirps/1k_8k_0523.wav'
@@ -402,11 +402,15 @@ if __name__ == "__main__":
     asp.load_audio_files()
 
     # Find the delay
-    delay = asp.find_delay(0,10,plot=False)
+    # delay = asp.find_delay(0,10,plot=False)
+    delay1, delay2 = asp.find_two_delays(0,2,-2, plot=True)
+    print("delay1",delay1)
+    print("delay2",delay2)
 
     # Trim the received signal
-    start_index = int(delay) # delay is an integer though
-    received_signal_trimmed = asp.recv[start_index+1024*1+int(1.365*fs):] #can directly use int()??
+    start_index = int(delay1) # delay is an integer though
+    end_index = int(delay2)
+    received_signal_trimmed = asp.recv[start_index+1024*2+int(1.365*fs):end_index] #can directly use int()??
 
     # # Save the trimmed signal to a new file (or directly process it)
     trimmed_signal_path = './files/trimmed_received_signal_' + recording_name + '.csv'
@@ -419,9 +423,7 @@ if __name__ == "__main__":
     # logging.info(f"Saving trimmed received signal to:{trimmed_signal_path_wav}")
 
     # Compute the frequency response
-    frequencies, frequency_response = asp.get_frequency_response(chirp_start_time, chirp_end_time, plot=False)
-
-
+    frequencies, frequency_response = asp.get_frequency_response(chirp_start_index, chirp_end_index, plot=False)
     # Compute the FIR filter (impulse response) from the frequency response
     impulse_response = asp.get_FIR(plot=False, truncate=False)
     direct_impulse_response = asp.get_direct_FIR(plot=False, truncate=False)

@@ -382,7 +382,7 @@ if __name__ == "__main__":
     chirp_f_high = 8824.22
     chirp_transmitted_path = 'chirps/1k_8k_0523.wav'
     received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
-
+    received_signal_path = 'recordings/0602_1120_iceland_ldpc_noSuffix.m4a'
 
     # kmeans flag
     shift_constellation_phase = False
@@ -402,7 +402,7 @@ if __name__ == "__main__":
     asp.load_audio_files()
 
     # Find the delay
-    delay = asp.find_delay(0,10,plot=False)
+    delay = asp.find_delay(0,10,plot=True)
 
     # Trim the received signal
     start_index = int(delay) # delay is an integer though

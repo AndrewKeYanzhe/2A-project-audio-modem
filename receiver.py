@@ -374,7 +374,7 @@ if __name__ == "__main__":
     fs =  48000
     # recording_name = '0525_1749'
     OFDM_prefix_length = 1024
-    OFDM_suffix_length = 0
+    OFDM_suffix_length = 1024
     OFDM_block_size = 4096
     chirp_start_index = 1024
     chirp_end_index = 1024 + 4096*16
@@ -409,7 +409,8 @@ if __name__ == "__main__":
 
     # Trim the received signal
     start_index = int(delay1) # delay is an integer though
-    received_signal_trimmed = asp.recv[start_index+1024*1+int(1.365*fs):] #can directly use int()??
+    end_index = int(delay2)
+    received_signal_trimmed = asp.recv[start_index+1024*2+int(1.365*fs):end_index] #can directly use int()??
 
     # # Save the trimmed signal to a new file (or directly process it)
     trimmed_signal_path = './files/trimmed_received_signal_' + recording_name + '.csv'

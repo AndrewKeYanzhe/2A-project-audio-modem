@@ -360,13 +360,13 @@ if __name__ == "__main__":
     block_size = (4096-2)//2
     prefix_length = 1024
     suffix_length = 1024
-    chirp_name = '1k_8k_0523'
+    chirp_name = '1k_8k_0523_suffix'
 
     # Example usage
     transmitter = OFDMTransmitter()
 
     # Load the binary data from file
-    transmitted_binary_path = 'text/article_2_iceland.txt'
+    transmitted_binary_path = 'binaries/P1017125.tif'
     # transmitted_binary_path = 'text/article_3_long.txt'
     logging.info(f"Loading binary data from {transmitted_binary_path}.")
     data = transmitter.load_binary_data(transmitted_binary_path)

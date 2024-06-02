@@ -394,7 +394,7 @@ if __name__ == "__main__":
 
 
     # Generate the chirp signal with ChirpSignalGenerator and save it
-    generator = ChirpSignalGenerator(t_chirp=1.365 ,f_low=761.72, f_high=8824.22,
+    generator = ChirpSignalGenerator(t_chirp=1.365333333 ,f_low=761.72, f_high=8824.22,
                                      prefix_size=prefix_length, suffix_size=suffix_length)
     generator.generate_chirp_signal()
     chirp_path = 'chirps/' + chirp_name + '.wav'

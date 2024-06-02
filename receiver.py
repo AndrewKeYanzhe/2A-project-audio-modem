@@ -71,12 +71,18 @@ class Receiver:
 
     def remove_cyclic_prefix(self, signal):
         """Remove the cyclic prefix of an OFDM signal."""
-        num_blocks = len(signal) // (self.block_size + self.prefix_length)
+        num_blocks = round(len(signal) / (self.block_size + self.prefix_length))
+        
+        # pad the signal with zeros to make it a multiple of block_size + prefix_length
+        if len(signal) < num_blocks * (self.block_size + self.prefix_length):
+            padded_signal = np.pad(signal, (0, num_blocks * (self.block_size + self.prefix_length) - len(signal)), 'constant')
+        else:
+            padded_signal = signal
         blocks = []
         for i in range(num_blocks):
             start_index = i * (self.block_size + self.prefix_length) + self.prefix_length
             end_index = start_index + self.block_size
-            blocks.append(signal[start_index:end_index])
+            blocks.append(padded_signal[start_index:end_index])
         return blocks
 
     def apply_fft(self, signal, n):
@@ -381,7 +387,7 @@ if __name__ == "__main__":
     chirp_f_low = 761.72
     chirp_f_high = 8824.22
     chirp_transmitted_path = 'chirps/1k_8k_0523_suffix.wav'
-    received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
+    received_signal_path = 'recordings/cat_LR11.wav'
 
 
     # kmeans flag
@@ -403,25 +409,26 @@ if __name__ == "__main__":
 
     # Find the delay
     # delay = asp.find_delay(0,10,plot=False)
-    delay1, delay2 = asp.find_two_delays(0,2,-2, plot=True)
-    print("delay1",delay1)
-    print("delay2",delay2)
+    delay1, delay2 = asp.find_two_delays(0,10,-10, plot=True)
+    print("delay1 = ",delay1)
+    print("delay2 = ",delay2)
 
     if two_chirps:
         # Trim the received signal
         start_index = int(delay1) # delay is an integer though
-        info_start_index = start_index+1024*2+int(1.365*fs)
+        info_start_index = start_index+1024*2+4096*16
         info_end_index = int(delay2)
         exact_OFDM_num = (info_end_index - info_start_index)/(4096+1024)
         logging.info(f"Exact number of OFDM symbols between = {exact_OFDM_num}")
-        expected_OFDM_num = int(exact_OFDM_num)
+        expected_OFDM_num = round(exact_OFDM_num)
         fs_new = fs * expected_OFDM_num / exact_OFDM_num
         logging.info(f"New sampling rate: {fs_new}")
         received_signal_trimmed = asp.recv[info_start_index:info_end_index] #can directly use int()??
         received_signal_trimmed = resample_signal(received_signal_trimmed, fs, fs_new)
+        print(f"Matthew: {len(received_signal_trimmed)/(4096+1024)}")
     else:
         start_index = int(delay1) # delay is an integer though
-        received_signal_trimmed = asp.recv[start_index+1024*2+int(1.365*fs):] #can directly use int()??
+        received_signal_trimmed = asp.recv[start_index+1024*2+4096*16:] #can directly use int()??
 
     
     # # Save the trimmed signal to a new file (or directly process it)

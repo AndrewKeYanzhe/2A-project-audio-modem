@@ -249,24 +249,24 @@ unshifted_path ='binaries/received_0529_0908_pilot_iceland_channelFromPilot_kmea
 pilot_kmeans = compare_2(ref_path, unshifted_path,1194)
 
 
-print('\nchannel from pilot with ldpc')
+print('\nchannel from pilot with ldpc, newest')
 unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland.bin'
 ldpc = compare_2(ref_path, unshifted_path,588)
 
-print('\nchannel from pilot with ldpc')
+print('\nchannel from pilot with ldpc old')
 unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland_old.bin'
 ldpc_old = compare_2(ref_path, unshifted_path,588)
 
 
-print('\nchannel from pilot with ldpc kmeans')
+print('\nchannel from pilot with ldpc old kmeans')
 unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland_old_kmeans.bin'
 ldpc_old_kmeans = compare_2(ref_path, unshifted_path,588)
 
-print('\nchannel from pilot with ldpc')
+print('\nchannel from pilot with ldpc prob kmeans' )
 unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland_prob_kmeans.bin'
 ldpc_prob_kmeans = compare_2(ref_path, unshifted_path,588)
 
-print('\nchannel from pilot with ldpc')
+print('\nchannel from pilot with ldpc prob')
 unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland_prob.bin'
 ldpc_prob = compare_2(ref_path, unshifted_path,588)
 

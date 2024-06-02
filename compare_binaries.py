@@ -260,7 +260,16 @@ ldpc_old = compare_2(ref_path, unshifted_path,588)
 
 print('\nchannel from pilot with ldpc kmeans')
 unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland_old_kmeans.bin'
-ldpc_kmeans = compare_2(ref_path, unshifted_path,588)
+ldpc_old_kmeans = compare_2(ref_path, unshifted_path,588)
+
+print('\nchannel from pilot with ldpc')
+unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland_prob_kmeans.bin'
+ldpc_prob_kmeans = compare_2(ref_path, unshifted_path,588)
+
+print('\nchannel from pilot with ldpc')
+unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland_prob.bin'
+ldpc_prob = compare_2(ref_path, unshifted_path,588)
+
 
 # # Plotting errors_list against its index
 # plt.figure(figsize=(10, 5))
@@ -303,7 +312,7 @@ font_size = 12
 
 # Create a figure with two subplots side by side
 # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7, 3))
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(10, 3))
 
 # First subplot
 ax1.plot(chirp, marker='o', linestyle='-', color='b', label='chirp')
@@ -332,10 +341,10 @@ ax1.set_ylim(0, 30)
 # ax1.set_ylim(0, 5)
 
 # Second subplot
-ax2.plot(ldpc_old, marker='o', linestyle='-', color='r', label='ldpc old')
-ax2.plot(ldpc, marker='o', linestyle='-', color='black', label='ldpc')
+ax2.plot(ldpc_old, marker='o', linestyle='-', color='r', label='hard de-map')
+ax2.plot(ldpc_prob, marker='o', linestyle='-', color='black', label='soft de-map')
 # ax2.plot(ldpc_kmeans, marker='o', linestyle='-', color='black', label='ldpc+kmeans')
-ax2.set_title('Bit error rate vs block with ldpc', fontsize=font_size)
+ax2.set_title('Bit error rate', fontsize=font_size)
 ax2.set_xlabel('block', fontsize=font_size)
 ax2.set_ylabel('bit error % per block', fontsize=font_size)
 custom_ticks = np.linspace(0, len(ldpc) - 1, 5, dtype=int)
@@ -343,6 +352,20 @@ ax2.set_xticks(custom_ticks)
 ax2.grid(True)
 ax2.legend(fontsize=font_size)  # Add legend to label the lines
 ax2.set_ylim(0, 30)
+
+
+# Second subplot
+ax3.plot(ldpc_old_kmeans, marker='o', linestyle='-', color='r', label='hard de-map/kmeans')
+ax3.plot(ldpc_prob_kmeans, marker='o', linestyle='-', color='black', label='soft de-map/kmeans')
+# ax2.plot(ldpc_kmeans, marker='o', linestyle='-', color='black', label='ldpc+kmeans')
+ax3.set_title('Bit error rate (k-means)', fontsize=font_size)
+ax3.set_xlabel('block', fontsize=font_size)
+ax3.set_ylabel('bit error % per block', fontsize=font_size)
+custom_ticks = np.linspace(0, len(ldpc) - 1, 5, dtype=int)
+ax3.set_xticks(custom_ticks)
+ax3.grid(True)
+ax3.legend(fontsize=font_size)  # Add legend to label the lines
+ax3.set_ylim(0, 30)
 
 plt.tight_layout()
 plt.show()

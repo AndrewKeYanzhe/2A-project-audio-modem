@@ -19,6 +19,74 @@ import os
 
 from ldpc_function import *
 
+def normalize_and_clip(data_in, normalisation_factor):
+    # Normalize the value to the normalisation_factor
+    # normalized_value = data_in / normalisation_factor 
+    # normalisation factor is 2. because 1+j,-1-j is a difference of 2 in real,imag
+    # normalisation factor calculated with kmeans is 1.41 which matches
+    normalized_value = data_in / 1.41
+    
+    # Clip the value at 1
+    clipped_value = min(normalized_value, 1)
+    clipped_value = max(normalized_value,-1)
+    
+    # clipping improves performance
+
+    return clipped_value
+    # return normalized_value
+
+def qpsk_demap_probabilities(constellations, normalisation_factor, bins_used=648, start_bin=85):
+    """Demap QPSK symbols to binary data."""
+    constellation = {
+        complex(1, 1): '00',
+        complex(-1, 1): '01',
+        complex(-1, -1): '11',
+        complex(1, -1): '10'
+    }
+    # print("constellation length",len(constellations))
+
+    seed=1
+
+    n_bins=4096
+
+    # Reverse the modulus multiplication to get the original numbers
+    np.random.seed(seed)
+    constellation_points = np.array([0, 90, 270, 180])
+    pseudo_random = np.random.choice(constellation_points, n_bins)
+
+    angles_radians = np.deg2rad(pseudo_random)
+    complex_exponentials = np.exp(1j * angles_radians)
+    complex_exponentials = np.concatenate(([1 + 1j], complex_exponentials))
+
+
+    constellations = constellations * complex_exponentials[start_bin:start_bin+bins_used]
+
+
+
+    
+
+    binary_probabilities = []
+    # for symbol in constellations:
+    #     min_dist = float('inf')
+    #     bits = None
+    #     for point, mapping in constellation.items():
+    #         dist = np.abs(symbol - point)
+    #         if dist < min_dist:
+    #             min_dist = dist
+    #             bits = mapping
+    #     if bits is not None:
+    #         binary_data += bits
+    #     else:
+    #         logging.warning(f"No matching constellation point found for symbol {symbol}")
+    for index, symbol in enumerate(constellations):
+        
+        binary_probabilities.append(0.5-0.5*normalize_and_clip(symbol.imag, normalisation_factor))
+        binary_probabilities.append(0.5-0.5*normalize_and_clip(symbol.real, normalisation_factor))
+        # binary_probabilities.append(math.log(0.5-0.5*normalize_and_clip(symbol.imag, normalisation_factor)))
+        # binary_probabilities.append(math.log(0.5-0.5*normalize_and_clip(symbol.real, normalisation_factor)))
+        
+    return binary_probabilities
+
 """
     The Receiver class processes an OFDM signal to recover binary data, convert it to bytes,
     and save it to a file. It handles loading data, removing cyclic prefixes, applying FFT,
@@ -295,70 +363,9 @@ class Receiver:
 
             # print("binary_data length",len(binary_data))
 
-            def normalize_and_clip(data_in, normalisation_factor):
-                # Normalize the value to the normalisation_factor
-                # normalized_value = data_in / normalisation_factor 
-                # normalisation factor is 2. because 1+j,-1-j is a difference of 2 in real,imag
-                # normalisation factor calculated with kmeans is 1.41 which matches
-                normalized_value = data_in / 1.41
-                
-                # Clip the value at 1
-                clipped_value = min(normalized_value, 1)
-                clipped_value = max(normalized_value,-1)
-                
-                # clipping improves performance
+            
 
-                return clipped_value
-                # return normalized_value
-
-            def qpsk_demap_probabilities(constellations, normalisation_factor):
-                """Demap QPSK symbols to binary data."""
-                constellation = {
-                    complex(1, 1): '00',
-                    complex(-1, 1): '01',
-                    complex(-1, -1): '11',
-                    complex(1, -1): '10'
-                }
-                # print("constellation length",len(constellations))
-
-                seed=1
-
-                n_bins=4096
-
-                # Reverse the modulus multiplication to get the original numbers
-                np.random.seed(seed)
-                constellation_points = np.array([0, 90, 270, 180])
-                pseudo_random = np.random.choice(constellation_points, n_bins)
-
-                angles_radians = np.deg2rad(pseudo_random)
-                complex_exponentials = np.exp(1j * angles_radians)
-                constellations = constellations * complex_exponentials[85:85+648]
-
-
-
-                
-
-                binary_probabilities = []
-                # for symbol in constellations:
-                #     min_dist = float('inf')
-                #     bits = None
-                #     for point, mapping in constellation.items():
-                #         dist = np.abs(symbol - point)
-                #         if dist < min_dist:
-                #             min_dist = dist
-                #             bits = mapping
-                #     if bits is not None:
-                #         binary_data += bits
-                #     else:
-                #         logging.warning(f"No matching constellation point found for symbol {symbol}")
-                for index, symbol in enumerate(constellations):
-                    
-                    binary_probabilities.append(0.5-0.5*normalize_and_clip(symbol.imag, normalisation_factor))
-                    binary_probabilities.append(0.5-0.5*normalize_and_clip(symbol.real, normalisation_factor))
-                    # binary_probabilities.append(math.log(0.5-0.5*normalize_and_clip(symbol.imag, normalisation_factor)))
-                    # binary_probabilities.append(math.log(0.5-0.5*normalize_and_clip(symbol.real, normalisation_factor)))
-                    
-                return binary_probabilities
+            
 
             if use_ldpc:
                 # if index == 0 and use_pilot_tone:

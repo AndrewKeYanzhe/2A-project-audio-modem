@@ -1,6 +1,10 @@
 import numpy as np
 import logging
 
+from receiver import *
+
+
+
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
@@ -114,11 +118,18 @@ qpsk_symbols = map_numbers_to_symbols(modulus_multiplication_result)
 logging.debug(f"QPSK symbols: {qpsk_symbols}")
 
 # 5. Demodulate to recover original binary data
-recovered_binary_data = qpsk_demapper(qpsk_symbols)
+# recovered_binary_data = qpsk_demapper(qpsk_symbols)
+print(len(qpsk_symbols))
+# recovered_binary_data = qpsk_demapper(qpsk_symbols)
+print("Original binary data:  ", original_binary_data)
+recovered_binary_data = qpsk_demap_probabilities(qpsk_symbols, 1.41, bins_used=32, start_bin=0)
+# recovered_binary_data = int(recovered_binary_data)
+# recovered_binary_data = [int(x) for x in recovered_binary_data]
+
 logging.debug(f"Recovered binary data: {recovered_binary_data}")
 
 # 6. Compare the recovered binary data with the original binary data
-print("Original binary data:  ", original_binary_data)
+
 print("Recovered binary data: ", recovered_binary_data)
 
 # Check if the recovered binary data matches the original binary data

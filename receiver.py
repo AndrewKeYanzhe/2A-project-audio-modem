@@ -419,12 +419,12 @@ if __name__ == "__main__":
     # logging.info(f"Saving trimmed received signal to:{trimmed_signal_path_wav}")
 
     # Compute the frequency response
-    frequencies, frequency_response = asp.get_frequency_response(chirp_start_time, chirp_end_time, plot=False)
+    # frequencies, frequency_response = asp.get_frequency_response(chirp_start_time, chirp_end_time, plot=False)
 
 
-    # Compute the FIR filter (impulse response) from the frequency response
-    impulse_response = asp.get_FIR(plot=False, truncate=False)
-    direct_impulse_response = asp.get_direct_FIR(plot=False, truncate=False)
+    # # Compute the FIR filter (impulse response) from the frequency response
+    # impulse_response = asp.get_FIR(plot=False, truncate=False)
+    # direct_impulse_response = asp.get_direct_FIR(plot=False, truncate=False)
 
     # # Initialize Receiver with the trimmed signal
     print("start demodulating ")

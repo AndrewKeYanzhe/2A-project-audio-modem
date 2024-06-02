@@ -221,7 +221,7 @@ class AnalogueSignalProcessor:
 
         plt.tight_layout()
         plt.show()
-    def get_frequency_response(self, chirp_start_time, chirp_end_time, plot=False):
+    def get_frequency_response(self, chirp_start_index, chirp_end_index, plot=False):
         """
         Compute the frequency response of the channel.
         The chirp start and end times are used to truncate the transmitted and received signals.
@@ -245,8 +245,8 @@ class AnalogueSignalProcessor:
             f_high = 10000
         
         # truncate both signals to the chirp section
-        start_index = int(chirp_start_time*self.fs)
-        end_index = int(chirp_end_time*self.fs)
+        start_index = chirp_start_index
+        end_index = chirp_end_index
         self.trans_chirp = self.trans[start_index:end_index]
         self.recv_chirp = self.recv[self.delay1+start_index:self.delay1+end_index]
         
@@ -442,8 +442,8 @@ if __name__ == '__main__':
     f_low = 20
     f_high = 8000
     fs=48000
-    chirp_start_time = 2.0
-    chirp_end_time = 7.0
+    chirp_start_index = 1024
+    chirp_end_index = 1024 + 16*4096
     # File paths
     transmitted_signal_path = 'chirps/1k_8k_0523.wav'
     received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
@@ -462,6 +462,7 @@ if __name__ == '__main__':
     # For delay calcualtion: you will need to add the chirp start and end times
     # when your received signal comes with the information bits - make it faster!
     delay1, delay2 = signal_processor.find_two_delays(start1=0, end1=5, start2=-5, plot=True)
-    # frequency_bins, frequency_response = signal_processor.get_frequency_response(chirp_start_time, chirp_end_time, plot=True)
-    # FIR = signal_processor.get_FIR(plot=True, truncate=True, file_path='FIR_filters/5.56pm.csv')
-    # direct_FIR = signal_processor.get_direct_FIR(plot=True, truncate=True, file_path='FIR_filters/direct_5.56pm.csv')
+    print(delay1, delay2)
+    frequency_bins, frequency_response = signal_processor.get_frequency_response(chirp_start_index, chirp_end_index, plot=True)
+    FIR = signal_processor.get_FIR(plot=True, truncate=True, file_path='FIR_filters/5.56pm.csv')
+    direct_FIR = signal_processor.get_direct_FIR(plot=True, truncate=True, file_path='FIR_filters/direct_5.56pm.csv')

@@ -141,7 +141,7 @@ class AnalogueSignalProcessor:
         while start2 and end2 (-ve) are used to truncate the second received signal.
         """
         
-        if start1 and end1:
+        if start1 != None and end1 != None:
             truncated_recv1 = self.recv[int(start1*self.fs):int(end1*self.fs)]
             offset1 = int(start1*self.fs)
         else:

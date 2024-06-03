@@ -100,7 +100,7 @@ def compare_2(file1, file2, bits_per_block):
     #         best_match = matched_bits
     #         shift_at_best_match = shift
 
-    for shift in range(0,1200):
+    for shift in range(0,4000):
         compared_length = 0
         matched_bits = 0
         for i in range(1000):
@@ -250,11 +250,14 @@ pilot_kmeans = compare_2(ref_path, unshifted_path,1194)
 
 
 print('\nchannel from pilot with ldpc')
-unshifted_path ='binaries/received_0530_1700.bin'
-ldpc = compare_2(ref_path, unshifted_path,588)
+unshifted_path ='binaries/received_0603_1541_article4_no_resample.bin'
+ref_path='text/article_4_long.txt'
+ldpc = compare_2(ref_path, unshifted_path,648)
 
 print('\nchannel from pilot with ldpc kmeans')
 unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland_kmeans.bin'
+ref_path = 'text/article_2_iceland.txt'
+
 ldpc_kmeans = compare_2(ref_path, unshifted_path,588)
 
 # # Plotting errors_list against its index
@@ -332,11 +335,13 @@ ax2.plot(ldpc_kmeans, marker='o', linestyle='-', color='black', label='ldpc+kmea
 ax2.set_title('Bit error rate vs block with ldpc', fontsize=font_size)
 ax2.set_xlabel('block', fontsize=font_size)
 ax2.set_ylabel('bit error % per block', fontsize=font_size)
-custom_ticks = np.linspace(0, len(ldpc) - 1, 5, dtype=int)
+# custom_ticks = np.linspace(0, len(ldpc) - 1, 5, dtype=int)
+custom_ticks = np.linspace(0, 100 - 1, 5, dtype=int)
 ax2.set_xticks(custom_ticks)
 ax2.grid(True)
 ax2.legend(fontsize=font_size)  # Add legend to label the lines
-ax2.set_ylim(0, 30)
+# ax2.set_ylim(0, 30)
+ax2.set_xlim(0, 100)
 
 plt.tight_layout()
 plt.show()

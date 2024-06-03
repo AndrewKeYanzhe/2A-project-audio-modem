@@ -95,6 +95,8 @@ def qpsk_demapper(compensated_symbols, n_bins=4096, seed=1, offset=85, sequence_
 # Test the function
 original_binary_data = '1101010111001010110101110001001100101010111001011010101110010010'  # Example binary data
 
+original_binary_data = '00'*32
+
 # 1. Map original binary data to numbers
 numbers = map_bits_to_numbers(original_binary_data)
 logging.debug(f"Original numbers: {numbers}")
@@ -103,7 +105,7 @@ logging.debug(f"Original numbers: {numbers}")
 np.random.seed(1)
 constellation_points = np.array([0, 1, 2, 3])
 number_extended = np.random.choice(constellation_points, 4096)[85:85+648]
-number_extended = [0]*1000
+# number_extended = [0]*1000
 logging.debug(f"Pseudo-random sequence: {number_extended}")
 
 # 3. Apply modulus multiplication

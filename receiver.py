@@ -388,13 +388,14 @@ if __name__ == "__main__":
     chirp_f_high = 8824.22
     chirp_transmitted_path = 'chirps/1k_8k_0523_suffix.wav'
     received_signal_path = 'recordings/cat_LR11.wav'
+    received_signal_path = 'recordings/0603_1541_article4.m4a'
 
 
     # kmeans flag
     shift_constellation_phase = False
     use_pilot_tone = True
     use_ldpc = True
-    two_chirps = True
+    two_chirps = False
     # pilot1, ldpc0/1 works
     # pilot0, ldpc0/1 doesnt work
 
@@ -409,7 +410,7 @@ if __name__ == "__main__":
 
     # Find the delay
     # delay = asp.find_delay(0,10,plot=False)
-    delay1, delay2 = asp.find_two_delays(0,10,-10, plot=True)
+    delay1, delay2 = asp.find_two_delays(0,4,-5, plot=True)
     print("delay1 = ",delay1)
     print("delay2 = ",delay2)
 

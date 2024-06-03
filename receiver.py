@@ -227,7 +227,6 @@ class Receiver:
         # self.plot_constellation(compensated_constellations_subsampled, title="Constellation After Compensation,\nsubsampled 1:10")
 
 
-
         for index, block in enumerate(blocks):
             # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
@@ -238,24 +237,14 @@ class Receiver:
 
             constellations = np.copy(x_n[bin_low:bin_high+1])
             
-            #shifted_constellations = [z * cmath.exp(1j * math.radians(phase_shift_needed)) for z in constellations]
+            shifted_constellations = self.apply_kmeans(constellations, n_clusters=4, random_state=42)
   
             
             if shift_constellation_phase:
-                #binary_data = self.qpsk_demapper(shifted_constellations) # change: now we only demap the frequency bins of interest
-                pass
+                binary_data = self.qpsk_demapper(shifted_constellations) # change: now we only demap the frequency bins of interest
             else:
                 binary_data = self.qpsk_demapper(constellations) # change: now we only demap the frequency bins of interest
-
-            # print("binary_data length",len(binary_data))
-
-            
-
             if use_ldpc:
-                # if index == 0 and use_pilot_tone:
-                #     continue
-
-
                 block_length = len(binary_data)
                 ldpc_encoded_length = (block_length//24)*24
 
@@ -282,7 +271,42 @@ class Receiver:
 
         logging.info(f"Recovered Binary Data Length: {len(complete_binary_data)}")
         return complete_binary_data
+    def apply_kmeans(self, compensated_constellations, n_clusters=5, random_state=42):
 
+        # Convert complex numbers to a 2D array of their real and imaginary parts
+        data = np.array([[z.real, z.imag] for z in compensated_constellations])
+        
+        # Apply k-means clustering
+        kmeans = KMeans(n_clusters=n_clusters, init='k-means++', n_init=10, random_state=random_state).fit(data)
+        
+        # Get the cluster centroids
+        centroids = kmeans.cluster_centers_
+        
+        # Sort the top 4 centroids by magnitude
+        top_4 = sorted(centroids, key=lambda c: c[0]**2 + c[1]**2, reverse=True)[:4]
+        
+        # Calculate phases and sort them
+        phases = [(c, math.atan2(c[1], c[0])) for c in top_4]
+        phases_sorted = sorted(phases, key=lambda x: x[1])
+        
+        # Calculate the sum of angles in degrees
+        sum_angles = 0
+        for c, angle in phases_sorted:
+            angle_degrees = math.degrees(angle)
+            if angle_degrees < 0:
+                angle_degrees += 360
+            sum_angles += angle_degrees
+        
+        # Calculate the phase shift needed
+        phase_shift_needed = (720 - sum_angles) / 4
+        
+        # Convert centroids back to complex numbers
+        centroid_complex_numbers = [complex(c[0], c[1]) for c in centroids]
+        
+        # Apply the phase shift to the original constellations
+        shifted_constellations = [z * cmath.exp(1j * math.radians(phase_shift_needed)) for z in compensated_constellations]
+        
+        return shifted_constellations
     def plot_constellation(self, symbols, title="QPSK Constellation", dot_size=20):
         font_size = 16
         plt.figure(figsize=(4, 4))

@@ -42,7 +42,7 @@ class ChirpSignalGenerator:
 
     def generate_chirp_signal(self):
         """Generates the chirp signal with prefix and silence."""
-        t_chirp_only = np.linspace(0, self.t_chirp, int(self.fs * self.t_chirp), endpoint=False)
+        t_chirp_only = np.linspace(0, self.t_chirp, round(self.fs * self.t_chirp), endpoint=False)
         chirp_signal = chirp(t_chirp_only, f0=self.f_low, f1=self.f_high, t1=self.t_chirp, method='linear')
 
         # Create circular prefix (last prefix_duration seconds of chirp)

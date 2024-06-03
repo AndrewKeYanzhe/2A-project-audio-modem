@@ -49,7 +49,8 @@ class Receiver:
     def __init__(self, channel_file, received_file,
                  fs,frequencies, channel_impulse_response,
                  prefix_length, block_size,
-                 f_low = None, f_high = None):
+                 f_low = None, f_high = None,
+                 sync_drift_per_OFDM_symbol = 0):
         self.channel_file = channel_file
         self.fs= fs
         self.frequencies = frequencies
@@ -64,6 +65,7 @@ class Receiver:
         self.g_n = None
         self.f_low = f_low
         self.f_high = f_high
+        self.sync_drift_per_OFDM_symbol = sync_drift_per_OFDM_symbol
 
     def load_data(self, file_path):
         """Load data from a CSV file into a numpy array."""
@@ -73,16 +75,20 @@ class Receiver:
         """Remove the cyclic prefix of an OFDM signal."""
         num_blocks = round(len(signal) / (self.block_size + self.prefix_length))
         
-        # pad the signal with zeros to make it a multiple of block_size + prefix_length
-        if len(signal) < num_blocks * (self.block_size + self.prefix_length):
-            padded_signal = np.pad(signal, (0, num_blocks * (self.block_size + self.prefix_length) - len(signal)), 'constant')
-        else:
-            padded_signal = signal
         blocks = []
         for i in range(num_blocks):
-            start_index = i * (self.block_size + self.prefix_length) + self.prefix_length
+            sync_drift = round(i*self.sync_drift_per_OFDM_symbol)
+            start_index = i * (self.block_size + self.prefix_length) + self.prefix_length + sync_drift
             end_index = start_index + self.block_size
-            blocks.append(padded_signal[start_index:end_index])
+    
+            # Deal with the case where the end index is out of bounds
+            try:
+                blocks.append(signal[start_index:end_index])
+            except:
+                logging.warning(f"Error in block {i} out of {num_blocks}: start={start_index}, end={end_index}, len(signal)={len(signal)}")
+                logging.warning("Padd the OFDM with zeros")
+                ith_block = signal[start_index:] + [0]*(self.block_size - len(signal[start_index:]))
+                blocks.append(ith_block)
         return blocks
 
     def apply_fft(self, signal, n):
@@ -412,15 +418,16 @@ if __name__ == "__main__":
     chirp_f_low = 761.72
     chirp_f_high = 8824.22
     chirp_transmitted_path = 'chirps/1k_8k_0523_suffix.wav'
-    received_signal_path = 'recordings/cat_LR11.wav'
-    received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
+    received_signal_path = 'recordings/0603_1531_iceland_benchmark.m4a'
+    received_signal_path = 'recordings/0603_1541_article4_benchmark.m4a'
+    received_signal_path = 'recordings/cat_no_channel.wav'
 
 
     # kmeans flag
     shift_constellation_phase = False
     use_pilot_tone = True
     use_ldpc = True
-    two_chirps = False
+    two_chirps = True
     # pilot1, ldpc0/1 works
     # pilot0, ldpc0/1 doesnt work
 
@@ -435,7 +442,7 @@ if __name__ == "__main__":
 
     # Find the delay
     # delay = asp.find_delay(0,10,plot=False)
-    delay1, delay2 = asp.find_two_delays(0,4,-5, plot=True)
+    delay1, delay2 = asp.find_two_delays(0,5,-5, plot=True)
     print("delay1 = ",delay1)
     print("delay2 = ",delay2)
 
@@ -447,11 +454,14 @@ if __name__ == "__main__":
         exact_OFDM_num = (info_end_index - info_start_index)/(4096+1024)
         logging.info(f"Exact number of OFDM symbols between = {exact_OFDM_num}")
         expected_OFDM_num = round(exact_OFDM_num)
-        fs_new = fs * expected_OFDM_num / exact_OFDM_num
-        logging.info(f"New sampling rate: {fs_new}")
-        received_signal_trimmed = asp.recv[info_start_index:info_end_index] #can directly use int()??
-        received_signal_trimmed = resample_signal(received_signal_trimmed, fs, fs_new)
-        print(f"Matthew: {len(received_signal_trimmed)/(4096+1024)}")
+        logging.info(f"Expected number of OFDM symbols = {expected_OFDM_num}")
+        logging.info(f"Total drift = {info_end_index - info_start_index - expected_OFDM_num*(4096+1024)}")
+        # Calculate how much sample we drifts away per OFDM symbol
+        # if this is less than 0, we need to shift the start and end indices of OFDM symbol to the left
+        sync_drift_per_OFDM_symbol = ((info_end_index - info_start_index) - expected_OFDM_num*(4096+1024))/expected_OFDM_num
+        logging.info(f"Sync drift per OFDM symbol = {sync_drift_per_OFDM_symbol}")
+        
+        received_signal_trimmed = asp.recv[info_start_index:info_end_index]
     else:
         start_index = int(delay1) # delay is an integer though
         received_signal_trimmed = asp.recv[start_index+1024*2+4096*16:] #can directly use int()??
@@ -481,10 +491,14 @@ if __name__ == "__main__":
                         frequencies=frequencies,
                         channel_impulse_response=frequency_response,
                         prefix_length=OFDM_prefix_length, block_size=OFDM_block_size,
-                        f_low=chirp_f_low, f_high=chirp_f_high)
+                        f_low=chirp_f_low, f_high=chirp_f_high,
+                        sync_drift_per_OFDM_symbol=sync_drift_per_OFDM_symbol)
 
     binary_data = receiver.process_signal()
-    deomudulated_binary_path='./binaries/received_'+recording_name+'.bin'
+    if two_chirps:
+        deomudulated_binary_path = './binaries/received_'+recording_name+'_resampled.bin'
+    else:
+        deomudulated_binary_path='./binaries/received_'+recording_name+'.bin'
     binfile = receiver.binary_to_bin_file(binary_data, deomudulated_binary_path)
     # binfile = receiver.binary_to_bin_file(binary_data+"00000000000000000000000000000", deomudulated_binary_path)
 

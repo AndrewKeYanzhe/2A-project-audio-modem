@@ -227,43 +227,6 @@ class Receiver:
         # self.plot_constellation(compensated_constellations_subsampled, title="Constellation After Compensation,\nsubsampled 1:10")
 
 
-        data = np.array([[z.real, z.imag] for z in self.compensated_constellations])
-        # data = np.array([[z.real, z.imag] for z in subsample])
-        n_clusters = 5
-
-        # Apply k-means clustering
-        kmeans = KMeans(n_clusters, init='k-means++', n_init=10, random_state=42).fit(data)
-
-        # Get the cluster centroids
-        centroids = kmeans.cluster_centers_
-
-        top_4 = sorted(centroids, key=lambda c: c[0]**2 + c[1]**2, reverse=True)[:4]
-        phases = [(c, math.atan2(c[1], c[0])) for c in top_4]
-
-        phases_sorted = sorted(phases, key=lambda x: x[1])
-
-        sum_angles = 0
-        for c, angle in phases_sorted:
-            # Convert angle from radians to degrees
-            angle_degrees = math.degrees(angle)
-            
-            print(f"Coordinate: {c}, Magnitude: {math.sqrt(c[0]**2 + c[1]**2)}, Phase: {angle_degrees} degrees")
-            # print(angle_degrees)
-            if angle_degrees < 0:
-                angle_degrees = angle_degrees + 360
-            
-            sum_angles = sum_angles + angle_degrees
- 
-        phase_shift_needed = (720-sum_angles)/4
-        print("phase shift needed", phase_shift_needed)
-
-        # Convert centroids back to complex numbers
-        centroid_complex_numbers = [complex(c[0], c[1]) for c in centroids]
-
-        # centroid_complex_numbers
-
-        self.plot_constellation(centroid_complex_numbers, title="k-means clusters="+str(n_clusters), dot_size=100)
-
 
         for index, block in enumerate(blocks):
             # Apply FFT to the block
@@ -275,11 +238,12 @@ class Receiver:
 
             constellations = np.copy(x_n[bin_low:bin_high+1])
             
-            shifted_constellations = [z * cmath.exp(1j * math.radians(phase_shift_needed)) for z in constellations]
+            #shifted_constellations = [z * cmath.exp(1j * math.radians(phase_shift_needed)) for z in constellations]
   
             
             if shift_constellation_phase:
-                binary_data = self.qpsk_demapper(shifted_constellations) # change: now we only demap the frequency bins of interest
+                #binary_data = self.qpsk_demapper(shifted_constellations) # change: now we only demap the frequency bins of interest
+                pass
             else:
                 binary_data = self.qpsk_demapper(constellations) # change: now we only demap the frequency bins of interest
 
@@ -332,6 +296,43 @@ class Receiver:
         plt.tick_params(axis='both', which='major', labelsize=font_size)
         plt.tight_layout()
         plt.show()
+    
+    def apply_kmeans(self, compensated_constellations, n_clusters=5, random_state=42):
+
+        # Convert complex numbers to a 2D array of their real and imaginary parts
+        data = np.array([[z.real, z.imag] for z in compensated_constellations])
+        
+        # Apply k-means clustering
+        kmeans = KMeans(n_clusters=n_clusters, init='k-means++', n_init=10, random_state=random_state).fit(data)
+        
+        # Get the cluster centroids
+        centroids = kmeans.cluster_centers_
+        
+        # Sort the top 4 centroids by magnitude
+        top_4 = sorted(centroids, key=lambda c: c[0]**2 + c[1]**2, reverse=True)[:4]
+        
+        # Calculate phases and sort them
+        phases = [(c, math.atan2(c[1], c[0])) for c in top_4]
+        phases_sorted = sorted(phases, key=lambda x: x[1])
+        
+        # Calculate the sum of angles in degrees
+        sum_angles = 0
+        for c, angle in phases_sorted:
+            angle_degrees = math.degrees(angle)
+            if angle_degrees < 0:
+                angle_degrees += 360
+            sum_angles += angle_degrees
+        
+        # Calculate the phase shift needed
+        phase_shift_needed = (720 - sum_angles) / 4
+        
+        # Convert centroids back to complex numbers
+        centroid_complex_numbers = [complex(c[0], c[1]) for c in centroids]
+        
+        # Apply the phase shift to the original constellations
+        shifted_constellations = [z * cmath.exp(1j * math.radians(phase_shift_needed)) for z in compensated_constellations]
+        
+        return shifted_constellations
 
     def binary_to_bytes(self, binary_data):
         """Convert binary data to bytes."""
@@ -388,7 +389,7 @@ if __name__ == "__main__":
     chirp_f_high = 8824.22
     chirp_transmitted_path = 'chirps/1k_8k_0523_suffix.wav'
     received_signal_path = 'recordings/cat_LR11.wav'
-    received_signal_path = 'recordings/0603_1541_article4.m4a'
+    received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
 
 
     # kmeans flag

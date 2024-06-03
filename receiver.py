@@ -19,6 +19,23 @@ import os
 
 from ldpc_function import *
 
+def gray_to_binary(gray_code):
+                    # binary = [0] * len(gray_code)
+                    # binary[0] = gray_code[0]  # MSB is the same
+                    # for i in range(1, len(gray_code)):
+                    #     binary[i] = binary[i - 1] ^ gray_code[i]
+                    # return binary
+    binary=[]
+    for i in range(len(gray_code)):
+        if i%2==0:
+            binary.append(gray_code[1])
+        elif i%2==1:
+            if gray_code[i-1]==0:
+                binary.append(gray_code[1])
+            elif gray_code[i-1]==1:
+                binary.append(1-gray_code[1])
+    return binary
+
 def normalize_and_clip(data_in, normalisation_factor):
     # Normalize the value to the normalisation_factor
     # normalized_value = data_in / normalisation_factor 
@@ -52,11 +69,12 @@ def qpsk_demap_probabilities(constellations, normalisation_factor, bins_used=648
     # Reverse the modulus multiplication to get the original numbers
     np.random.seed(seed)
     constellation_points = np.array([0, 90, 270, 180])
+    constellation_points=np.array([0,0,0,0])
     pseudo_random = np.random.choice(constellation_points, n_bins)
 
     angles_radians = np.deg2rad(pseudo_random)
     complex_exponentials = np.exp(1j * angles_radians)
-    complex_exponentials = np.concatenate(([1 + 1j], complex_exponentials))
+    # complex_exponentials = np.concatenate(([1 + 1j], complex_exponentials)) #todo uncomment
 
 
     constellations = constellations * complex_exponentials[start_bin:start_bin+bins_used]
@@ -80,8 +98,15 @@ def qpsk_demap_probabilities(constellations, normalisation_factor, bins_used=648
     #         logging.warning(f"No matching constellation point found for symbol {symbol}")
     for index, symbol in enumerate(constellations):
         
-        binary_probabilities.append(0.5-0.5*normalize_and_clip(symbol.imag, normalisation_factor))
-        binary_probabilities.append(0.5-0.5*normalize_and_clip(symbol.real, normalisation_factor))
+        bit0=0.5-0.5*normalize_and_clip(symbol.imag, normalisation_factor)
+        bit1=0.5-0.5*normalize_and_clip(symbol.real, normalisation_factor)
+
+        binary_probabilities.append(bit0)
+
+        # if bit0>=0.5:
+        #     bit1 = 1-bit1
+
+        binary_probabilities.append(bit1)
         # binary_probabilities.append(math.log(0.5-0.5*normalize_and_clip(symbol.imag, normalisation_factor)))
         # binary_probabilities.append(math.log(0.5-0.5*normalize_and_clip(symbol.real, normalisation_factor)))
         
@@ -398,6 +423,15 @@ class Receiver:
                 
                 # print("ldpc_signal_list length",len(ldpc_signal_list))
                 ldpc_decoded, ldpc_decoded_with_redundancies = decode_ldpc(ldpc_signal_list)
+
+                
+
+                # # Example usage:
+                # gray_code = [0, 1, 1, 1]  # 4-bit Gray code
+                # binary_code = gray_to_binary(gray_code)
+                # print(binary_code)  # Should output the binary equivalent
+
+                ldpc_decoded = gray_to_binary(ldpc_decoded)
 
                 
                 #convert list to string

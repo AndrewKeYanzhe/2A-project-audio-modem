@@ -111,7 +111,7 @@ logging.debug(f"Pseudo-random sequence: {number_extended}")
 # 3. Apply modulus multiplication
 modulus_multiplication_result = []
 for i in range(len(numbers)):
-    corresponding_index = i % 648
+    corresponding_index = i-1 % 648
     result = (numbers[i] + number_extended[corresponding_index]) % 4
     modulus_multiplication_result.append(result)
 logging.debug(f"Modulus multiplication result: {modulus_multiplication_result}")

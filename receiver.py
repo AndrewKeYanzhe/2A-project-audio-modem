@@ -72,6 +72,9 @@ def qpsk_demap_probabilities(constellations, normalisation_factor, bins_used=648
     # constellation_points=np.array([0,0,0,0])
     pseudo_random = np.random.choice(constellation_points, n_bins)
 
+    pseudo_random = np.insert(pseudo_random, 0, 0)
+
+
     angles_radians = np.deg2rad(pseudo_random)
     complex_exponentials = np.exp(1j * angles_radians)
     # complex_exponentials = np.concatenate(([1 + 1j], complex_exponentials)) #todo uncomment

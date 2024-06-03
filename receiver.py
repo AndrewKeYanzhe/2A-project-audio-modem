@@ -28,12 +28,12 @@ def gray_to_binary(gray_code):
     binary=[]
     for i in range(len(gray_code)):
         if i%2==0:
-            binary.append(gray_code[1])
+            binary.append(gray_code[i])
         elif i%2==1:
             if gray_code[i-1]==0:
-                binary.append(gray_code[1])
+                binary.append(gray_code[i])
             elif gray_code[i-1]==1:
-                binary.append(1-gray_code[1])
+                binary.append(1-gray_code[i])
     return binary
 
 def normalize_and_clip(data_in, normalisation_factor):
@@ -52,7 +52,7 @@ def normalize_and_clip(data_in, normalisation_factor):
     return clipped_value
     # return normalized_value
 
-def qpsk_demap_probabilities(constellations, normalisation_factor, bins_used=648, start_bin=85):
+def qpsk_demap_probabilities(constellations, normalisation_factor, bins_used=648, start_bin=85, debug=False):
     """Demap QPSK symbols to binary data."""
     constellation = {
         complex(1, 1): '00',
@@ -72,14 +72,14 @@ def qpsk_demap_probabilities(constellations, normalisation_factor, bins_used=648
     # constellation_points=np.array([0,0,0,0])
     pseudo_random = np.random.choice(constellation_points, n_bins)
 
-    pseudo_random = np.insert(pseudo_random, 0, 0)
+    pseudo_random = np.insert(pseudo_random, 0, 0) #TODO enable
 
 
     angles_radians = np.deg2rad(pseudo_random)
     complex_exponentials = np.exp(1j * angles_radians)
     # complex_exponentials = np.concatenate(([1 + 1j], complex_exponentials)) #todo uncomment
-
-    print([complex(round(c.real), round(c.imag)) for c in complex_exponentials[start_bin:start_bin + bins_used]])
+    if debug:
+        print([complex(round(c.real), round(c.imag)) for c in complex_exponentials[start_bin:start_bin + bins_used]])
 
 
     constellations = constellations / complex_exponentials[start_bin:start_bin+bins_used]

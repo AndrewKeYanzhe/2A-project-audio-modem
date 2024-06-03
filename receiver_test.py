@@ -95,7 +95,7 @@ def qpsk_demapper(compensated_symbols, n_bins=4096, seed=1, offset=85, sequence_
 # Test the function
 original_binary_data = '1101010111001010110101110001001100101010111001011010101110010010'  # Example binary data
 
-original_binary_data = '00'*32
+# original_binary_data = '00'*32
 
 # 1. Map original binary data to numbers
 numbers = map_bits_to_numbers(original_binary_data)
@@ -136,8 +136,8 @@ logging.debug(f"Recovered binary data: {recovered_binary_data}")
 print("Recovered binary data   : ", [round(x) for x in recovered_binary_data])
 
 recovered_binary_data = [round(x) for x in recovered_binary_data]
-# recovered_binary_data=gray_to_binary(recovered_binary_data)
-# print("Recovered gray to binary: ", recovered_binary_data)
+recovered_binary_data_gray=gray_to_binary(recovered_binary_data)
+print("Recovered gray to binary: ", recovered_binary_data_gray)
 
 recovered_binary_data = ''.join(str(x) for x in recovered_binary_data)
 print(original_binary_data)

@@ -248,14 +248,30 @@ print('\nchannel from pilot with kmeans')
 unshifted_path ='binaries/received_0529_0908_pilot_iceland_channelFromPilot_kmeans.bin'
 pilot_kmeans = compare_2(ref_path, unshifted_path,1194)
 
-
+# *********************
+# use latest recording here
 print('\nchannel from pilot with ldpc')
 unshifted_path ='binaries/received_0603_1541_article4_benchmark_no_resample.bin'
+unshifted_path = 'binaries/received_0603_1541_article4_benchmark_soft.bin'
 ref_path='text/article_4_long.txt'
 ldpc = compare_2(ref_path, unshifted_path,648)
 
+
+print('\nchannel from benchmark article 4 hard demap')
+unshifted_path ='binaries/received_0603_1541_article4_benchmark_no_resample.bin'
+# unshifted_path = 'binaries/received_0603_1541_article4_benchmark.bin'
+ref_path='text/article_4_long.txt'
+ldpc_hard = compare_2(ref_path, unshifted_path,648)
+
+
+print('\nchannel from pilot with ldpc')
+ref_path='text/article_2_iceland.txt'
+unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland_old.bin'
+ldpc_old = compare_2(ref_path, unshifted_path,588)
+
+
 print('\nchannel from pilot with ldpc kmeans')
-unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland_kmeans.bin'
+unshifted_path ='binaries/received_0529_0856_pilot_ldpc_iceland_old_kmeans.bin'
 ref_path = 'text/article_2_iceland.txt'
 
 ldpc_kmeans = compare_2(ref_path, unshifted_path,588)
@@ -301,7 +317,7 @@ font_size = 12
 
 # Create a figure with two subplots side by side
 # fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4))
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 3))
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7, 3))
 
 # First subplot
 ax1.plot(chirp, marker='o', linestyle='-', color='b', label='chirp')
@@ -330,8 +346,9 @@ ax1.set_ylim(0, 30)
 # ax1.set_ylim(0, 5)
 
 # Second subplot
-ax2.plot(ldpc, marker='o', linestyle='-', color='r', label='ldpc latest')
-# ax2.plot(ldpc_kmeans, marker='o', linestyle='-', color='black', label='ldpc+kmeans')
+# ax2.plot(ldpc, marker='o', linestyle='-', color='r', label='ldpc latest')
+ax2.plot(ldpc, marker='o', linestyle='-', color='r', label='soft demap')
+ax2.plot(ldpc_hard, marker='o', linestyle='-', color='black', label='hard demap')
 ax2.set_title('Bit error rate vs block with ldpc', fontsize=font_size)
 ax2.set_xlabel('block', fontsize=font_size)
 ax2.set_ylabel('bit error % per block', fontsize=font_size)
@@ -340,7 +357,7 @@ ax2.set_ylabel('bit error % per block', fontsize=font_size)
 # ax2.set_xticks(custom_ticks)
 ax2.grid(True)
 ax2.legend(fontsize=font_size)  # Add legend to label the lines
-# ax2.set_ylim(0, 30)
+ax2.set_ylim(0, 60)
 # ax2.set_xlim(0, 100)
 # ax2.set_xlim(0, 800)
 

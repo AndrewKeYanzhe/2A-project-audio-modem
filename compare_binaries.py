@@ -100,7 +100,7 @@ def compare_2(file1, file2, bits_per_block):
     #         best_match = matched_bits
     #         shift_at_best_match = shift
 
-    for shift in range(0,4000):
+    for shift in range(0,2000):
         compared_length = 0
         matched_bits = 0
         for i in range(1000):
@@ -250,7 +250,7 @@ pilot_kmeans = compare_2(ref_path, unshifted_path,1194)
 
 
 print('\nchannel from pilot with ldpc')
-unshifted_path ='binaries/received_0603_1541_article4_no_resample.bin'
+unshifted_path ='binaries/received_0603_1541_article4_benchmark_no_resample.bin'
 ref_path='text/article_4_long.txt'
 ldpc = compare_2(ref_path, unshifted_path,648)
 
@@ -330,7 +330,7 @@ ax1.set_ylim(0, 30)
 # ax1.set_ylim(0, 5)
 
 # Second subplot
-ax2.plot(ldpc, marker='o', linestyle='-', color='r', label='ldpc')
+ax2.plot(ldpc, marker='o', linestyle='-', color='r', label='ldpc latest')
 ax2.plot(ldpc_kmeans, marker='o', linestyle='-', color='black', label='ldpc+kmeans')
 ax2.set_title('Bit error rate vs block with ldpc', fontsize=font_size)
 ax2.set_xlabel('block', fontsize=font_size)

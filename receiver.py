@@ -73,7 +73,8 @@ def qpsk_demap_probabilities(constellations, normalisation_factor, bins_used=648
     pseudo_random = np.random.choice(constellation_points, n_bins)
 
     #TODO enable. this inserts 0 at 0th position
-    pseudo_random = np.insert(pseudo_random, 0, 0) 
+    # Current implementation and malachy's uses replace, not insert
+    # pseudo_random = np.insert(pseudo_random, 0, 0) 
 
 
     angles_radians = np.deg2rad(pseudo_random)

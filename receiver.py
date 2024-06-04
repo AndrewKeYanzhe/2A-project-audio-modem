@@ -438,7 +438,7 @@ class Receiver:
                 # binary_code = gray_to_binary(gray_code)
                 # print(binary_code)  # Should output the binary equivalent
 
-                ldpc_decoded = gray_to_binary(ldpc_decoded)
+                # ldpc_decoded = gray_to_binary(ldpc_decoded)
 
                 
                 #convert list to string

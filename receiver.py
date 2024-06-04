@@ -18,6 +18,8 @@ import cmath
 import os
 
 from ldpc_function import *
+from tqdm import tqdm
+
 
 def gray_to_binary(gray_code):
                     # binary = [0] * len(gray_code)
@@ -86,9 +88,6 @@ def qpsk_demap_probabilities(constellations, normalisation_factor, bins_used=648
 
     constellations = constellations / complex_exponentials[start_bin:start_bin+bins_used]
 
-
-
-    
 
     binary_probabilities = []
     # for symbol in constellations:
@@ -204,6 +203,38 @@ class Receiver:
         epsilon = 1e-10  # To avoid division by zero or very small values
         return r_n / (g_n + epsilon)
 
+    def map_bits_to_numbers(self, binary_data):
+        """Map 2N information bits to N numbers using QPSK with Gray coding."""
+        constellation = {
+            '00': 0,
+            '01': 1,
+            '11': 2,
+            '10': 3
+        }
+        String_bin = ''
+        for bit in binary_data:
+            String_bin += str(bit)
+        numbers = []
+        for i in range(0, len(String_bin), 2):
+            bits = String_bin[i:i+2]
+            numbers.append(constellation[bits])
+        return numbers
+    def map_numbers_to_symbols(self, numbers):
+        """Map N information numbers to N constellation symbols using QPSK with Gray coding."""
+        # Define the QPSK Gray coding constellation symbols
+        constellation = {
+            0: complex(1, 1),    # '00'
+            1: complex(-1, 1),   # '01'
+            2: complex(-1, -1),  # '11'
+            3: complex(1, -1)    # '10'
+        }    
+        # List to store the constellation symbols
+        symbols = []
+        # Iterate over the list of numbers
+        for number in numbers:
+            # Append the corresponding symbol to the list
+            symbols.append(constellation[number])
+        return symbols
     def qpsk_demapper(self, compensated_symbols, n_bins=4096, seed=1, offset=85):
         """Decode compensated QPSK symbols to original binary data."""
         # Define the QPSK Gray coding constellation mapping
@@ -270,7 +301,6 @@ class Receiver:
 
     def process_signal(self):
         """Process the received signal to recover binary data."""
-        
         self.received_signal = self.load_data(self.received_file)
 
         # Remove cyclic prefix and get blocks
@@ -303,7 +333,9 @@ class Receiver:
                 symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
                 pilot_n = symbols_extended
                 r_n = self.apply_fft(block, self.block_size)
-                print("pilot_n length",len(pilot_n))
+                for i in range(len(symbols_extended)):
+                    if symbols_extended[i] == 0:
+                        symbols_extended[i] = 0.00000001
                 pilot_response = r_n/pilot_n
 
                 self.g_n = pilot_response
@@ -409,7 +441,7 @@ class Receiver:
         self.plot_constellation(centroid_complex_numbers, title="k-means clusters="+str(n_clusters), dot_size=100)
 
 
-        for index, block in enumerate(blocks):
+        for index, block in enumerate(tqdm(blocks)):
             # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
             if use_pilot_tone == False:
@@ -421,69 +453,52 @@ class Receiver:
             
             # shifted_constellations = self.apply_kmeans(constellations, n_clusters=4, random_state=42)
             shifted_constellations = [z * cmath.exp(1j * math.radians(phase_shift_needed)) for z in constellations]
-  
-            
-            # if shift_constellation_phase:
-            #     binary_data = self.qpsk_demapper(shifted_constellations) # change: now we only demap the frequency bins of interest
-            # else:
-            #     binary_data = self.qpsk_demapper(constellations) # change: now we only demap the frequency bins of interest
 
-            # print("binary_data length",len(binary_data))
-
-            
-
-            
 
             if use_ldpc:
-                # if index == 0 and use_pilot_tone:
-                #     continue
-
 
                 block_length = 1296 #TODO change hardcode
                 ldpc_encoded_length = (block_length//24)*24
-
-                # ldpc_signal = binary_data[0:ldpc_encoded_length]
-
-                # print(list(ldpc_signal))
-
-                #convert string to list
-                # ldpc_signal_list = np.array([int(element) for element in list(ldpc_signal)])
-
-                # print("ldpc_signal_list length",len(ldpc_signal_list))
-
 
                 if shift_constellation_phase:
                     ldpc_signal_list=np.array(qpsk_demap_probabilities(shifted_constellations, avg_kmeans_magnitude))
                 elif shift_constellation_phase == 0:
                     ldpc_signal_list=np.array(qpsk_demap_probabilities(constellations, avg_kmeans_magnitude))
-                    # ldpc_signal_list =np.array(self.qpsk_demapper(constellations))
-                
+
                 ldpc_signal_list = ldpc_signal_list[0:ldpc_encoded_length]
-                
-                
-                
-                
-                # print("ldpc_signal_list length",len(ldpc_signal_list))
+
                 ldpc_decoded, ldpc_decoded_with_redundancies = decode_ldpc(ldpc_signal_list)
-
-                
-
-                # # Example usage:
-                # gray_code = [0, 1, 1, 1]  # 4-bit Gray code
-                # binary_code = gray_to_binary(gray_code)
-                # print(binary_code)  # Should output the binary equivalent
-
-                # ldpc_decoded = gray_to_binary(ldpc_decoded)
 
                 
                 #convert list to string
                 ldpc_decoded = ''.join(str(x) for x in ldpc_decoded)
 
                 complete_binary_data += ldpc_decoded
+            
+            #update g[n] for next block
+            numbers = self.map_bits_to_numbers(ldpc_decoded_with_redundancies)
+            
+            # 2. Generate the pseudo-random sequence used in the transmitter
+            np.random.seed(1)
+            random_constellation_points = np.array([0, 1, 2, 3])
+            number_extended = np.random.choice(random_constellation_points, 4096)
+            modulus_multiplication_result = list(number_extended)
 
-            elif use_ldpc == False:
-                if index != 0:
-                    complete_binary_data += binary_data
+            # Perform modulus 4 multiplication for the relevant indices
+            for i in range(len(numbers)):
+                corresponding_index = i + 85
+                result = (numbers[i] + number_extended[corresponding_index]) % 4
+                modulus_multiplication_result[corresponding_index] = result
+
+            symbols_extended = self.map_numbers_to_symbols(modulus_multiplication_result)
+            symbols_extended[0] = 0
+            symbols_extended[n_bins // 2] = 0
+            symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
+            for i in range(len(symbols_extended)):
+                if symbols_extended[i] == 0:
+                    symbols_extended[i] = 0.00000001
+            self.g_n = r_n/(symbols_extended)
+            
 
         logging.info(f"Recovered Binary Data Length: {len(complete_binary_data)}")
         return complete_binary_data
@@ -630,7 +645,7 @@ if __name__ == "__main__":
     chirp_transmitted_path = 'chirps/1k_8k_0523_suffix.wav'
     received_signal_path = 'recordings/cat_LR11.wav'
     received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
-    received_signal_path = 'recordings/0603_1541_article4_benchmark.m4a'
+    received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
     # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
 
 
@@ -638,7 +653,7 @@ if __name__ == "__main__":
     shift_constellation_phase = True
     use_pilot_tone = True
     use_ldpc = True
-    two_chirps = True
+    two_chirps = False
     # pilot1, ldpc0/1 works
     # pilot0, ldpc0/1 doesnt work
 
@@ -653,7 +668,7 @@ if __name__ == "__main__":
 
     # Find the delay
     # delay = asp.find_delay(0,10,plot=False)
-    delay1, delay2 = asp.find_two_delays(0,5,-5, plot=True, plot_corr=False)
+    delay1, delay2 = asp.find_two_delays(0,5,-5, plot=False, plot_corr=False)
     print("delay1 = ",delay1)
     print("delay2 = ",delay2)
 
@@ -674,6 +689,7 @@ if __name__ == "__main__":
         
         received_signal_trimmed = asp.recv[info_start_index:info_end_index]
     else:
+        sync_drift_per_OFDM_symbol = 0
         start_index = int(delay1) # delay is an integer though
         received_signal_trimmed = asp.recv[start_index+1024*2+4096*16:] #can directly use int()??
 

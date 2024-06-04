@@ -333,9 +333,9 @@ class Receiver:
                 symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
                 pilot_n = symbols_extended
                 r_n = self.apply_fft(block, self.block_size)
-                for i in range(len(symbols_extended)):
-                    if symbols_extended[i] == 0:
-                        symbols_extended[i] = 0.00000001
+                for i in range(len(pilot_n)):
+                    if pilot_n[i] == 0:
+                        pilot_n[i] = 0.00000001
                 pilot_response = r_n/pilot_n
 
                 self.g_n = pilot_response
@@ -463,16 +463,17 @@ class Receiver:
                 result = (numbers[i] + number_extended[corresponding_index]) % 4
                 modulus_multiplication_result[corresponding_index] = result
 
-            symbols_extended = self.map_numbers_to_symbols(modulus_multiplication_result)
-            symbols_extended[0] = 0
-            symbols_extended[n_bins // 2] = 0
-            symbols_extended[n_bins//2+1:] = np.conj(np.flip(symbols_extended[1:n_bins//2]))
-            for i in range(len(symbols_extended)):
-                if symbols_extended[i] == 0:
-                    symbols_extended[i] = 0.00000001
-            self.g_n = r_n/(symbols_extended)
-            gn_list.append(self.g_n)
-            self.g_n = np.mean(gn_list, axis=0)
+            ldpc_xn = self.map_numbers_to_symbols(modulus_multiplication_result)
+            ldpc_xn[0] = 0
+            ldpc_xn[n_bins // 2] = 0
+            ldpc_xn[n_bins//2+1:] = np.conj(np.flip(ldpc_xn[1:n_bins//2]))
+            for i in range(len(ldpc_xn)):
+                if ldpc_xn[i] == 0:
+                    ldpc_xn[i] = 0.00000001
+        
+            gn_list.append(r_n/(ldpc_xn))
+            ########## Update the g_n using AR model ##########
+            self.g_n = 0.99*self.g_n + 0.01*(r_n/(ldpc_xn))
             ######################################################
 
             
@@ -685,12 +686,9 @@ if __name__ == "__main__":
 
     # Compute the frequency response
     frequencies, frequency_response = asp.get_frequency_response(chirp_start_index, chirp_end_index, plot=False)
-    # Compute the FIR filter (impulse response) from the frequency response
-    impulse_response = asp.get_FIR(plot=False, truncate=False)
-    direct_impulse_response = asp.get_direct_FIR(plot=False, truncate=False)
 
     # # Initialize Receiver with the trimmed signal
-    print("start demodulating ")
+    logging.info("Start Demodulating ")
     receiver = Receiver(channel_file =trimmed_signal_path,
                         received_file=trimmed_signal_path,
                         fs=fs,

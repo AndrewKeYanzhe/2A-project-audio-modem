@@ -440,13 +440,13 @@ class Receiver:
 
         self.plot_constellation(centroid_complex_numbers, title="k-means clusters="+str(n_clusters), dot_size=100)
 
-
+        gn_list = []
+        gn_list.append(self.g_n)
         for index, block in enumerate(tqdm(blocks)):
+            
             # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
-            if use_pilot_tone == False:
-                self.g_n = interpolated_response
-            # Compensate for the channel effects
+
             x_n = self.channel_compensation(r_n, self.g_n)
 
             constellations = np.copy(x_n[bin_low:bin_high+1])
@@ -498,6 +498,10 @@ class Receiver:
                 if symbols_extended[i] == 0:
                     symbols_extended[i] = 0.00000001
             self.g_n = r_n/(symbols_extended)
+            gn_list.append(self.g_n)
+            self.g_n = np.mean(gn_list, axis=0)
+
+
             
 
         logging.info(f"Recovered Binary Data Length: {len(complete_binary_data)}")
@@ -647,6 +651,8 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
     received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
     # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
+    received_signal_path = 'recordings/0603_1541_article4_benchmark.m4a'
+
 
 
     # kmeans flag

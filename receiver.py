@@ -81,13 +81,17 @@ class Receiver:
             start_index = i * (self.block_size + self.prefix_length) + self.prefix_length + sync_drift
             end_index = start_index + self.block_size
     
+            if i == num_blocks - 1:
+                print(start_index, end_index, len(signal))
             # Deal with the case where the end index is out of bounds
-            try:
+            
+            
+            if end_index <= len(signal):
                 blocks.append(signal[start_index:end_index])
-            except:
+            else:
                 logging.warning(f"Error in block {i} out of {num_blocks}: start={start_index}, end={end_index}, len(signal)={len(signal)}")
                 logging.warning("Padd the OFDM with zeros")
-                ith_block = signal[start_index:] + [0]*(self.block_size - len(signal[start_index:]))
+                ith_block = np.concatenate((signal[start_index:], np.zeros(self.block_size - len(signal[start_index:]))))
                 blocks.append(ith_block)
         return blocks
 
@@ -442,7 +446,7 @@ if __name__ == "__main__":
 
     # Find the delay
     # delay = asp.find_delay(0,10,plot=False)
-    delay1, delay2 = asp.find_two_delays(0,5,-5, plot=True)
+    delay1, delay2 = asp.find_two_delays(0,5,-5, plot=True, plot_corr=False)
     print("delay1 = ",delay1)
     print("delay2 = ",delay2)
 

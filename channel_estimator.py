@@ -133,7 +133,7 @@ class AnalogueSignalProcessor:
             )
         return self.delay1
     
-    def find_two_delays(self, start1=0, end1=5, start2=-5, plot=False):
+    def find_two_delays(self, start1=0, end1=5, start2=-5, plot=False, plot_corr=False):
         """
         
         Find the start positions of the two chirp signals in the received signal.
@@ -186,6 +186,21 @@ class AnalogueSignalProcessor:
                 received=truncated_recv2,
                 delay=relative_delay2 # Note: The delay relative to the truncated received signal
             )
+            
+        if plot_corr:
+            plt.figure(figsize=(8, 6))
+            plt.plot(correlation1)
+            plt.title('Correlation between the first received signal and the transmitted signal')
+            plt.xlabel('Samples')
+            plt.ylabel('Correlation')
+            plt.show()
+            
+            plt.figure(figsize=(8, 6))
+            plt.plot(correlation2)
+            plt.title('Correlation between the second received signal and the transmitted signal')
+            plt.xlabel('Samples')
+            plt.ylabel('Correlation')
+            plt.show()    
         
         return self.delay1, self.delay2
         

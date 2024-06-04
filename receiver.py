@@ -369,77 +369,51 @@ class Receiver:
         # self.plot_constellation(compensated_constellations_subsampled, title="Constellation After Compensation,\nsubsampled 1:10")
 
 
+        ############### K MEANS CLUSTERING ################
         data = np.array([[z.real, z.imag] for z in self.compensated_constellations])
         # data = np.array([[z.real, z.imag] for z in subsample])
         n_clusters = 5
-
         # Apply k-means clustering
         kmeans = KMeans(n_clusters, init='k-means++', n_init=10, random_state=42).fit(data)
-
         # Get the cluster centroids
         centroids = kmeans.cluster_centers_
-
         # top_4 = sorted(centroids, key=lambda c: c[0]**2 + c[1]**2, reverse=True)[:4]
         top_5 = sorted(centroids, key=lambda c: c[0]**2 + c[1]**2, reverse=True)[:5]
-        
-        
-
         # Step 1: Calculate magnitudes
         magnitudes = [np.linalg.norm(coord) for coord in top_5]
-
         # Step 2: Filter out magnitudes larger than 4
         filtered_coords_magnitudes = [(coord, mag) for coord, mag in zip(top_5, magnitudes) if mag <= 4]
-
         # Step 3: Sort the remaining magnitudes in descending order based on magnitudes
         sorted_filtered_coords_magnitudes = sorted(filtered_coords_magnitudes, key=lambda x: x[1], reverse=True)
-
         # Step 4: Extract the top 4 coordinates
         top_4 = [coord for coord, mag in sorted_filtered_coords_magnitudes[:4]]
-
         print(top_4)
-        
         phases = [(c, math.atan2(c[1], c[0])) for c in top_4]
-
         phases_sorted = sorted(phases, key=lambda x: x[1])
-
         # phases_sorted = [phase + 360 if phase < 0 else phase for phase in phases_sorted]
-
-
-
-        # for key, value in phases_sorted.items():
-            # if value < 0:
-            #     phases_sorted[key] = value + 360
-
         kmeans_cluster_magnitudes = []
         sum_angles = 0
         for c, angle in phases_sorted:
             # Convert angle from radians to degrees
             angle_degrees = math.degrees(angle)
-            
             print(f"Coordinate: {c}, Magnitude: {math.sqrt(c[0]**2 + c[1]**2)}, Phase: {angle_degrees} degrees")
             # print(angle_degrees)
             if angle_degrees < 0:
                 angle_degrees = angle_degrees + 360
-            
             sum_angles = sum_angles + angle_degrees
-
             kmeans_cluster_magnitudes.append(math.sqrt(c[0]**2 + c[1]**2))
-        
-        # print(sum_angles)
-
         avg_kmeans_magnitude = sum(kmeans_cluster_magnitudes) / len(kmeans_cluster_magnitudes) 
         print("avg_kmeans_magnitude",avg_kmeans_magnitude)
-
         phase_shift_needed = (720-sum_angles)/4
         print("phase shift needed", phase_shift_needed)
-
         # Convert centroids back to complex numbers
         centroid_complex_numbers = [complex(c[0], c[1]) for c in centroids]
-
         # centroid_complex_numbers
-
         self.plot_constellation(centroid_complex_numbers, title="k-means clusters="+str(n_clusters), dot_size=100)
+        ################################################
 
+
+        # gn_list store the past channel frequency responses
         gn_list = []
         gn_list.append(self.g_n)
         for index, block in enumerate(tqdm(blocks)):
@@ -451,7 +425,6 @@ class Receiver:
 
             constellations = np.copy(x_n[bin_low:bin_high+1])
             
-            # shifted_constellations = self.apply_kmeans(constellations, n_clusters=4, random_state=42)
             shifted_constellations = [z * cmath.exp(1j * math.radians(phase_shift_needed)) for z in constellations]
 
 
@@ -475,10 +448,10 @@ class Receiver:
 
                 complete_binary_data += ldpc_decoded
             
-            #update g[n] for next block
+            ############ Update g[n] for next block ############
             numbers = self.map_bits_to_numbers(ldpc_decoded_with_redundancies)
             
-            # 2. Generate the pseudo-random sequence used in the transmitter
+            # Generate the pseudo-random sequence used in the transmitter
             np.random.seed(1)
             random_constellation_points = np.array([0, 1, 2, 3])
             number_extended = np.random.choice(random_constellation_points, 4096)
@@ -500,7 +473,7 @@ class Receiver:
             self.g_n = r_n/(symbols_extended)
             gn_list.append(self.g_n)
             self.g_n = np.mean(gn_list, axis=0)
-
+            ######################################################
 
             
 

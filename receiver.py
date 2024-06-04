@@ -337,7 +337,25 @@ class Receiver:
         # Get the cluster centroids
         centroids = kmeans.cluster_centers_
 
-        top_4 = sorted(centroids, key=lambda c: c[0]**2 + c[1]**2, reverse=True)[:4]
+        # top_4 = sorted(centroids, key=lambda c: c[0]**2 + c[1]**2, reverse=True)[:4]
+        top_5 = sorted(centroids, key=lambda c: c[0]**2 + c[1]**2, reverse=True)[:5]
+        
+        
+
+        # Step 1: Calculate magnitudes
+        magnitudes = [np.linalg.norm(coord) for coord in top_5]
+
+        # Step 2: Filter out magnitudes larger than 4
+        filtered_coords_magnitudes = [(coord, mag) for coord, mag in zip(top_5, magnitudes) if mag <= 4]
+
+        # Step 3: Sort the remaining magnitudes in descending order based on magnitudes
+        sorted_filtered_coords_magnitudes = sorted(filtered_coords_magnitudes, key=lambda x: x[1], reverse=True)
+
+        # Step 4: Extract the top 4 coordinates
+        top_4 = [coord for coord, mag in sorted_filtered_coords_magnitudes[:4]]
+
+        print(top_4)
+        
         phases = [(c, math.atan2(c[1], c[0])) for c in top_4]
 
         phases_sorted = sorted(phases, key=lambda x: x[1])
@@ -606,7 +624,7 @@ if __name__ == "__main__":
 
 
     # kmeans flag
-    shift_constellation_phase = False
+    shift_constellation_phase = True
     use_pilot_tone = True
     use_ldpc = True
     two_chirps = False

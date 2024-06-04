@@ -252,7 +252,8 @@ pilot_kmeans = compare_2(ref_path, unshifted_path,1194)
 # use latest recording here
 print('\nchannel from pilot with ldpc')
 unshifted_path ='binaries/received_0603_1541_article4_benchmark_no_resample.bin'
-unshifted_path = 'binaries/received_0603_1541_article4_benchmark_soft_kmeans.bin'
+# unshifted_path = 'binaries/received_0603_1541_article4_benchmark_soft_kmeans.bin'
+unshifted_path = 'binaries/received_0603_1541_article4_benchmark_soft_kmeansOld.bin'
 ref_path='text/article_4_long.txt'
 ldpc = compare_2(ref_path, unshifted_path,648)
 
@@ -353,7 +354,7 @@ ax1.set_ylim(0, 30)
 
 # Second subplot
 # ax2.plot(ldpc, marker='o', linestyle='-', color='r', label='ldpc latest')
-ax2.plot(ldpc, marker='o', linestyle='-', color='r', label='soft demap kmeans')
+ax2.plot(ldpc, marker='o', linestyle='-', color='r', label='soft demap kmeans old')
 ax2.plot(ldpc_hard, marker='o', linestyle='-', color='black', label='soft demap')
 ax2.set_title('Bit error rate vs block with ldpc', fontsize=font_size)
 ax2.set_xlabel('block', fontsize=font_size)

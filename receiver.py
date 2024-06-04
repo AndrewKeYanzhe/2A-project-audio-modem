@@ -409,7 +409,8 @@ class Receiver:
 
             constellations = np.copy(x_n[bin_low:bin_high+1])
             
-            shifted_constellations = self.apply_kmeans(constellations, n_clusters=4, random_state=42)
+            # shifted_constellations = self.apply_kmeans(constellations, n_clusters=4, random_state=42)
+            shifted_constellations = [z * cmath.exp(1j * math.radians(phase_shift_needed)) for z in constellations]
   
             
             # if shift_constellation_phase:

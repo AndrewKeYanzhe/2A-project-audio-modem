@@ -331,7 +331,7 @@ ax1.set_ylim(0, 30)
 
 # Second subplot
 ax2.plot(ldpc, marker='o', linestyle='-', color='r', label='ldpc latest')
-ax2.plot(ldpc_kmeans, marker='o', linestyle='-', color='black', label='ldpc+kmeans')
+# ax2.plot(ldpc_kmeans, marker='o', linestyle='-', color='black', label='ldpc+kmeans')
 ax2.set_title('Bit error rate vs block with ldpc', fontsize=font_size)
 ax2.set_xlabel('block', fontsize=font_size)
 ax2.set_ylabel('bit error % per block', fontsize=font_size)

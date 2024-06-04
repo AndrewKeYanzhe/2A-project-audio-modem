@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import scipy
 from channel_estimator import AnalogueSignalProcessor
-from utils import save_as_wav, cut_freq_bins, resample_signal
+from utils import save_as_wav, cut_freq_bins
 import matplotlib.pyplot as plt
 import logging
 from scipy.io.wavfile import write
@@ -18,106 +18,6 @@ import cmath
 import os
 
 from ldpc_function import *
-
-def gray_to_binary(gray_code):
-                    # binary = [0] * len(gray_code)
-                    # binary[0] = gray_code[0]  # MSB is the same
-                    # for i in range(1, len(gray_code)):
-                    #     binary[i] = binary[i - 1] ^ gray_code[i]
-                    # return binary
-    binary=[]
-    for i in range(len(gray_code)):
-        if i%2==0:
-            binary.append(gray_code[i])
-        elif i%2==1:
-            if gray_code[i-1]==0:
-                binary.append(gray_code[i])
-            elif gray_code[i-1]==1:
-                binary.append(1-gray_code[i])
-    return binary
-
-def normalize_and_clip(data_in, normalisation_factor):
-    # Normalize the value to the normalisation_factor
-    # normalized_value = data_in / normalisation_factor 
-    # normalisation factor is 2. because 1+j,-1-j is a difference of 2 in real,imag
-    # normalisation factor calculated with kmeans is 1.41 which matches
-    normalized_value = data_in / 1.41
-    
-    # Clip the value at 1
-    clipped_value = min(normalized_value, 1)
-    clipped_value = max(normalized_value,-1)
-    
-    # clipping improves performance
-
-    return clipped_value
-    # return normalized_value
-
-def qpsk_demap_probabilities(constellations, normalisation_factor, bins_used=648, start_bin=85, debug=False):
-    """Demap QPSK symbols to binary data."""
-    constellation = {
-        complex(1, 1): '00',
-        complex(-1, 1): '01',
-        complex(-1, -1): '11',
-        complex(1, -1): '10'
-    }
-    # print("constellation length",len(constellations))
-
-    seed=1
-
-    n_bins=4096
-
-    # Reverse the modulus multiplication to get the original numbers
-    np.random.seed(seed)
-    constellation_points = np.array([0, 90, 180, 270])
-    # constellation_points=np.array([0,0,0,0])
-    pseudo_random = np.random.choice(constellation_points, n_bins)
-
-    #TODO enable. this inserts 0 at 0th position
-    # Current implementation and malachy's uses replace, not insert
-    # pseudo_random = np.insert(pseudo_random, 0, 0) 
-
-
-    angles_radians = np.deg2rad(pseudo_random)
-    complex_exponentials = np.exp(1j * angles_radians)
-    # complex_exponentials = np.concatenate(([1 + 1j], complex_exponentials)) #todo uncomment
-    if debug:
-        print([complex(round(c.real), round(c.imag)) for c in complex_exponentials[start_bin:start_bin + bins_used]])
-
-
-    constellations = constellations / complex_exponentials[start_bin:start_bin+bins_used]
-
-
-
-    
-
-    binary_probabilities = []
-    # for symbol in constellations:
-    #     min_dist = float('inf')
-    #     bits = None
-    #     for point, mapping in constellation.items():
-    #         dist = np.abs(symbol - point)
-    #         if dist < min_dist:
-    #             min_dist = dist
-    #             bits = mapping
-    #     if bits is not None:
-    #         binary_data += bits
-    #     else:
-    #         logging.warning(f"No matching constellation point found for symbol {symbol}")
-    for index, symbol in enumerate(constellations):
-        
-        bit0=0.5-0.5*normalize_and_clip(symbol.imag, normalisation_factor)
-        bit1=0.5-0.5*normalize_and_clip(symbol.real, normalisation_factor)
-
-        binary_probabilities.append(bit0)
-
-        # if bit0>=0.5:
-        #     bit1 = 1-bit1
-
-        binary_probabilities.append(bit1)
-        # binary_probabilities.append(math.log(0.5-0.5*normalize_and_clip(symbol.imag, normalisation_factor)))
-        # binary_probabilities.append(math.log(0.5-0.5*normalize_and_clip(symbol.real, normalisation_factor)))
-        
-    return binary_probabilities
 
 """
     The Receiver class processes an OFDM signal to recover binary data, convert it to bytes,
@@ -149,8 +49,7 @@ class Receiver:
     def __init__(self, channel_file, received_file,
                  fs,frequencies, channel_impulse_response,
                  prefix_length, block_size,
-                 f_low = None, f_high = None,
-                 sync_drift_per_OFDM_symbol = 0):
+                 f_low = None, f_high = None):
         self.channel_file = channel_file
         self.fs= fs
         self.frequencies = frequencies
@@ -165,7 +64,6 @@ class Receiver:
         self.g_n = None
         self.f_low = f_low
         self.f_high = f_high
-        self.sync_drift_per_OFDM_symbol = sync_drift_per_OFDM_symbol
 
     def load_data(self, file_path):
         """Load data from a CSV file into a numpy array."""
@@ -173,26 +71,12 @@ class Receiver:
 
     def remove_cyclic_prefix(self, signal):
         """Remove the cyclic prefix of an OFDM signal."""
-        num_blocks = round(len(signal) / (self.block_size + self.prefix_length))
-        
+        num_blocks = len(signal) // (self.block_size + self.prefix_length)
         blocks = []
         for i in range(num_blocks):
-            sync_drift = round(i*self.sync_drift_per_OFDM_symbol)
-            start_index = i * (self.block_size + self.prefix_length) + self.prefix_length + sync_drift
+            start_index = i * (self.block_size + self.prefix_length) + self.prefix_length
             end_index = start_index + self.block_size
-    
-            if i == num_blocks - 1:
-                print(start_index, end_index, len(signal))
-            # Deal with the case where the end index is out of bounds
-            
-            
-            if end_index <= len(signal):
-                blocks.append(signal[start_index:end_index])
-            else:
-                logging.warning(f"Error in block {i} out of {num_blocks}: start={start_index}, end={end_index}, len(signal)={len(signal)}")
-                logging.warning("Padd the OFDM with zeros")
-                ith_block = np.concatenate((signal[start_index:], np.zeros(self.block_size - len(signal[start_index:]))))
-                blocks.append(ith_block)
+            blocks.append(signal[start_index:end_index])
         return blocks
 
     def apply_fft(self, signal, n):
@@ -347,38 +231,11 @@ class Receiver:
         # Get the cluster centroids
         centroids = kmeans.cluster_centers_
 
-        # top_4 = sorted(centroids, key=lambda c: c[0]**2 + c[1]**2, reverse=True)[:4]
-        top_5 = sorted(centroids, key=lambda c: c[0]**2 + c[1]**2, reverse=True)[:5]
-        
-        
-
-        # Step 1: Calculate magnitudes
-        magnitudes = [np.linalg.norm(coord) for coord in top_5]
-
-        # Step 2: Filter out magnitudes larger than 4
-        filtered_coords_magnitudes = [(coord, mag) for coord, mag in zip(top_5, magnitudes) if mag <= 4]
-
-        # Step 3: Sort the remaining magnitudes in descending order based on magnitudes
-        sorted_filtered_coords_magnitudes = sorted(filtered_coords_magnitudes, key=lambda x: x[1], reverse=True)
-
-        # Step 4: Extract the top 4 coordinates
-        top_4 = [coord for coord, mag in sorted_filtered_coords_magnitudes[:4]]
-
-        print(top_4)
-        
+        top_4 = sorted(centroids, key=lambda c: c[0]**2 + c[1]**2, reverse=True)[:4]
         phases = [(c, math.atan2(c[1], c[0])) for c in top_4]
 
         phases_sorted = sorted(phases, key=lambda x: x[1])
 
-        # phases_sorted = [phase + 360 if phase < 0 else phase for phase in phases_sorted]
-
-
-
-        # for key, value in phases_sorted.items():
-            # if value < 0:
-            #     phases_sorted[key] = value + 360
-
-        kmeans_cluster_magnitudes = []
         sum_angles = 0
         for c, angle in phases_sorted:
             # Convert angle from radians to degrees
@@ -390,14 +247,7 @@ class Receiver:
                 angle_degrees = angle_degrees + 360
             
             sum_angles = sum_angles + angle_degrees
-
-            kmeans_cluster_magnitudes.append(math.sqrt(c[0]**2 + c[1]**2))
-        
-        # print(sum_angles)
-
-        avg_kmeans_magnitude = sum(kmeans_cluster_magnitudes) / len(kmeans_cluster_magnitudes) 
-        print("avg_kmeans_magnitude",avg_kmeans_magnitude)
-
+ 
         phase_shift_needed = (720-sum_angles)/4
         print("phase shift needed", phase_shift_needed)
 
@@ -419,18 +269,15 @@ class Receiver:
 
             constellations = np.copy(x_n[bin_low:bin_high+1])
             
-            # shifted_constellations = self.apply_kmeans(constellations, n_clusters=4, random_state=42)
             shifted_constellations = [z * cmath.exp(1j * math.radians(phase_shift_needed)) for z in constellations]
   
             
-            # if shift_constellation_phase:
-            #     binary_data = self.qpsk_demapper(shifted_constellations) # change: now we only demap the frequency bins of interest
-            # else:
-            #     binary_data = self.qpsk_demapper(constellations) # change: now we only demap the frequency bins of interest
+            if shift_constellation_phase:
+                binary_data = self.qpsk_demapper(shifted_constellations) # change: now we only demap the frequency bins of interest
+            else:
+                binary_data = self.qpsk_demapper(constellations) # change: now we only demap the frequency bins of interest
 
             # print("binary_data length",len(binary_data))
-
-            
 
             
 
@@ -439,41 +286,19 @@ class Receiver:
                 #     continue
 
 
-                block_length = 1296 #TODO change hardcode
+                block_length = len(binary_data)
                 ldpc_encoded_length = (block_length//24)*24
 
-                # ldpc_signal = binary_data[0:ldpc_encoded_length]
+                ldpc_signal = binary_data[0:ldpc_encoded_length]
 
                 # print(list(ldpc_signal))
 
                 #convert string to list
-                # ldpc_signal_list = np.array([int(element) for element in list(ldpc_signal)])
+                ldpc_signal_list = np.array([int(element) for element in list(ldpc_signal)])
 
-                # print("ldpc_signal_list length",len(ldpc_signal_list))
+                # print(ldpc_signal_list)
 
-
-                if shift_constellation_phase:
-                    ldpc_signal_list=np.array(qpsk_demap_probabilities(shifted_constellations, avg_kmeans_magnitude))
-                elif shift_constellation_phase == 0:
-                    ldpc_signal_list=np.array(qpsk_demap_probabilities(constellations, avg_kmeans_magnitude))
-                    # ldpc_signal_list =np.array(self.qpsk_demapper(constellations))
-                
-                ldpc_signal_list = ldpc_signal_list[0:ldpc_encoded_length]
-                
-                
-                
-                
-                # print("ldpc_signal_list length",len(ldpc_signal_list))
                 ldpc_decoded, ldpc_decoded_with_redundancies = decode_ldpc(ldpc_signal_list)
-
-                
-
-                # # Example usage:
-                # gray_code = [0, 1, 1, 1]  # 4-bit Gray code
-                # binary_code = gray_to_binary(gray_code)
-                # print(binary_code)  # Should output the binary equivalent
-
-                # ldpc_decoded = gray_to_binary(ldpc_decoded)
 
                 
                 #convert list to string
@@ -487,42 +312,7 @@ class Receiver:
 
         logging.info(f"Recovered Binary Data Length: {len(complete_binary_data)}")
         return complete_binary_data
-    def apply_kmeans(self, compensated_constellations, n_clusters=5, random_state=42):
 
-        # Convert complex numbers to a 2D array of their real and imaginary parts
-        data = np.array([[z.real, z.imag] for z in compensated_constellations])
-        
-        # Apply k-means clustering
-        kmeans = KMeans(n_clusters=n_clusters, init='k-means++', n_init=10, random_state=random_state).fit(data)
-        
-        # Get the cluster centroids
-        centroids = kmeans.cluster_centers_
-        
-        # Sort the top 4 centroids by magnitude
-        top_4 = sorted(centroids, key=lambda c: c[0]**2 + c[1]**2, reverse=True)[:4]
-        
-        # Calculate phases and sort them
-        phases = [(c, math.atan2(c[1], c[0])) for c in top_4]
-        phases_sorted = sorted(phases, key=lambda x: x[1])
-        
-        # Calculate the sum of angles in degrees
-        sum_angles = 0
-        for c, angle in phases_sorted:
-            angle_degrees = math.degrees(angle)
-            if angle_degrees < 0:
-                angle_degrees += 360
-            sum_angles += angle_degrees
-        
-        # Calculate the phase shift needed
-        phase_shift_needed = (720 - sum_angles) / 4
-        
-        # Convert centroids back to complex numbers
-        centroid_complex_numbers = [complex(c[0], c[1]) for c in centroids]
-        
-        # Apply the phase shift to the original constellations
-        shifted_constellations = [z * cmath.exp(1j * math.radians(phase_shift_needed)) for z in compensated_constellations]
-        
-        return shifted_constellations
     def plot_constellation(self, symbols, title="QPSK Constellation", dot_size=20):
         font_size = 16
         plt.figure(figsize=(4, 4))
@@ -536,43 +326,6 @@ class Receiver:
         plt.tick_params(axis='both', which='major', labelsize=font_size)
         plt.tight_layout()
         plt.show()
-    
-    def apply_kmeans(self, compensated_constellations, n_clusters=5, random_state=42):
-
-        # Convert complex numbers to a 2D array of their real and imaginary parts
-        data = np.array([[z.real, z.imag] for z in compensated_constellations])
-        
-        # Apply k-means clustering
-        kmeans = KMeans(n_clusters=n_clusters, init='k-means++', n_init=10, random_state=random_state).fit(data)
-        
-        # Get the cluster centroids
-        centroids = kmeans.cluster_centers_
-        
-        # Sort the top 4 centroids by magnitude
-        top_4 = sorted(centroids, key=lambda c: c[0]**2 + c[1]**2, reverse=True)[:4]
-        
-        # Calculate phases and sort them
-        phases = [(c, math.atan2(c[1], c[0])) for c in top_4]
-        phases_sorted = sorted(phases, key=lambda x: x[1])
-        
-        # Calculate the sum of angles in degrees
-        sum_angles = 0
-        for c, angle in phases_sorted:
-            angle_degrees = math.degrees(angle)
-            if angle_degrees < 0:
-                angle_degrees += 360
-            sum_angles += angle_degrees
-        
-        # Calculate the phase shift needed
-        phase_shift_needed = (720 - sum_angles) / 4
-        
-        # Convert centroids back to complex numbers
-        centroid_complex_numbers = [complex(c[0], c[1]) for c in centroids]
-        
-        # Apply the phase shift to the original constellations
-        shifted_constellations = [z * cmath.exp(1j * math.radians(phase_shift_needed)) for z in compensated_constellations]
-        
-        return shifted_constellations
 
     def binary_to_bytes(self, binary_data):
         """Convert binary data to bytes."""
@@ -621,24 +374,21 @@ if __name__ == "__main__":
     fs =  48000
     # recording_name = '0525_1749'
     OFDM_prefix_length = 1024
-    OFDM_suffix_length = 1024
+    OFDM_suffix_length = 0
     OFDM_block_size = 4096
-    chirp_start_index = 1024
-    chirp_end_index = 1024 + 4096*16
+    chirp_start_time = 0.0  # Example start time of chirp
+    chirp_end_time = 15.0    # Example end time of chirp
     chirp_f_low = 761.72
     chirp_f_high = 8824.22
-    chirp_transmitted_path = 'chirps/1k_8k_0523_suffix.wav'
-    received_signal_path = 'recordings/cat_LR11.wav'
-    received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
-    received_signal_path = 'recordings/0603_1541_article4_benchmark.m4a'
-    # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
+    chirp_transmitted_path = 'chirps/1k_8k_0523.wav'
+    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
 
 
     # kmeans flag
-    shift_constellation_phase = True
+    shift_constellation_phase = False
+
     use_pilot_tone = True
     use_ldpc = True
-    two_chirps = True
     # pilot1, ldpc0/1 works
     # pilot0, ldpc0/1 doesnt work
 
@@ -652,32 +402,12 @@ if __name__ == "__main__":
     asp.load_audio_files()
 
     # Find the delay
-    # delay = asp.find_delay(0,10,plot=False)
-    delay1, delay2 = asp.find_two_delays(0,5,-5, plot=True, plot_corr=False)
-    print("delay1 = ",delay1)
-    print("delay2 = ",delay2)
+    delay = asp.find_delay(0,10,plot=False)
 
-    if two_chirps:
-        # Trim the received signal
-        start_index = int(delay1) # delay is an integer though
-        info_start_index = start_index+1024*2+4096*16
-        info_end_index = int(delay2)
-        exact_OFDM_num = (info_end_index - info_start_index)/(4096+1024)
-        logging.info(f"Exact number of OFDM symbols between = {exact_OFDM_num}")
-        expected_OFDM_num = round(exact_OFDM_num)
-        logging.info(f"Expected number of OFDM symbols = {expected_OFDM_num}")
-        logging.info(f"Total drift = {info_end_index - info_start_index - expected_OFDM_num*(4096+1024)}")
-        # Calculate how much sample we drifts away per OFDM symbol
-        # if this is less than 0, we need to shift the start and end indices of OFDM symbol to the left
-        sync_drift_per_OFDM_symbol = ((info_end_index - info_start_index) - expected_OFDM_num*(4096+1024))/expected_OFDM_num
-        logging.info(f"Sync drift per OFDM symbol = {sync_drift_per_OFDM_symbol}")
-        
-        received_signal_trimmed = asp.recv[info_start_index:info_end_index]
-    else:
-        start_index = int(delay1) # delay is an integer though
-        received_signal_trimmed = asp.recv[start_index+1024*2+4096*16:] #can directly use int()??
+    # Trim the received signal
+    start_index = int(delay) # delay is an integer though
+    received_signal_trimmed = asp.recv[start_index+1024*1+int(1.365*fs):] #can directly use int()??
 
-    
     # # Save the trimmed signal to a new file (or directly process it)
     trimmed_signal_path = './files/trimmed_received_signal_' + recording_name + '.csv'
     logging.info(f"Saving trimmed received signal to:{trimmed_signal_path}")
@@ -689,7 +419,9 @@ if __name__ == "__main__":
     # logging.info(f"Saving trimmed received signal to:{trimmed_signal_path_wav}")
 
     # Compute the frequency response
-    frequencies, frequency_response = asp.get_frequency_response(chirp_start_index, chirp_end_index, plot=False)
+    frequencies, frequency_response = asp.get_frequency_response(chirp_start_time, chirp_end_time, plot=False)
+
+
     # Compute the FIR filter (impulse response) from the frequency response
     impulse_response = asp.get_FIR(plot=False, truncate=False)
     direct_impulse_response = asp.get_direct_FIR(plot=False, truncate=False)
@@ -702,14 +434,10 @@ if __name__ == "__main__":
                         frequencies=frequencies,
                         channel_impulse_response=frequency_response,
                         prefix_length=OFDM_prefix_length, block_size=OFDM_block_size,
-                        f_low=chirp_f_low, f_high=chirp_f_high,
-                        sync_drift_per_OFDM_symbol=sync_drift_per_OFDM_symbol)
+                        f_low=chirp_f_low, f_high=chirp_f_high)
 
     binary_data = receiver.process_signal()
-    if two_chirps:
-        deomudulated_binary_path = './binaries/received_'+recording_name+'_resampled.bin'
-    else:
-        deomudulated_binary_path='./binaries/received_'+recording_name+'.bin'
+    deomudulated_binary_path='./binaries/received_'+recording_name+'.bin'
     binfile = receiver.binary_to_bin_file(binary_data, deomudulated_binary_path)
     # binfile = receiver.binary_to_bin_file(binary_data+"00000000000000000000000000000", deomudulated_binary_path)
 

@@ -1,6 +1,10 @@
 import numpy as np
 import logging
 
+from receiver import *
+
+
+
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
@@ -91,6 +95,8 @@ def qpsk_demapper(compensated_symbols, n_bins=4096, seed=1, offset=85, sequence_
 # Test the function
 original_binary_data = '1101010111001010110101110001001100101010111001011010101110010010'  # Example binary data
 
+# original_binary_data = '00'*32
+
 # 1. Map original binary data to numbers
 numbers = map_bits_to_numbers(original_binary_data)
 logging.debug(f"Original numbers: {numbers}")
@@ -99,12 +105,14 @@ logging.debug(f"Original numbers: {numbers}")
 np.random.seed(1)
 constellation_points = np.array([0, 1, 2, 3])
 number_extended = np.random.choice(constellation_points, 4096)[85:85+648]
+# number_extended = [0]*1000
 logging.debug(f"Pseudo-random sequence: {number_extended}")
 
 # 3. Apply modulus multiplication
 modulus_multiplication_result = []
 for i in range(len(numbers)):
     corresponding_index = i % 648
+    # corresponding_index = i-1 % 648 #if using insert instead of replace
     result = (numbers[i] + number_extended[corresponding_index]) % 4
     modulus_multiplication_result.append(result)
 logging.debug(f"Modulus multiplication result: {modulus_multiplication_result}")
@@ -114,12 +122,27 @@ qpsk_symbols = map_numbers_to_symbols(modulus_multiplication_result)
 logging.debug(f"QPSK symbols: {qpsk_symbols}")
 
 # 5. Demodulate to recover original binary data
-recovered_binary_data = qpsk_demapper(qpsk_symbols)
+# recovered_binary_data = qpsk_demapper(qpsk_symbols)
+print(len(qpsk_symbols))
+# recovered_binary_data = qpsk_demapper(qpsk_symbols)
+print("Original binary data:  ", original_binary_data)
+recovered_binary_data = qpsk_demap_probabilities(qpsk_symbols, 1.41, bins_used=32, start_bin=85)
+# recovered_binary_data = int(recovered_binary_data)
+# recovered_binary_data = [int(x) for x in recovered_binary_data]
+
 logging.debug(f"Recovered binary data: {recovered_binary_data}")
 
 # 6. Compare the recovered binary data with the original binary data
-print("Original binary data:  ", original_binary_data)
-print("Recovered binary data: ", recovered_binary_data)
+
+print("Recovered binary data   : ", [round(x) for x in recovered_binary_data])
+
+recovered_binary_data = [round(x) for x in recovered_binary_data]
+recovered_binary_data_gray=gray_to_binary(recovered_binary_data)
+print("Recovered gray to binary: ", recovered_binary_data_gray)
+
+recovered_binary_data = ''.join(str(x) for x in recovered_binary_data)
+print(original_binary_data)
+print(recovered_binary_data)
 
 # Check if the recovered binary data matches the original binary data
 assert original_binary_data == recovered_binary_data, "The recovered binary data does not match the original!"

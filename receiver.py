@@ -638,7 +638,7 @@ if __name__ == "__main__":
     shift_constellation_phase = True
     use_pilot_tone = True
     use_ldpc = True
-    two_chirps = True
+    two_chirps = False
     # pilot1, ldpc0/1 works
     # pilot0, ldpc0/1 doesnt work
 
@@ -676,7 +676,7 @@ if __name__ == "__main__":
     else:
         start_index = int(delay1) # delay is an integer though
         received_signal_trimmed = asp.recv[start_index+1024*2+4096*16:] #can directly use int()??
-
+        sync_drift_per_OFDM_symbol = 0
     
     # # Save the trimmed signal to a new file (or directly process it)
     trimmed_signal_path = './files/trimmed_received_signal_' + recording_name + '.csv'

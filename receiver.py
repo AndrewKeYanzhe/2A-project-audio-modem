@@ -21,6 +21,36 @@ from ldpc_function import *
 from tqdm import tqdm
 from sklearn.linear_model import LinearRegression
 
+def remove_leading_zeros(binary_data):
+    while binary_data.startswith("00000000"):
+        binary_data = binary_data[8:]
+    return binary_data
+
+def split_by_first_two_occurrences(binary_data, delimiter="0"*16):
+    step = 8
+    occurrences = []
+
+    # Scan through the string with the step size
+    index = 0
+    while index <= len(binary_data) - len(delimiter):
+        if binary_data[index:index + len(delimiter)] == delimiter:
+            occurrences.append(index)
+            if len(occurrences) == 2:
+                break
+        index += step
+
+    if len(occurrences) < 2:
+        return [binary_data, '', '']
+
+    # Split the string into three parts
+    first_occurrence = occurrences[0]
+    second_occurrence = occurrences[1]
+
+    part1 = binary_data[:first_occurrence]
+    part2 = binary_data[first_occurrence + len(delimiter):second_occurrence]
+    part3 = binary_data[second_occurrence + len(delimiter):]
+
+    return [part1, part2, part3]
 
 def gray_to_binary(gray_code):
                     # binary = [0] * len(gray_code)
@@ -63,7 +93,6 @@ def qpsk_demap_probabilities(constellations, normalisation_factor, bins_used=648
         complex(-1, -1): '11',
         complex(1, -1): '10'
     }
-    # print("constellation length",len(constellations))
 
     seed=1
 
@@ -180,12 +209,6 @@ class Receiver:
             sync_drift = round(i*self.sync_drift_per_OFDM_symbol)
             start_index = i * (self.block_size + self.prefix_length) + self.prefix_length + sync_drift
             end_index = start_index + self.block_size
-    
-            if i == num_blocks - 1:
-                print(start_index, end_index, len(signal))
-            # Deal with the case where the end index is out of bounds
-            
-            
             if end_index <= len(signal):
                 blocks.append(signal[start_index:end_index])
             else:
@@ -318,13 +341,13 @@ class Receiver:
         # Get the frequency bins corresponding to the given frequency range
         bin_low,bin_high = cut_freq_bins(self.f_low, self.f_high, self.fs, self.block_size) 
 
-        print("number of blocks:",len(blocks))
+        logging.info(f"Number of OFDM blocks: {len(blocks)}")
 
         for index, block in enumerate(blocks):
             
             n_bins = 4096
             if index == 0 and use_pilot_tone:
-                print("using pilot tone")
+                logging.info("using pilot tone")
                 np.random.seed(1)
                 constellation_points = np.array([1+1j, -1+1j, -1-1j, 1-1j])
                 symbols_extended = np.random.choice(constellation_points, n_bins)
@@ -362,12 +385,6 @@ class Receiver:
             # Save the constellation points for plotting
             self.received_constellations.extend(r_n[bin_low:bin_high+1])
             self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
-
-        # self.plot_constellation(self.received_constellations, title="Constellation\nBefore Compensation")
-
-        # self.plot_constellation(self.compensated_constellations, title="Constellation\nAfter Compensation")
-
-
         ############### K MEANS CLUSTERING ################
         data = np.array([[z.real, z.imag] for z in self.compensated_constellations])
         # data = np.array([[z.real, z.imag] for z in subsample])
@@ -386,7 +403,6 @@ class Receiver:
         sorted_filtered_coords_magnitudes = sorted(filtered_coords_magnitudes, key=lambda x: x[1], reverse=True)
         # Step 4: Extract the top 4 coordinates
         top_4 = [coord for coord, mag in sorted_filtered_coords_magnitudes[:4]]
-        print(top_4)
         phases = [(c, math.atan2(c[1], c[0])) for c in top_4]
         phases_sorted = sorted(phases, key=lambda x: x[1])
         # phases_sorted = [phase + 360 if phase < 0 else phase for phase in phases_sorted]
@@ -395,16 +411,15 @@ class Receiver:
         for c, angle in phases_sorted:
             # Convert angle from radians to degrees
             angle_degrees = math.degrees(angle)
-            print(f"Coordinate: {c}, Magnitude: {math.sqrt(c[0]**2 + c[1]**2)}, Phase: {angle_degrees} degrees")
-            # print(angle_degrees)
+            logging.info(f"Coordinate: {c}, Magnitude: {math.sqrt(c[0]**2 + c[1]**2)}, Phase: {angle_degrees} degrees")
             if angle_degrees < 0:
                 angle_degrees = angle_degrees + 360
             sum_angles = sum_angles + angle_degrees
             kmeans_cluster_magnitudes.append(math.sqrt(c[0]**2 + c[1]**2))
         avg_kmeans_magnitude = sum(kmeans_cluster_magnitudes) / len(kmeans_cluster_magnitudes) 
-        print("avg_kmeans_magnitude",avg_kmeans_magnitude)
+        logging.info(f"avg_kmeans_magnitude {avg_kmeans_magnitude}")
         phase_shift_needed = (720-sum_angles)/4
-        print("phase shift needed", phase_shift_needed)
+        logging.info(f"Phase shift needed: {phase_shift_needed} degrees")
         # Convert centroids back to complex numbers
         centroid_complex_numbers = [complex(c[0], c[1]) for c in centroids]
         # centroid_complex_numbers
@@ -476,7 +491,6 @@ class Receiver:
             self.g_n =0.6*self.g_n + 0.4*(r_n/(ldpc_xn))
             ######################################################
 
-
             # Save the constellation points for plotting
             self.received_constellations.extend(r_n[bin_low:bin_high+1])
             self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
@@ -488,32 +502,9 @@ class Receiver:
         plt.scatter(range(len(phase_for_85)),phase_for_85)
         plt.title("Phase of g[n] at bin 85")
         plt.show()
-        # Extract the subset of phase_for_85
-        subset = phase_for_85[50:500]
-
-        # Create the input feature matrix X
-        X = np.arange(len(subset)).reshape(-1, 1)
-
-        # Create the target variable y
-        y = subset
-
-        # Create a linear regression model
-        regression_model = LinearRegression()
-
-        # Fit the model to the data
-        regression_model.fit(X, y)
-
-        # Get the gradient of the regression line
-        gradient = regression_model.coef_[0]
-
-        # Print the gradient
-        print("Gradient:", gradient)
+        
         self.plot_constellation(self.received_constellations, title="Constellation\nBefore Compensation")
-
         self.plot_constellation(self.compensated_constellations, title="Constellation\nAfter Compensation")
-
-            
-
         logging.info(f"Recovered Binary Data Length: {len(complete_binary_data)}")
         return complete_binary_data
     def apply_kmeans(self, compensated_constellations, n_clusters=5, random_state=42):
@@ -602,7 +593,6 @@ class Receiver:
         shifted_constellations = [z * cmath.exp(1j * math.radians(phase_shift_needed)) for z in compensated_constellations]
         
         return shifted_constellations
-
     def binary_to_bytes(self, binary_data):
         """Convert binary data to bytes."""
         # Pad the binary string to make its length a multiple of 8
@@ -612,7 +602,6 @@ class Receiver:
             byte_part = padded_binary[i:i + 8]
             byte_array.append(int(byte_part, 2))
         return bytes(byte_array)
-
     def parse_bytes_data(self, bytes_data):
         """Parse the bytes data to extract filename, size, and content."""
         # Splitting the data at null bytes
@@ -633,13 +622,12 @@ class Receiver:
             byte_array.append(int(byte_part, 2))
         with open(file_path, 'wb') as bin_file:
             bin_file.write(byte_array)
-        print(f"Binary data has been saved to {file_path}.")
-
+        logging.info(f"Binary data has been saved to {file_path}.")
     def save_file(self, file_path, content):
         """Save the content to a file."""
         with open(file_path, 'wb') as file:
             file.write(content)
-        print(f"File has been saved to {file_path}. Please check the file to see if the image is correctly reconstructed.")
+        logging.info(f"File has been saved to {file_path}. Please check the file to see if the image is correctly reconstructed.")
 
 
 if __name__ == "__main__":
@@ -656,16 +644,13 @@ if __name__ == "__main__":
     chirp_end_index = 1024 + 4096*16
     chirp_f_low = 761.72
     chirp_f_high = 8824.22
+    manual_shift = 0
     chirp_transmitted_path = 'chirps/1k_8k_0523_suffix.wav'
     received_signal_path = 'recordings/cat_LR11.wav'
-    received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
-    received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
-    # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
+    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
     received_signal_path = 'recordings/0605_demo_test_4.m4a'
     received_signal_path = 'recordings/test_65.wav'
     # received_signal_path = 'recordings/0605_afternoon_article4_5OFDM.m4a'
-
-
 
     # kmeans flag
     shift_constellation_phase = False
@@ -676,41 +661,28 @@ if __name__ == "__main__":
     remove_header_frontNulls=True
     trim_end = True
 
-    # pilot1, ldpc0/1 works
-    # pilot0, ldpc0/1 doesnt work
-
     recording_name = os.path.splitext(os.path.basename(received_signal_path))[0]
-
     
     # Initialize AnalogueSignalProcessor with the chirp signals
     asp = AnalogueSignalProcessor(chirp_transmitted_path, received_signal_path,chirp_f_low,chirp_f_high)
-
     # Load the chirp signals
     asp.load_audio_files()
 
     # Find the delay
-    # delay = asp.find_delay(0,10,plot=False)
     delay1, delay2 = asp.find_two_delays(0,5,-5, plot=False, plot_corr=False)
-    print("delay1 = ",delay1)
-    print("delay2 = ",delay2)
+    logging.info(f"delay1 = {delay1}")
+    logging.info(f"delay2 = {delay2}")
 
     # Manually shift the delay forward
-    delay1 = delay1
-    delay2 = delay2
+    
+    delay1 = delay1 + manual_shift
+    delay2 = delay2 + manual_shift
 
     if two_chirps:
         # Trim the received signal
         start_index = int(delay1) # delay is an integer though
         info_start_index = start_index+1024*2+4096*16
         info_end_index = int(delay2)
-        exact_OFDM_num = (info_end_index - info_start_index)/(4096+1024)
-        logging.info(f"Exact number of OFDM symbols between = {exact_OFDM_num}")
-        expected_OFDM_num = round(exact_OFDM_num)
-        logging.info(f"Expected number of OFDM symbols = {expected_OFDM_num}")
-        logging.info(f"Total drift = {info_end_index - info_start_index - expected_OFDM_num*(4096+1024)}")
-        # Calculate how much sample we drifts away per OFDM symbol
-        # if this is less than 0, we need to shift the start and end indices of OFDM symbol to the left
-        sync_drift_per_OFDM_symbol = ((info_end_index - info_start_index) - expected_OFDM_num*(4096+1024))/expected_OFDM_num
         sync_drift_per_OFDM_symbol = -0.23997/(2*math.pi)
         logging.info(f"Sync drift per OFDM symbol = {sync_drift_per_OFDM_symbol}")
         
@@ -746,75 +718,24 @@ if __name__ == "__main__":
                         sync_drift_per_OFDM_symbol=sync_drift_per_OFDM_symbol)
 
     binary_data = receiver.process_signal()
+    
     if remove_header_frontNulls:
-        # binary_data=binary_data[592:]
-        def remove_leading_zeros(binary_data):
-            while binary_data.startswith("00000000"):
-                binary_data = binary_data[8:]
-            return binary_data
-
         # # Example usage
         # binary_data = "000000000000000011010101"
         binary_data = remove_leading_zeros(binary_data)
-
-
-        def split_by_first_two_occurrences(binary_data, delimiter="0"*16):
-            step = 8
-            occurrences = []
-
-            # Scan through the string with the step size
-            index = 0
-            while index <= len(binary_data) - len(delimiter):
-                if binary_data[index:index + len(delimiter)] == delimiter:
-                    occurrences.append(index)
-                    if len(occurrences) == 2:
-                        break
-                index += step
-
-            if len(occurrences) < 2:
-                return [binary_data, '', '']
-
-            # Split the string into three parts
-            first_occurrence = occurrences[0]
-            second_occurrence = occurrences[1]
-
-            part1 = binary_data[:first_occurrence]
-            part2 = binary_data[first_occurrence + len(delimiter):second_occurrence]
-            part3 = binary_data[second_occurrence + len(delimiter):]
-
-            return [part1, part2, part3]
-
-        # Example usage:
-        # binary_data = "110100000000000000001101000000000000000011001010110"
-        
         filename, number_of_bits,binary_data = split_by_first_two_occurrences(binary_data)
-        
-        
         filename=receiver.binary_to_bytes(filename).decode('utf-8')
         number_of_bits=receiver.binary_to_bytes(number_of_bits).decode('utf-8')
-
-        print(filename, number_of_bits)
-
-        # number_of_bits = "abc"
+        logging.info(f"Filename: {filename}")
+        logging.info(f"Number of bits: {number_of_bits}")
         try:
             if trim_end:
                 binary_data = binary_data[:int(number_of_bits)]
         except ValueError:
-            print("A ValueError occurred, because number_of_bits is not an integer. Hence trim_end is not used.")
+            logging.warning("A ValueError occurred, because number_of_bits is not an integer. Hence trim_end is not used.")
 
     if two_chirps:
         deomudulated_binary_path = './binaries/received_'+recording_name+'_resampled.bin'
     else:
         deomudulated_binary_path='./binaries/received_'+recording_name+'.bin'
     binfile = receiver.binary_to_bin_file(binary_data, deomudulated_binary_path)
-    # binfile = receiver.binary_to_bin_file(binary_data+"00000000000000000000000000000", deomudulated_binary_path)
-
-    # bytes_data = receiver.binary_to_bytes(binary_data)
-    # filename, file_size, content = receiver.parse_bytes_data(bytes_data)
-    # print("Filename:", filename)
-    # print("File Size:", file_size)
-    # print(content[0:10])
-
-    # Save the byte array to a file
-    # output_file_path = './files/test_image_received.tiff'
-    # receiver.save_file(output_file_path, content)

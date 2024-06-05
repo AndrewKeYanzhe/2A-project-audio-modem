@@ -472,8 +472,8 @@ class Receiver:
                     ldpc_xn[i] = 0.00000001
         
             gn_list.append(r_n/(ldpc_xn))
-            ########## Update the g_n using AR model ##########
-            self.g_n = 0.99*self.g_n + 0.01*(r_n/(ldpc_xn))
+            ######### Update the g_n using AR model ##########
+            self.g_n = 0.6*self.g_n + 0.4*(r_n/(ldpc_xn))
             ######################################################
 
             
@@ -625,12 +625,12 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
     received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
     # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
-    received_signal_path = 'recordings/0603_1541_article4_benchmark.m4a'
+    received_signal_path = 'recordings/0605_demo_test_4.m4a'
 
 
 
     # kmeans flag
-    shift_constellation_phase = True
+    shift_constellation_phase = False
     use_pilot_tone = True
     use_ldpc = True
     two_chirps = False
@@ -651,6 +651,10 @@ if __name__ == "__main__":
     delay1, delay2 = asp.find_two_delays(0,5,-5, plot=False, plot_corr=False)
     print("delay1 = ",delay1)
     print("delay2 = ",delay2)
+
+    # Manually shift the delay forward
+    delay1 = delay1 - 25
+    delay2 = delay2 - 25
 
     if two_chirps:
         # Trim the received signal

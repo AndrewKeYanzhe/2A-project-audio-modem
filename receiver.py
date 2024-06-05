@@ -358,15 +358,13 @@ class Receiver:
                 self.g_n = interpolated_response
             # Compensate for the channel effects
             x_n = self.channel_compensation(r_n, self.g_n)
-
             # Save the constellation points for plotting
             self.received_constellations.extend(r_n[bin_low:bin_high+1])
             self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
 
-        self.plot_constellation(self.received_constellations, title="Constellation\nBefore Compensation")
+        # self.plot_constellation(self.received_constellations, title="Constellation\nBefore Compensation")
 
-        self.plot_constellation(self.compensated_constellations, title="Constellation\nAfter Compensation")
-        # self.plot_constellation(compensated_constellations_subsampled, title="Constellation After Compensation,\nsubsampled 1:10")
+        # self.plot_constellation(self.compensated_constellations, title="Constellation\nAfter Compensation")
 
 
         ############### K MEANS CLUSTERING ################
@@ -416,8 +414,9 @@ class Receiver:
         # gn_list store the past channel frequency responses
         gn_list = []
         gn_list.append(self.g_n)
+        self.received_constellations = []
+        self.compensated_constellations = []
         for index, block in enumerate(tqdm(blocks)):
-            
             # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
 
@@ -475,6 +474,22 @@ class Receiver:
             ######### Update the g_n using AR model ##########
             self.g_n = 0.6*self.g_n + 0.4*(r_n/(ldpc_xn))
             ######################################################
+
+
+            # Save the constellation points for plotting
+            self.received_constellations.extend(r_n[bin_low:bin_high+1])
+            self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
+
+
+        phase_for_85=[]
+        for i in range(len(gn_list)):
+            phase_for_85.append(math.degrees(np.angle(gn_list[i][85+648])))
+        plt.scatter(range(len(phase_for_85)),phase_for_85)
+        plt.title("Phase of g[n] at bin 85")
+        plt.show()
+        self.plot_constellation(self.received_constellations, title="Constellation\nBefore Compensation")
+
+        self.plot_constellation(self.compensated_constellations, title="Constellation\nAfter Compensation")
 
             
 
@@ -626,6 +641,8 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
     # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
     received_signal_path = 'recordings/0605_demo_test_4.m4a'
+    received_signal_path = 'recordings/test_65.wav'
+
 
 
 

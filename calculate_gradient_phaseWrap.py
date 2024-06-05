@@ -67,6 +67,7 @@ def calculate_gradients(phase, plot=False):
         # Display the combined figure
         plt.tight_layout()
         plt.show()
+        plt.close()
     
     
     return mean_gradient

@@ -474,26 +474,26 @@ class Receiver:
             new_gn=(r_n/(ldpc_xn))
 
             #self.g_n = np.mean(gn_list, axis=0)
-            weight_old = 0.5
-            weight_new = 0.5
-            # ########## Update the g_n using AR model ##########
-            # self.g_n = 0.99*self.g_n + 0.01*(r_n/(ldpc_xn))
+            weight_old = 0.95
+            weight_new = 0.05
+            ########## Update the g_n using AR model ##########
+            self.g_n = 0.99*self.g_n + 0.01*(r_n/(ldpc_xn))
             last_gn = self.g_n
 
-            # Extract phases from the most recent g_n
-            last_phases = [cmath.phase(c) for c in last_gn]
-            new_phases = [cmath.phase(c) for c in new_gn]
+            # # Extract phases from the most recent g_n
+            # last_phases = [cmath.phase(c) for c in last_gn]
+            # new_phases = [cmath.phase(c) for c in new_gn]
 
-            # Apply phase shift to new_gn
-            updated_gn = []
-            for c, old_phase, new_phase in zip(new_gn, last_phases, new_phases):
-                combined_phase = weight_old * old_phase + weight_new * new_phase
-                magnitude = abs(c)
-                updated_complex = cmath.rect(magnitude, combined_phase)
-                updated_gn.append(updated_complex)
+            # # Apply phase shift to new_gn
+            # updated_gn = []
+            # for c, old_phase, new_phase in zip(last_gn, last_phases, new_phases):
+            #     combined_phase = weight_old * old_phase + weight_new * new_phase
+            #     magnitude = abs(c)
+            #     updated_complex = cmath.rect(magnitude, combined_phase)
+            #     updated_gn.append(updated_complex)
     
-            # Append the updated g_n to the list
-            gn_list.append(updated_gn)
+            # # Append the updated g_n to the list
+            # gn_list.append(updated_gn)
                     
 
             

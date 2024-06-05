@@ -655,7 +655,7 @@ if __name__ == "__main__":
     use_pilot_tone = True
     use_ldpc = True
     two_chirps = False
-    remove_nullsAtStart=True
+    remove_header_frontNulls=True
     # pilot1, ldpc0/1 works
     # pilot0, ldpc0/1 doesnt work
 
@@ -721,7 +721,7 @@ if __name__ == "__main__":
                         sync_drift_per_OFDM_symbol=sync_drift_per_OFDM_symbol)
 
     binary_data = receiver.process_signal()
-    if remove_nullsAtStart:
+    if remove_header_frontNulls:
         # binary_data=binary_data[592:]
         def remove_leading_zeros(binary_data):
             while binary_data.startswith("00000000"):

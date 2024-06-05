@@ -646,7 +646,7 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
     # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
     received_signal_path = 'recordings/0605_demo_test_4.m4a'
-    received_signal_path='recordings/0603_1541_article4_benchmark.m4a'
+    # received_signal_path='recordings/0603_1541_article4_benchmark.m4a'
 
 
 
@@ -731,6 +731,43 @@ if __name__ == "__main__":
         # # Example usage
         # binary_data = "000000000000000011010101"
         binary_data = remove_leading_zeros(binary_data)
+
+
+        def split_by_first_two_occurrences(binary_data, delimiter="0"*16):
+            step = 8
+            occurrences = []
+
+            # Scan through the string with the step size
+            index = 0
+            while index <= len(binary_data) - len(delimiter):
+                if binary_data[index:index + len(delimiter)] == delimiter:
+                    occurrences.append(index)
+                    if len(occurrences) == 2:
+                        break
+                index += step
+
+            if len(occurrences) < 2:
+                return [binary_data, '', '']
+
+            # Split the string into three parts
+            first_occurrence = occurrences[0]
+            second_occurrence = occurrences[1]
+
+            part1 = binary_data[:first_occurrence]
+            part2 = binary_data[first_occurrence + len(delimiter):second_occurrence]
+            part3 = binary_data[second_occurrence + len(delimiter):]
+
+            return [part1, part2, part3]
+
+        # Example usage:
+        # binary_data = "110100000000000000001101000000000000000011001010110"
+        filename, number_of_bits,binary_data = split_by_first_two_occurrences(binary_data)
+        
+        filename=receiver.binary_to_bytes(filename).decode('utf-8')
+        number_of_bits=receiver.binary_to_bytes(number_of_bits).decode('utf-8')
+
+        print(filename, number_of_bits)
+
     if two_chirps:
         deomudulated_binary_path = './binaries/received_'+recording_name+'_resampled.bin'
     else:

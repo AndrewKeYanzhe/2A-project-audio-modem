@@ -636,6 +636,12 @@ if __name__ == "__main__":
     use_ldpc = True
     two_chirps = False
     remove_header_frontNulls=True
+
+    trim_end = True
+
+
+
+    remove_header_frontNulls=True
     # pilot1, ldpc0/1 works
     # pilot0, ldpc0/1 doesnt work
 
@@ -751,6 +757,9 @@ if __name__ == "__main__":
         number_of_bits=receiver.binary_to_bytes(number_of_bits).decode('utf-8')
 
         print(filename, number_of_bits)
+
+        if trim_end:
+            binary_data = binary_data[:int(number_of_bits)]
 
     if two_chirps:
         deomudulated_binary_path = './binaries/received_'+recording_name+'_resampled.bin'

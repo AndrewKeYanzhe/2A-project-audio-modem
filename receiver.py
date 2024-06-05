@@ -758,8 +758,12 @@ if __name__ == "__main__":
 
         print(filename, number_of_bits)
 
-        if trim_end:
-            binary_data = binary_data[:int(number_of_bits)]
+        number_of_bits = "abc"
+        try:
+            if trim_end:
+                binary_data = binary_data[:int(number_of_bits)]
+        except ValueError:
+            print("A ValueError occurred, because number_of_bits is not an integer. Hence trim_end is not used.")
 
     if two_chirps:
         deomudulated_binary_path = './binaries/received_'+recording_name+'_resampled.bin'

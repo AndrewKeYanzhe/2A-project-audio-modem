@@ -445,7 +445,7 @@ class Receiver:
                 
                 #convert list to string
                 ldpc_decoded = ''.join(str(x) for x in ldpc_decoded)
-
+            
                 complete_binary_data += ldpc_decoded
             
             ############ Update g[n] for next block ############
@@ -471,10 +471,30 @@ class Receiver:
                 if ldpc_xn[i] == 0:
                     ldpc_xn[i] = 0.00000001
         
-            gn_list.append(r_n/(ldpc_xn))
-            ########## Update the g_n using AR model ##########
-            self.g_n = 0.99*self.g_n + 0.01*(r_n/(ldpc_xn))
-            ######################################################
+            new_gn=(r_n/(ldpc_xn))
+
+            #self.g_n = np.mean(gn_list, axis=0)
+            weight_old = 0.5
+            weight_new = 0.5
+            # ########## Update the g_n using AR model ##########
+            # self.g_n = 0.99*self.g_n + 0.01*(r_n/(ldpc_xn))
+            last_gn = self.g_n
+
+            # Extract phases from the most recent g_n
+            last_phases = [cmath.phase(c) for c in last_gn]
+            new_phases = [cmath.phase(c) for c in new_gn]
+
+            # Apply phase shift to new_gn
+            updated_gn = []
+            for c, old_phase, new_phase in zip(new_gn, last_phases, new_phases):
+                combined_phase = weight_old * old_phase + weight_new * new_phase
+                magnitude = abs(c)
+                updated_complex = cmath.rect(magnitude, combined_phase)
+                updated_gn.append(updated_complex)
+    
+            # Append the updated g_n to the list
+            gn_list.append(updated_gn)
+                    
 
             
 
@@ -625,12 +645,12 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
     received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
     # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
-    received_signal_path = 'recordings/0603_1541_article4_benchmark.m4a'
+    received_signal_path = 'recordings/0605_demo_test_4.m4a'
 
 
 
     # kmeans flag
-    shift_constellation_phase = True
+    shift_constellation_phase = False
     use_pilot_tone = True
     use_ldpc = True
     two_chirps = False

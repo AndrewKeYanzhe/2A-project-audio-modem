@@ -478,7 +478,7 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/cat_LR11.wav'
     received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
     received_signal_path = 'recordings/0605_demo_test_4.m4a'
-    received_signal_path = 'recordings/recording_64.wav'
+    received_signal_path = 'recordings/test_65.wav'
     # kmeans flag
     shift_constellation_phase = False
     use_pilot_tone = True
@@ -516,7 +516,12 @@ if __name__ == "__main__":
         # The gradient is degree per OFDM symbol
         gradient_86th_bin = drift_calculator.find_drift_per_block()
         logging.info(f"Gradient at 86th bin: {gradient_86th_bin}")
-        sync_drift_per_OFDM_symbol = -gradient_86th_bin * 4096 / (2*math.pi*86*180)
+        sync_drift_per_OFDM_symbol = -gradient_86th_bin * 4096 / (2*86*180)
+        logging.info(f"Sync drift per OFDM symbol = {sync_drift_per_OFDM_symbol}")
+        
+        ### shift to left to avoid information loss ###
+        delay1 = delay1 - manual_shift
+        delay2 = delay2 - manual_shift
     ################################################################
     else:      
         sync_drift_per_OFDM_symbol = 0  

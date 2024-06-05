@@ -278,7 +278,7 @@ class DriftCalculator:
 
         phase_for_86=[]
         for i in range(len(gn_list)):
-            phase_for_86.append(math.degrees(np.angle(gn_list[i][286])))
+            phase_for_86.append(math.degrees(np.angle(gn_list[i][86])))
         mean_gradient = calculate_gradients(phase_for_86, plot=True)
         logging.debug(f"Mean Gradient: {mean_gradient}")
         

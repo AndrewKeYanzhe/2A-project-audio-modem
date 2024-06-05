@@ -655,7 +655,7 @@ if __name__ == "__main__":
     use_pilot_tone = True
     use_ldpc = True
     two_chirps = False
-    remove_header_frontNulls=True
+    remove_header_frontNulls=False
     # pilot1, ldpc0/1 works
     # pilot0, ldpc0/1 doesnt work
 

@@ -644,8 +644,8 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/cat_LR11.wav'
     received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
     received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
-    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
-    # received_signal_path = 'recordings/0605_demo_test_4.m4a'
+    # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
+    received_signal_path = 'recordings/0605_demo_test_4.m4a'
 
 
 
@@ -654,6 +654,7 @@ if __name__ == "__main__":
     use_pilot_tone = True
     use_ldpc = True
     two_chirps = False
+    remove_nullsAtStart=True
     # pilot1, ldpc0/1 works
     # pilot0, ldpc0/1 doesnt work
 
@@ -719,6 +720,16 @@ if __name__ == "__main__":
                         sync_drift_per_OFDM_symbol=sync_drift_per_OFDM_symbol)
 
     binary_data = receiver.process_signal()
+    if remove_nullsAtStart:
+        # binary_data=binary_data[592:]
+        def remove_leading_zeros(binary_data):
+            while binary_data.startswith("00000000"):
+                binary_data = binary_data[8:]
+            return binary_data
+
+        # # Example usage
+        # binary_data = "000000000000000011010101"
+        binary_data = remove_leading_zeros(binary_data)
     if two_chirps:
         deomudulated_binary_path = './binaries/received_'+recording_name+'_resampled.bin'
     else:

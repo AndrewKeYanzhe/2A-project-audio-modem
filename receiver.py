@@ -478,14 +478,12 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/cat_LR11.wav'
     received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
     received_signal_path = 'recordings/0605_demo_test_4.m4a'
-    received_signal_path = 'recordings/test_65.wav'
-    # received_signal_path = 'recordings/0605_afternoon_article4_5OFDM.m4a'
-
+    received_signal_path = 'recordings/recording_64.wav'
     # kmeans flag
     shift_constellation_phase = False
     use_pilot_tone = True
     use_ldpc = True
-    two_chirps = True
+    two_chirps = False
     remove_header_frontNulls=True
     trim_end = True
     remove_drift = True

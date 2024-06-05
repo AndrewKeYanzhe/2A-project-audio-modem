@@ -663,7 +663,7 @@ if __name__ == "__main__":
     # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
     received_signal_path = 'recordings/0605_demo_test_4.m4a'
     received_signal_path = 'recordings/test_65.wav'
-
+    received_signal_path = 'recordings/recording_63.wav'
 
 
 
@@ -797,7 +797,7 @@ if __name__ == "__main__":
 
         print(filename, number_of_bits)
 
-        number_of_bits = "abc"
+        # number_of_bits = "abc"
         try:
             if trim_end:
                 binary_data = binary_data[:int(number_of_bits)]

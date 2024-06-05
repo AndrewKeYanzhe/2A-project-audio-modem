@@ -110,7 +110,8 @@ class OFDMTransmitter:
                 transmitted_signal = self.add_cyclic_prefix(time_domain_signal, prefix_length)
                 
                 # Append the block with cyclic prefix to the list
-                blocks_with_prefix.append(transmitted_signal)
+                for i in range(5):
+                    blocks_with_prefix.append(transmitted_signal)
 
 
             print("length of binary data", len(binary_data))
@@ -201,7 +202,8 @@ class OFDMTransmitter:
                 transmitted_signal = self.add_cyclic_prefix(time_domain_signal, prefix_length)
                 
                 # Append the block with cyclic prefix to the list
-                blocks_with_prefix.append(transmitted_signal)
+                for i in range(5):
+                    blocks_with_prefix.append(transmitted_signal)
 
                 print("transmitted_block length pilot",len(transmitted_signal))
 

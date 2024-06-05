@@ -446,6 +446,9 @@ class Receiver:
                 #convert list to string
                 ldpc_decoded = ''.join(str(x) for x in ldpc_decoded)
 
+                if index==0:
+                    ldpc_decoded=""
+                    
                 complete_binary_data += ldpc_decoded
             
             ############ Update g[n] for next block ############
@@ -634,6 +637,7 @@ if __name__ == "__main__":
     use_pilot_tone = True
     use_ldpc = True
     two_chirps = False
+    remove_nullsAtStart=True
     # pilot1, ldpc0/1 works
     # pilot0, ldpc0/1 doesnt work
 
@@ -699,6 +703,8 @@ if __name__ == "__main__":
                         sync_drift_per_OFDM_symbol=sync_drift_per_OFDM_symbol)
 
     binary_data = receiver.process_signal()
+    if remove_nullsAtStart:
+        binary_data=binary_data[592:]
     if two_chirps:
         deomudulated_binary_path = './binaries/received_'+recording_name+'_resampled.bin'
     else:

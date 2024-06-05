@@ -663,7 +663,7 @@ if __name__ == "__main__":
     # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
     received_signal_path = 'recordings/0605_demo_test_4.m4a'
     received_signal_path = 'recordings/test_65.wav'
-    received_signal_path = 'recordings/recording_63.wav'
+    # received_signal_path = 'recordings/0605_afternoon_article4_5OFDM.m4a'
 
 
 
@@ -672,14 +672,10 @@ if __name__ == "__main__":
     shift_constellation_phase = False
     use_pilot_tone = True
     use_ldpc = True
-    two_chirps = False
+    two_chirps = True
     remove_header_frontNulls=True
-
     trim_end = True
 
-
-
-    remove_header_frontNulls=True
     # pilot1, ldpc0/1 works
     # pilot0, ldpc0/1 doesnt work
 
@@ -699,8 +695,8 @@ if __name__ == "__main__":
     print("delay2 = ",delay2)
 
     # Manually shift the delay forward
-    delay1 = delay1 -25
-    delay2 = delay2 -25
+    delay1 = delay1
+    delay2 = delay2
 
     if two_chirps:
         # Trim the received signal
@@ -715,7 +711,7 @@ if __name__ == "__main__":
         # Calculate how much sample we drifts away per OFDM symbol
         # if this is less than 0, we need to shift the start and end indices of OFDM symbol to the left
         sync_drift_per_OFDM_symbol = ((info_end_index - info_start_index) - expected_OFDM_num*(4096+1024))/expected_OFDM_num
-        sync_drift_per_OFDM_symbol = -0.23997
+        sync_drift_per_OFDM_symbol = -0.23997/(2*math.pi)
         logging.info(f"Sync drift per OFDM symbol = {sync_drift_per_OFDM_symbol}")
         
         received_signal_trimmed = asp.recv[info_start_index:info_end_index]
@@ -790,7 +786,9 @@ if __name__ == "__main__":
 
         # Example usage:
         # binary_data = "110100000000000000001101000000000000000011001010110"
+        
         filename, number_of_bits,binary_data = split_by_first_two_occurrences(binary_data)
+        
         
         filename=receiver.binary_to_bytes(filename).decode('utf-8')
         number_of_bits=receiver.binary_to_bytes(number_of_bits).decode('utf-8')

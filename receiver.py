@@ -19,6 +19,7 @@ import os
 
 from ldpc_function import *
 from tqdm import tqdm
+from sklearn.linear_model import LinearRegression
 
 
 def gray_to_binary(gray_code):
@@ -472,7 +473,7 @@ class Receiver:
 
             gn_list.append(r_n/(ldpc_xn))
             ######### Update the g_n using AR model ##########
-            self.g_n = 0.6*self.g_n + 0.4*(r_n/(ldpc_xn))
+            self.g_n =0.6*self.g_n + 0.4*(r_n/(ldpc_xn))
             ######################################################
 
 
@@ -480,13 +481,33 @@ class Receiver:
             self.received_constellations.extend(r_n[bin_low:bin_high+1])
             self.compensated_constellations.extend(x_n[bin_low:bin_high+1]) 
 
-
+        
         phase_for_85=[]
         for i in range(len(gn_list)):
-            phase_for_85.append(math.degrees(np.angle(gn_list[i][85+648])))
+            phase_for_85.append(math.degrees(np.angle(gn_list[i][86])))
         plt.scatter(range(len(phase_for_85)),phase_for_85)
         plt.title("Phase of g[n] at bin 85")
         plt.show()
+        # Extract the subset of phase_for_85
+        subset = phase_for_85[50:500]
+
+        # Create the input feature matrix X
+        X = np.arange(len(subset)).reshape(-1, 1)
+
+        # Create the target variable y
+        y = subset
+
+        # Create a linear regression model
+        regression_model = LinearRegression()
+
+        # Fit the model to the data
+        regression_model.fit(X, y)
+
+        # Get the gradient of the regression line
+        gradient = regression_model.coef_[0]
+
+        # Print the gradient
+        print("Gradient:", gradient)
         self.plot_constellation(self.received_constellations, title="Constellation\nBefore Compensation")
 
         self.plot_constellation(self.compensated_constellations, title="Constellation\nAfter Compensation")
@@ -678,8 +699,8 @@ if __name__ == "__main__":
     print("delay2 = ",delay2)
 
     # Manually shift the delay forward
-    delay1 = delay1 - 25
-    delay2 = delay2 - 25
+    delay1 = delay1 -25
+    delay2 = delay2 -25
 
     if two_chirps:
         # Trim the received signal
@@ -694,6 +715,7 @@ if __name__ == "__main__":
         # Calculate how much sample we drifts away per OFDM symbol
         # if this is less than 0, we need to shift the start and end indices of OFDM symbol to the left
         sync_drift_per_OFDM_symbol = ((info_end_index - info_start_index) - expected_OFDM_num*(4096+1024))/expected_OFDM_num
+        sync_drift_per_OFDM_symbol = -0.23997
         logging.info(f"Sync drift per OFDM symbol = {sync_drift_per_OFDM_symbol}")
         
         received_signal_trimmed = asp.recv[info_start_index:info_end_index]

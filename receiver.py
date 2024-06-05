@@ -445,7 +445,7 @@ class Receiver:
                 
                 #convert list to string
                 ldpc_decoded = ''.join(str(x) for x in ldpc_decoded)
-
+            
                 complete_binary_data += ldpc_decoded
             
             ############ Update g[n] for next block ############
@@ -471,6 +471,30 @@ class Receiver:
                 if ldpc_xn[i] == 0:
                     ldpc_xn[i] = 0.00000001
         
+            new_gn=(r_n/(ldpc_xn))
+
+            #self.g_n = np.mean(gn_list, axis=0)
+            weight_old = 0.95
+            weight_new = 0.05
+            ########## Update the g_n using AR model ##########
+            self.g_n = 0.99*self.g_n + 0.01*(r_n/(ldpc_xn))
+            last_gn = self.g_n
+
+            # # Extract phases from the most recent g_n
+            # last_phases = [cmath.phase(c) for c in last_gn]
+            # new_phases = [cmath.phase(c) for c in new_gn]
+
+            # # Apply phase shift to new_gn
+            # updated_gn = []
+            # for c, old_phase, new_phase in zip(last_gn, last_phases, new_phases):
+            #     combined_phase = weight_old * old_phase + weight_new * new_phase
+            #     magnitude = abs(c)
+            #     updated_complex = cmath.rect(magnitude, combined_phase)
+            #     updated_gn.append(updated_complex)
+    
+            # # Append the updated g_n to the list
+            # gn_list.append(updated_gn)
+                    
             gn_list.append(r_n/(ldpc_xn))
             ######### Update the g_n using AR model ##########
             self.g_n = 0.6*self.g_n + 0.4*(r_n/(ldpc_xn))
@@ -631,9 +655,11 @@ if __name__ == "__main__":
 
     # kmeans flag
     shift_constellation_phase = False
+    shift_constellation_phase = False
     use_pilot_tone = True
     use_ldpc = True
     two_chirps = False
+    remove_header_frontNulls=False
     # pilot1, ldpc0/1 works
     # pilot0, ldpc0/1 doesnt work
 
@@ -703,6 +729,53 @@ if __name__ == "__main__":
                         sync_drift_per_OFDM_symbol=sync_drift_per_OFDM_symbol)
 
     binary_data = receiver.process_signal()
+    if remove_header_frontNulls:
+        # binary_data=binary_data[592:]
+        def remove_leading_zeros(binary_data):
+            while binary_data.startswith("00000000"):
+                binary_data = binary_data[8:]
+            return binary_data
+
+        # # Example usage
+        # binary_data = "000000000000000011010101"
+        binary_data = remove_leading_zeros(binary_data)
+
+
+        def split_by_first_two_occurrences(binary_data, delimiter="0"*16):
+            step = 8
+            occurrences = []
+
+            # Scan through the string with the step size
+            index = 0
+            while index <= len(binary_data) - len(delimiter):
+                if binary_data[index:index + len(delimiter)] == delimiter:
+                    occurrences.append(index)
+                    if len(occurrences) == 2:
+                        break
+                index += step
+
+            if len(occurrences) < 2:
+                return [binary_data, '', '']
+
+            # Split the string into three parts
+            first_occurrence = occurrences[0]
+            second_occurrence = occurrences[1]
+
+            part1 = binary_data[:first_occurrence]
+            part2 = binary_data[first_occurrence + len(delimiter):second_occurrence]
+            part3 = binary_data[second_occurrence + len(delimiter):]
+
+            return [part1, part2, part3]
+
+        # Example usage:
+        # binary_data = "110100000000000000001101000000000000000011001010110"
+        filename, number_of_bits,binary_data = split_by_first_two_occurrences(binary_data)
+        
+        filename=receiver.binary_to_bytes(filename).decode('utf-8')
+        number_of_bits=receiver.binary_to_bytes(number_of_bits).decode('utf-8')
+
+        print(filename, number_of_bits)
+
     if two_chirps:
         deomudulated_binary_path = './binaries/received_'+recording_name+'_resampled.bin'
     else:

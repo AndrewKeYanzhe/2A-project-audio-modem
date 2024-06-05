@@ -23,7 +23,7 @@ assert numpy  # avoid "imported but unused" message (W0611)
 import librosa
 import matplotlib.pyplot as plt
 
-from audiofile_to_csv import *
+# from audiofile_to_csv import *
 
 def int_or_str(text):
     """Helper function for argument parsing."""
@@ -124,4 +124,4 @@ if __name__ == "__main__":
 
     recording_path = record_audio()
     plot_waveform()
-    audio_to_csv(recording_path)
+    # audio_to_csv(recording_path)

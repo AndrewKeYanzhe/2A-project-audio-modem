@@ -298,7 +298,7 @@ class OFDMTransmitter:
     def file_data_to_binary_with_header(self, binary_data, filename):
         """Convert file binary data to a binary string with a header."""
         file_size = len(binary_data)
-        header = f"{filename}\0{file_size}\0"
+        header = f"\0\0{filename}\0\0{file_size}\0\0"
         header_binary = ''.join(format(ord(char), '08b') for char in header)
         binary_data_string = ''.join(format(byte, '08b') for byte in binary_data)
         complete_binary_data = header_binary + binary_data_string
@@ -366,23 +366,39 @@ if __name__ == "__main__":
     transmitter = OFDMTransmitter()
 
     # Load the binary data from file
-    transmitted_binary_path = 'binaries/P1017125.tif'
-    # transmitted_binary_path = 'text/article_3_long.txt'
+    # transmitted_binary_path = 'binaries/P1017125.tif'
+    transmitted_binary_path = 'text/article_3_long.txt'
+    transmitted_binary_path = 'text/article_2_iceland.txt'
     logging.info(f"Loading binary data from {transmitted_binary_path}.")
     data = transmitter.load_binary_data(transmitted_binary_path)
 
     recording_name = os.path.splitext(os.path.basename(transmitted_binary_path))[0]
-    
+    recording_name_with_extension = os.path.basename(transmitted_binary_path)
+
 
     use_pilot_tone = True
     use_ldpc = True
+    use_header=True
 
     # Convert file data to binary with header
     #filename = "transmitted_5.26pm.wav"
     ## if with header
     #binary_data = transmitter.file_data_to_binary_with_header(data, filename)
     #if withouth header
-    binary_data = transmitter.audio_to_binary(data)
+    if use_header:
+        binary_data = transmitter.file_data_to_binary_with_header(data, recording_name_with_extension)
+    else:
+        binary_data = transmitter.audio_to_binary(data)
+    
+
+
+    # print(type(binary_data))
+
+    # use_header = False
+
+    # if use_header:
+    #     binary_data = "0"*16+binary_data
+
 
     # Transmit the signal
     transmitted_signal = transmitter.transmit_signal(binary_data, block_size, prefix_length,fs, 1000, 8000) # Don't worry about this frequency range for now
@@ -405,6 +421,7 @@ if __name__ == "__main__":
 
     # Play the combined transmitted signal with chirp
     save_path ='recordings/transmitted_' + recording_name + '_pilot'+str(int(use_pilot_tone))+'_ldpc'+str(int(use_ldpc)) +'.wav'
+    save_path =f'recordings/transmitted_{recording_name}_pilot{int(use_pilot_tone)}_ldpc{int(use_ldpc)}_header{int(use_header)}.wav'
     transmitter.play_signal(transmitted_signal,chirp_data, fs, save_path=save_path)
     logging.info(f"Saving the combined transmitted signal with chirp to{save_path}.")
 

@@ -644,8 +644,9 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/cat_LR11.wav'
     received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
     received_signal_path = 'recordings/transmitted_P1017125_pilot1_ldpc1.wav'
-    # received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
-    received_signal_path = 'recordings/0605_demo_test_4.m4a'
+    received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1_header1.wav'
+    # received_signal_path = 'recordings/0605_demo_test_4.m4a'
+    # received_signal_path = 'recordings/transmitted_article_3_long_pilot1_ldpc1.wav'
     # received_signal_path='recordings/0603_1541_article4_benchmark.m4a'
 
 

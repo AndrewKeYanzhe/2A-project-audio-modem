@@ -298,7 +298,7 @@ class OFDMTransmitter:
     def file_data_to_binary_with_header(self, binary_data, filename):
         """Convert file binary data to a binary string with a header."""
         file_size = len(binary_data)
-        header = f"\0\0{filename}\0\0{file_size}\0\0"
+        header = f"\0\0{filename}\0\0{file_size*8}\0\0"
         header_binary = ''.join(format(ord(char), '08b') for char in header)
         binary_data_string = ''.join(format(byte, '08b') for byte in binary_data)
         complete_binary_data = header_binary + binary_data_string

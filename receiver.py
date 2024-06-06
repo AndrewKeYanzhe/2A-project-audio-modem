@@ -344,14 +344,14 @@ class Receiver:
                 frequencies=subcarrier_frequencies
                 phase_response = np.angle(self.g_n, deg=True)
 
-                # Plot the phase response
-                plt.figure(figsize=(6, 4))
-                plt.plot(frequencies, phase_response)
-                plt.title('Phase Response of the Channel (Pilot symbol)')
-                plt.xlabel('Frequency (Hz)')
-                plt.xlim(0, 10000)
-                plt.ylabel('Phase (Degrees)')
-                plt.show()
+                # # Plot the phase response
+                # plt.figure(figsize=(6, 4))
+                # plt.plot(frequencies, phase_response)
+                # plt.title('Phase Response of the Channel (Pilot symbol)')
+                # plt.xlabel('Frequency (Hz)')
+                # plt.xlim(0, 10000)
+                # plt.ylabel('Phase (Degrees)')
+                # plt.show()
 
             # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
@@ -408,7 +408,7 @@ class Receiver:
         # Convert centroids back to complex numbers
         centroid_complex_numbers = [complex(c[0], c[1]) for c in centroids]
         # centroid_complex_numbers
-        self.plot_constellation(centroid_complex_numbers, title="k-means clusters="+str(n_clusters), dot_size=100)
+        # self.plot_constellation(centroid_complex_numbers, title="k-means clusters="+str(n_clusters), dot_size=100)
         ################################################
 
 
@@ -485,9 +485,9 @@ class Receiver:
         phase_for_85=[]
         for i in range(len(gn_list)):
             phase_for_85.append(math.degrees(np.angle(gn_list[i][86])))
-        plt.scatter(range(len(phase_for_85)),phase_for_85)
-        plt.title("Phase of g[n] at bin 85")
-        plt.show()
+        # plt.scatter(range(len(phase_for_85)),phase_for_85)
+        # plt.title("Phase of g[n] at bin 85")
+        # plt.show()
         # Extract the subset of phase_for_85
         subset = phase_for_85[50:500]
 
@@ -671,7 +671,7 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/0605_2032_article4_zoomh1_otherSideOfRoom.wav'
     received_signal_path = 'recordings/0605_2037_article4_zoomh1_speaker50_2m.wav'
     received_signal_path = 'recordings/0606_1003_article4_LR5.wav'
-    received_signal_path = 'recordings/7.wav'
+    received_signal_path = 'recordings/5.wav'
 
     # kmeans flag
     shift_constellation_phase = False

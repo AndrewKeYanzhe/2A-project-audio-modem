@@ -112,6 +112,7 @@ class OFDMTransmitter:
                 # Append the block with cyclic prefix to the list
                 for i in range(5):
                     blocks_with_prefix.append(transmitted_signal)
+                logging.info(f"transmitted_signal length pilot {len(transmitted_signal)}")
 
 
             print("length of binary data", len(binary_data))
@@ -337,7 +338,7 @@ class OFDMTransmitter:
         """Play the combined chirp and transmitted signal."""
         _,normalized_signal = self.normalize_signal(signal)
         # combined_signal = np.concatenate((chirp_data, normalized_signal))
-        combined_signal = np.concatenate((chirp_data, normalized_signal, chirp_data))
+        combined_signal = np.concatenate((0.1*chirp_data, normalized_signal, 0.1*chirp_data))
         # sd.play(combined_signal, samplerate=fs)
         sd.wait()
         if save_path:
@@ -370,7 +371,7 @@ if __name__ == "__main__":
     # Load the binary data from file
     # transmitted_binary_path = 'binaries/P1017125.tif'
     transmitted_binary_path = 'text/article_3_long.txt'
-    transmitted_binary_path = 'text/article_2_iceland.txt'
+    transmitted_binary_path = 'text/P1017125_128_long_no_metadata.tiff'
     logging.info(f"Loading binary data from {transmitted_binary_path}.")
     data = transmitter.load_binary_data(transmitted_binary_path)
 

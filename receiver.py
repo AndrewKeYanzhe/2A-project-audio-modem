@@ -664,22 +664,27 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/0605_demo_test_4.m4a'
     received_signal_path = 'recordings/test_65.wav'
     received_signal_path = 'recordings/recording_63.wav'
-
-
+    received_signal_path = 'recordings/0605_2001_iceland_zoomh1.wav'
+    received_signal_path = 'recordings/0605_2011_article4_zoomh1.wav'
+    received_signal_path = 'recordings/0605_2015_article4_zoomh1_mbaSpeakers.wav'
+    received_signal_path = 'recordings/0605_2025_article4_zoomh1_mbaSpeakers_otherSideOfRoom.wav'
+    received_signal_path = 'recordings/0605_2032_article4_zoomh1_otherSideOfRoom.wav'
+    received_signal_path = 'recordings/0605_2037_article4_zoomh1_speaker50_2m.wav'
+    received_signal_path = 'recordings/0606_1003_article4_LR5.wav'
+    received_signal_path = 'recordings/0606_1013_homerton_LR5.wav'
 
     # kmeans flag
-    shift_constellation_phase = False
     shift_constellation_phase = False
     use_pilot_tone = True
     use_ldpc = True
     two_chirps = False
-    remove_header_frontNulls=True
 
+
+    remove_header_frontNulls=True
     trim_end = True
 
 
 
-    remove_header_frontNulls=True
     # pilot1, ldpc0/1 works
     # pilot0, ldpc0/1 doesnt work
 
@@ -788,19 +793,24 @@ if __name__ == "__main__":
 
             return [part1, part2, part3]
 
+        # binary_data_backup = np.copy(binary_data)
         # Example usage:
         # binary_data = "110100000000000000001101000000000000000011001010110"
-        filename, number_of_bits,binary_data = split_by_first_two_occurrences(binary_data)
+        filename, number_of_bits,binary_data_main = split_by_first_two_occurrences(binary_data)
         
-        filename=receiver.binary_to_bytes(filename).decode('utf-8')
-        number_of_bits=receiver.binary_to_bytes(number_of_bits).decode('utf-8')
-
+        try:
+            filename=receiver.binary_to_bytes(filename).decode('utf-8')
+            number_of_bits=receiver.binary_to_bytes(number_of_bits).decode('utf-8')
+        except UnicodeDecodeError:
+            print("unicode decode error")
+            # binary_data = binary_data_backup
+            trim_end=False
         print(filename, number_of_bits)
 
         # number_of_bits = "abc"
         try:
             if trim_end:
-                binary_data = binary_data[:int(number_of_bits)]
+                binary_data = binary_data_main[:int(number_of_bits)]
         except ValueError:
             print("A ValueError occurred, because number_of_bits is not an integer. Hence trim_end is not used.")
 

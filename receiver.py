@@ -670,8 +670,8 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/0605_2025_article4_zoomh1_mbaSpeakers_otherSideOfRoom.wav'
     received_signal_path = 'recordings/0605_2032_article4_zoomh1_otherSideOfRoom.wav'
     received_signal_path = 'recordings/0605_2037_article4_zoomh1_speaker50_2m.wav'
-
-
+    received_signal_path = 'recordings/0606_1003_article4_LR5.wav'
+    received_signal_path = 'recordings/0606_1013_homerton_LR5.wav'
 
     # kmeans flag
     shift_constellation_phase = False

@@ -508,9 +508,9 @@ class Receiver:
 
         # Print the gradient
         print("Gradient:", gradient)
-        self.plot_constellation(self.received_constellations, title="Constellation\nBefore Compensation")
+        # self.plot_constellation(self.received_constellations, title="Constellation\nBefore Compensation")
 
-        self.plot_constellation(self.compensated_constellations, title="Constellation\nAfter Compensation")
+        # self.plot_constellation(self.compensated_constellations, title="Constellation\nAfter Compensation")
 
             
 
@@ -671,7 +671,7 @@ if __name__ == "__main__":
     received_signal_path = 'recordings/0605_2032_article4_zoomh1_otherSideOfRoom.wav'
     received_signal_path = 'recordings/0605_2037_article4_zoomh1_speaker50_2m.wav'
     received_signal_path = 'recordings/0606_1003_article4_LR5.wav'
-    received_signal_path = 'recordings/0606_1013_homerton_LR5.wav'
+    received_signal_path = 'recordings/7.wav'
 
     # kmeans flag
     shift_constellation_phase = False
@@ -797,10 +797,11 @@ if __name__ == "__main__":
         # Example usage:
         # binary_data = "110100000000000000001101000000000000000011001010110"
         filename, number_of_bits,binary_data_main = split_by_first_two_occurrences(binary_data)
-        
+        filename_exists=False
         try:
             filename=receiver.binary_to_bytes(filename).decode('utf-8')
             number_of_bits=receiver.binary_to_bytes(number_of_bits).decode('utf-8')
+            filename_exists=True
         except UnicodeDecodeError:
             print("unicode decode error")
             # binary_data = binary_data_backup
@@ -818,6 +819,8 @@ if __name__ == "__main__":
         deomudulated_binary_path = './binaries/received_'+recording_name+'_resampled.bin'
     else:
         deomudulated_binary_path='./binaries/received_'+recording_name+'.bin'
+        if filename_exists:
+            deomudulated_binary_path='./binaries/'+filename
     binfile = receiver.binary_to_bin_file(binary_data, deomudulated_binary_path)
     # binfile = receiver.binary_to_bin_file(binary_data+"00000000000000000000000000000", deomudulated_binary_path)
 

@@ -370,8 +370,7 @@ if __name__ == "__main__":
 
     # Load the binary data from file
     # transmitted_binary_path = 'binaries/P1017125.tif'
-    transmitted_binary_path = 'text/article_3_long.txt'
-    transmitted_binary_path = 'text/P1017125_128_long_no_metadata.tiff'
+    transmitted_binary_path = 'text/article_2_iceland.txt'
     logging.info(f"Loading binary data from {transmitted_binary_path}.")
     data = transmitter.load_binary_data(transmitted_binary_path)
 

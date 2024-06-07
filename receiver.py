@@ -235,14 +235,14 @@ class Receiver:
                 frequencies=subcarrier_frequencies
                 phase_response = np.angle(self.g_n, deg=True)
 
-                # Plot the phase response
-                plt.figure(figsize=(6, 4))
-                plt.plot(frequencies, phase_response)
-                plt.title('Phase Response of the Channel (Pilot symbol)')
-                plt.xlabel('Frequency (Hz)')
-                plt.xlim(0, 10000)
-                plt.ylabel('Phase (Degrees)')
-                plt.show()
+                # # Plot the phase response
+                # plt.figure(figsize=(6, 4))
+                # plt.plot(frequencies, phase_response)
+                # plt.title('Phase Response of the Channel (Pilot symbol)')
+                # plt.xlabel('Frequency (Hz)')
+                # plt.xlim(0, 10000)
+                # plt.ylabel('Phase (Degrees)')
+                # plt.show()
 
             # Apply FFT to the block
             r_n = self.apply_fft(block, self.block_size)
@@ -291,7 +291,7 @@ class Receiver:
         # Convert centroids back to complex numbers
         centroid_complex_numbers = [complex(c[0], c[1]) for c in centroids]
         # centroid_complex_numbers
-        self.plot_constellation(centroid_complex_numbers, title="k-means clusters="+str(n_clusters), dot_size=100)
+        # self.plot_constellation(centroid_complex_numbers, title="k-means clusters="+str(n_clusters), dot_size=100)
         ################################################
 
 
@@ -369,8 +369,8 @@ class Receiver:
         plt.title("Phase of g[n] at bin 85")
         plt.show()
         
-        self.plot_constellation(self.received_constellations, title="Constellation\nBefore Compensation")
-        self.plot_constellation(self.compensated_constellations, title="Constellation\nAfter Compensation")
+        # self.plot_constellation(self.received_constellations, title="Constellation\nBefore Compensation")
+        # self.plot_constellation(self.compensated_constellations, title="Constellation\nAfter Compensation")
         logging.info(f"Recovered Binary Data Length: {len(complete_binary_data)}")
         return complete_binary_data
     def apply_kmeans(self, compensated_constellations, n_clusters=5, random_state=42):
@@ -473,12 +473,12 @@ if __name__ == "__main__":
     chirp_end_index = 1024 + 4096*16
     chirp_f_low = 761.72
     chirp_f_high = 8824.22
-    manual_shift = 25
+    manual_shift = 100
     chirp_transmitted_path = 'chirps/1k_8k_0523_suffix.wav'
     received_signal_path = 'recordings/cat_LR11.wav'
     received_signal_path = 'recordings/transmitted_article_2_iceland_pilot1_ldpc1.wav'
     received_signal_path = 'recordings/0605_demo_test_4.m4a'
-    received_signal_path = 'recordings/test_65.wav'
+    received_signal_path = 'recordings/g168try1.wav'
     # kmeans flag
     shift_constellation_phase = False
     use_pilot_tone = True
